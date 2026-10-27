@@ -272,6 +272,7 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
   <section id="tela-prof" hidden>
     <h2 style="font-size:1.15rem">Acompanhamento</h2>
     <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
+    <div id="avisoProf"></div>
     <div class="kpis" id="kpis"></div>
     <h3 class="sec">Etapa de cada grupo</h3>
     <div class="rol"><table id="tabGrupos"></table></div>
@@ -566,8 +567,19 @@ el('btRecarregar').addEventListener('click', carregarProf);
 
 async function carregarProf() {
   let r;
-  try { r = await rpc('resumo', { p_token: EU.token }); } catch (e) { return; }
-  if (!r.ok) return;
+  try { r = await rpc('resumo', { p_token: EU.token }); }
+  catch (e) { el('avisoProf').innerHTML =
+    '<div class="aviso erro">Não consegui falar com o servidor. Tente "Atualizar agora".</div>'; return; }
+  if (!r.ok) {
+    clearInterval(timer);
+    el('avisoProf').innerHTML = '<div class="aviso erro">' + (r.erro || 'Sessão expirada.') +
+      ' Entre de novo com o código PROF.</div>';
+    try { localStorage.removeItem('cene_sessao'); } catch (x) {}
+    EU = null; el('eu').hidden = true; el('btSair').hidden = true;
+    setTimeout(() => telas('entrar'), 1800);
+    return;
+  }
+  el('avisoProf').innerHTML = '';
   const P = {}; (r.parametros || []).forEach(p => P[p.chave] = +p.valor);
   const feitos = +r.total_concluidos, tot = +r.total_ambientes;
   const lamp = (r.grupos || []).reduce((s,g) => s + (+g.lampadas), 0);
@@ -582,7 +594,9 @@ async function carregarProf() {
     ['<b>' + (precos.length ? brl(precoMed) : '—') + '</b><span>preço médio do LED</span>']
   ].map(k => '<div class="kpi">' + k + '</div>').join('');
 
-  el('tabGrupos').innerHTML =
+  if (!(r.grupos || []).length) {
+    el('tabGrupos').innerHTML = '<tbody><tr><td>Nenhum grupo cadastrado no sistema.</td></tr></tbody>';
+  } else el('tabGrupos').innerHTML =
     '<thead><tr><th>Grupo</th><th>Turma</th><th>Ambientes</th><th>Concluídos</th>' +
     '<th>Lâmpadas</th><th>Situação</th></tr></thead><tbody>' +
     (r.grupos||[]).map(g => {
