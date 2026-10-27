@@ -156,6 +156,25 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     lance aqui depois, com calma.</p>
   </section>
 
+  <!-- INTEGRANTES -->
+  <section id="tela-alunos" hidden>
+    <h2 style="font-size:1.15rem">Quem é do seu grupo</h2>
+    <p class="ajuda">Escreva o nome completo de cada integrante, na mesma ordem do caderno.
+    Isso é o que permite ao professor ver a participação de cada um.</p>
+    <div id="avisoAlunos"></div>
+    <div class="cx">
+      <div class="campo"><label for="al1">1º integrante</label>
+        <input type="text" id="al1" autocomplete="off"></div>
+      <div class="campo"><label for="al2">2º integrante</label>
+        <input type="text" id="al2" autocomplete="off"></div>
+      <div class="campo"><label for="al3">3º integrante</label>
+        <input type="text" id="al3" autocomplete="off"></div>
+      <div class="campo"><label for="al4">4º integrante</label>
+        <input type="text" id="al4" autocomplete="off"></div>
+      <button class="btn" id="btAlunos">Salvar e continuar</button>
+    </div>
+  </section>
+
   <!-- LISTA DE AMBIENTES -->
   <section id="tela-ambientes" hidden>
     <div id="avisoLista"></div>
@@ -163,6 +182,7 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     <p class="ajuda" id="subLista"></p>
     <div class="barra" style="margin-bottom:16px"><i id="barraLista"></i></div>
     <div id="listaAmbientes"></div>
+    <div style="margin-top:18px"><button class="btn sec peq" id="btEditarAlunos">Corrigir os nomes do grupo</button></div>
   </section>
 
   <!-- UM AMBIENTE -->
@@ -173,6 +193,10 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     <div id="avisoAmb"></div>
 
     <div class="cx">
+      <div class="campo">
+        <label for="quemLanca">Quem está lançando agora</label>
+        <select id="quemLanca"></select>
+      </div>
       <label>Que equipamento você está lançando?</label>
       <div class="tipos" id="tipos"></div>
       <div class="dupla">
@@ -202,6 +226,21 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
 
     <h3 class="sec">Já lançado neste ambiente</h3>
     <div id="listaItens"></div>
+
+    <h3 class="sec">Quem fez cada função aqui</h3>
+    <p class="ajuda" id="ajudaFuncoes"></p>
+    <div class="cx">
+      <div class="campo"><label for="fContador">Contador — contou em voz alta</label>
+        <select id="fContador"></select></div>
+      <div class="campo"><label for="fLeitor">Leitor — leu as potências</label>
+        <select id="fLeitor"></select></div>
+      <div class="campo"><label for="fAnotador">Anotador — preencheu a ficha</label>
+        <select id="fAnotador"></select></div>
+      <div class="campo"><label for="fConferente">Conferente — fotografou e reconferiu</label>
+        <select id="fConferente"></select></div>
+      <button class="btn sec" id="btFuncoes">Salvar quem fez o quê</button>
+    </div>
+
     <div style="margin-top:18px"><button class="btn ok" id="btConcluir"></button></div>
   </section>
 
@@ -240,6 +279,9 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     <div class="rol"><table id="tabTipos"></table></div>
     <h3 class="sec">Preços pesquisados</h3>
     <div class="rol"><table id="tabPrecos"></table></div>
+    <h3 class="sec">Participação de cada aluno</h3>
+    <p class="ajuda" id="ajudaPart"></p>
+    <div class="rol"><table id="tabPart"></table></div>
     <h3 class="sec">Parecer técnico</h3>
     <p class="ajuda" id="avisoParecer"></p>
     <div class="parecer" id="parecer"></div>
@@ -257,7 +299,7 @@ const KEY = "sb_publishable_vpttM2lEsWdEunByNohB1A_abIutGKp";
 
 const $ = s => document.querySelector(s);
 const el = id => document.getElementById(id);
-let EU = null, AMB = null, TIPO = "Lâmpada", timer = null;
+let EU = null, AMB = null, TIPO = "Lâmpada", timer = null, ALUNOS = [];
 
 async function rpc(fn, args) {
   const r = await fetch(API + "/rest/v1/rpc/" + fn, {
@@ -274,9 +316,13 @@ function msg(onde, texto, tipo) {
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
-  ['entrar','ambientes','ambiente','precos','prof'].forEach(t =>
+  ['entrar','alunos','ambientes','ambiente','precos','prof'].forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
   window.scrollTo(0,0);
+}
+function opcoes(sel, vazio) {
+  el(sel).innerHTML = '<option value="">' + vazio + '</option>' +
+    ALUNOS.map(a => '<option value="' + a.id + '">' + a.nome + '</option>').join('');
 }
 
 /* ---------------- entrar e sair ---------------- */
@@ -298,8 +344,33 @@ function entrou() {
   el('senha').value = '';
   if (EU.papel === 'professor') { telas('prof'); carregarProf(); ligarAuto(); }
   else if (EU.papel === 'preco') { telas('precos'); carregarPrecos(); }
-  else { telas('ambientes'); carregarAmbientes(); }
+  else { comecarGrupo(); }
 }
+async function comecarGrupo() {
+  try {
+    const r = await rpc('listar_alunos', { p_token: EU.token, p_grupo: null });
+    if (!r.ok) return expirou(r.erro);
+    ALUNOS = r.alunos || [];
+    if (ALUNOS.length < 2) { abrirAlunos(); }
+    else { telas('ambientes'); carregarAmbientes(); }
+  } catch (err) { msg('avisoLista', err.message, 'erro'); telas('ambientes'); }
+}
+function abrirAlunos() {
+  [1,2,3,4].forEach(i => el('al' + i).value = (ALUNOS[i-1] || {}).nome || '');
+  msg('avisoAlunos','');
+  telas('alunos');
+}
+el('btEditarAlunos').addEventListener('click', abrirAlunos);
+el('btAlunos').addEventListener('click', async () => {
+  const nomes = [1,2,3,4].map(i => el('al' + i).value.trim()).filter(x => x);
+  const b = el('btAlunos'); b.disabled = true;
+  try {
+    const r = await rpc('salvar_alunos', { p_token: EU.token, p_nomes: nomes });
+    if (!r.ok) msg('avisoAlunos', r.erro, 'erro');
+    else { await comecarGrupo(); }
+  } catch (err) { msg('avisoAlunos', err.message, 'erro'); }
+  b.disabled = false;
+});
 el('btSair').addEventListener('click', async () => {
   try { await rpc('sair', { p_token: EU.token }); } catch(e){}
   try { localStorage.removeItem('cene_sessao'); } catch(e){}
@@ -323,7 +394,8 @@ async function carregarAmbientes() {
       const cls = a.concluido ? 'feito' : (a.itens > 0 ? 'andando' : '');
       const ic  = a.concluido ? '✓' : (a.itens > 0 ? '•' : '');
       const det = a.itens > 0
-        ? (a.itens + ' lançamento' + (a.itens===1?'':'s') + ' · ' + a.lampadas + ' lâmpadas')
+        ? (a.itens + ' lançamento' + (a.itens===1?'':'s') + ' · ' + a.lampadas + ' lâmpadas'
+           + (+a.funcoes < 4 ? ' · falta dizer quem fez o quê' : ''))
         : 'ainda sem lançamento';
       return '<button class="amb ' + cls + '" data-id="' + a.id + '">' +
              '<span class="n">' + String(a.ordem).padStart(2,'0') + '</span>' +
@@ -378,9 +450,35 @@ async function abrirAmbiente(id, lista) {
   TIPO = 'Lâmpada'; montarTipos(); chipsPot(); chipsHoras();
   el('qtd').value = 1; el('pot').value = ''; el('horas').value = ''; el('obs').value = '';
   msg('avisoAmb','');
+  opcoes('quemLanca', 'escolha quem está digitando');
+  ['fContador','fLeitor','fAnotador','fConferente'].forEach(s => opcoes(s, 'escolha'));
+  el('ajudaFuncoes').textContent = (AMB.pessoas && AMB.pessoas < 4)
+    ? 'Neste ambiente entram ' + AMB.pessoas + ' alunos, então as funções foram em dupla: '
+      + 'a mesma pessoa pode aparecer em duas.'
+    : 'Cada um dos quatro exerceu uma função aqui.';
   telas('ambiente');
-  await carregarItens();
+  await Promise.all([carregarItens(), carregarFuncoes()]);
 }
+async function carregarFuncoes() {
+  try {
+    const r = await rpc('ver_participacao', { p_token: EU.token, p_ambiente: AMB.id });
+    if (!r.ok) return;
+    const f = r.funcoes || {};
+    el('fContador').value   = f.contador   || '';
+    el('fLeitor').value     = f.leitor     || '';
+    el('fAnotador').value   = f.anotador   || '';
+    el('fConferente').value = f.conferente || '';
+  } catch (e) {}
+}
+el('btFuncoes').addEventListener('click', async () => {
+  const v = s => { const x = el(s).value; return x ? parseInt(x,10) : null; };
+  const r = await rpc('salvar_participacao', { p_token: EU.token, p_ambiente: AMB.id,
+    p_contador: v('fContador'), p_leitor: v('fLeitor'),
+    p_anotador: v('fAnotador'), p_conferente: v('fConferente') });
+  if (!r.ok) return msg('avisoAmb', r.erro, 'erro');
+  msg('avisoAmb', 'Funções salvas.', 'bom');
+  setTimeout(() => msg('avisoAmb',''), 2500);
+});
 async function carregarItens() {
   try {
     const r = await rpc('itens_do_ambiente', { p_token: EU.token, p_ambiente: AMB.id });
@@ -411,7 +509,8 @@ el('btAdd').addEventListener('click', async () => {
       p_token: EU.token, p_ambiente: AMB.id, p_tipo: TIPO,
       p_quantidade: parseInt(el('qtd').value, 10),
       p_potencia: num(el('pot').value), p_horas: num(el('horas').value),
-      p_obs: el('obs').value });
+      p_obs: el('obs').value,
+      p_aluno: el('quemLanca').value ? parseInt(el('quemLanca').value, 10) : null });
     if (!r.ok) msg('avisoAmb', r.erro, 'erro');
     else {
       msg('avisoAmb', 'Lançado.', 'bom');
@@ -507,6 +606,43 @@ async function carregarProf() {
     : '<tbody><tr><td>Nenhum preço pesquisado ainda.</td></tr></tbody>';
 
   montarParecer(r, P, lamp, precoMed, feitos, tot, precos.length);
+  carregarParticipacao();
+}
+
+async function carregarParticipacao() {
+  let r;
+  try { r = await rpc('relatorio_participacao', { p_token: EU.token }); } catch (e) { return; }
+  if (!r.ok) return;
+  const al = r.alunos || [];
+  if (!al.length) {
+    el('ajudaPart').textContent = 'Os grupos ainda não cadastraram os integrantes. '
+      + 'Isso acontece no primeiro acesso de cada grupo ao sistema.';
+    el('tabPart').innerHTML = '<tbody><tr><td>Nenhum aluno cadastrado ainda.</td></tr></tbody>';
+    return;
+  }
+  const semNada = al.filter(a => +a.ambientes === 0).length;
+  const faltaFuncao = al.filter(a =>
+    ['contador','leitor','anotador','conferente'].some(f => +a[f] === 0)).length;
+  const avisos = [];
+  if (semNada) avisos.push(semNada + ' aluno(s) sem nenhuma participação registrada');
+  if (faltaFuncao) avisos.push(faltaFuncao + ' aluno(s) que ainda não exerceram alguma das quatro funções');
+  if (+r.ambientes_sem_registro) avisos.push(r.ambientes_sem_registro
+    + ' ambiente(s) concluídos antes de o registro de funções existir');
+  el('ajudaPart').textContent = avisos.length
+    ? 'Atenção: ' + avisos.join('; ') + '.'
+    : 'Todos os alunos participaram e exerceram as quatro funções pelo menos uma vez.';
+
+  el('tabPart').innerHTML =
+    '<thead><tr><th>Aluno</th><th>Grupo</th><th>Ambientes</th><th>Contador</th>' +
+    '<th>Leitor</th><th>Anotador</th><th>Conferente</th><th>Lançou</th></tr></thead><tbody>' +
+    al.map(a => {
+      const zero = +a.ambientes === 0;
+      return '<tr' + (zero ? ' style="background:var(--vermelho2)"' : '') + '>' +
+        '<td>' + a.nome + '</td><td><b>' + a.grupo + '</b></td>' +
+        '<td class="n">' + a.ambientes + '</td><td class="n">' + a.contador + '</td>' +
+        '<td class="n">' + a.leitor + '</td><td class="n">' + a.anotador + '</td>' +
+        '<td class="n">' + a.conferente + '</td><td class="n">' + a.lancamentos + '</td></tr>';
+    }).join('') + '</tbody>';
 }
 
 function montarParecer(r, P, lamp, precoLed, feitos, tot, qtdPrecos) {
