@@ -156,23 +156,13 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     lance aqui depois, com calma.</p>
   </section>
 
-  <!-- INTEGRANTES -->
-  <section id="tela-alunos" hidden>
-    <h2 style="font-size:1.15rem">Quem é do seu grupo</h2>
-    <p class="ajuda">Escreva o nome completo de cada integrante, na mesma ordem do caderno.
-    Isso é o que permite ao professor ver a participação de cada um.</p>
-    <div id="avisoAlunos"></div>
-    <div class="cx">
-      <div class="campo"><label for="al1">1º integrante</label>
-        <input type="text" id="al1" autocomplete="off"></div>
-      <div class="campo"><label for="al2">2º integrante</label>
-        <input type="text" id="al2" autocomplete="off"></div>
-      <div class="campo"><label for="al3">3º integrante</label>
-        <input type="text" id="al3" autocomplete="off"></div>
-      <div class="campo"><label for="al4">4º integrante</label>
-        <input type="text" id="al4" autocomplete="off"></div>
-      <button class="btn" id="btAlunos">Salvar e continuar</button>
-    </div>
+  <!-- QUEM SOU EU -->
+  <section id="tela-eusou" hidden>
+    <h2 style="font-size:1.15rem" id="tituloEuSou">Quem está usando agora?</h2>
+    <p class="ajuda">Toque no seu nome. Tudo o que você fizer fica registrado no seu nome,
+    e é assim que o professor vê a participação de cada um.</p>
+    <div id="avisoEuSou"></div>
+    <div id="listaEuSou"></div>
   </section>
 
   <!-- LISTA DE AMBIENTES -->
@@ -182,7 +172,7 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     <p class="ajuda" id="subLista"></p>
     <div class="barra" style="margin-bottom:16px"><i id="barraLista"></i></div>
     <div id="listaAmbientes"></div>
-    <div style="margin-top:18px"><button class="btn sec peq" id="btEditarAlunos">Corrigir os nomes do grupo</button></div>
+    <div style="margin-top:18px"><button class="btn sec peq" id="btTrocarEu">Não sou eu — trocar de pessoa</button></div>
   </section>
 
   <!-- UM AMBIENTE -->
@@ -268,8 +258,24 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     <div id="listaPrecos"></div>
   </section>
 
+  <!-- MONTAGEM DOS GRUPOS -->
+  <section id="tela-montar" hidden>
+    <button class="volta" id="btVoltaPainel">← voltar para o acompanhamento</button>
+    <h2 style="font-size:1.15rem">Montar os grupos</h2>
+    <p class="ajuda">Para cada aluno, escolha o grupo e o papel. Quem ficar sem grupo
+    aparece no fim da lista. Grupo pode ter 3, 4, 5 alunos — o que vocês combinarem.</p>
+    <div id="avisoMontar"></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="btn peq" id="btT1A">1ª série A</button>
+      <button class="btn peq sec" id="btT1B">1ª série B</button>
+    </div>
+    <div class="rol"><table id="tabResumoGrupos"></table></div>
+    <div id="listaTurma"></div>
+  </section>
+
   <!-- PROFESSOR -->
   <section id="tela-prof" hidden>
+    <div style="margin-bottom:12px"><button class="btn peq" id="btMontar">Montar os grupos</button></div>
     <h2 style="font-size:1.15rem">Acompanhamento</h2>
     <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
     <div id="avisoProf"></div>
