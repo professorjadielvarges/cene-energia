@@ -183,10 +183,7 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     <div id="avisoAmb"></div>
 
     <div class="cx">
-      <div class="campo">
-        <label for="quemLanca">Quem está lançando agora</label>
-        <select id="quemLanca"></select>
-      </div>
+      <p class="ajuda" id="quemLanca" style="margin:0 0 12px"></p>
       <label>Que equipamento você está lançando?</label>
       <div class="tipos" id="tipos"></div>
       <div class="dupla">
@@ -306,7 +303,7 @@ const KEY = "sb_publishable_vpttM2lEsWdEunByNohB1A_abIutGKp";
 
 const $ = s => document.querySelector(s);
 const el = id => document.getElementById(id);
-let EU = null, AMB = null, TIPO = "Lâmpada", timer = null, ALUNOS = [];
+let EU = null, SOU = null, AMB = null, TIPO = "Lâmpada", timer = null, ALUNOS = [], TURMA = '1A';
 
 async function rpc(fn, args) {
   const r = await fetch(API + "/rest/v1/rpc/" + fn, {
@@ -323,7 +320,7 @@ function msg(onde, texto, tipo) {
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
-  ['entrar','alunos','ambientes','ambiente','precos','prof'].forEach(t =>
+  ['entrar','eusou','ambientes','ambiente','precos','prof','montar'].forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
   window.scrollTo(0,0);
 }
@@ -344,10 +341,10 @@ el('formEntrar').addEventListener('submit', async e => {
   } catch (err) { msg('erroLogin', err.message, 'erro'); }
   b.disabled = false; b.textContent = 'Entrar';
 });
-function guardar(){ try{ localStorage.setItem('cene_sessao', JSON.stringify(EU)); }catch(e){} }
+function guardar(){ try{ localStorage.setItem('cene_sessao', JSON.stringify({s:EU, q:SOU})); }catch(e){} }
 function entrou() {
   el('eu').hidden = false; el('btSair').hidden = false;
-  el('eu').textContent = EU.codigo;
+  el('eu').textContent = EU.codigo + (SOU ? ' · ' + SOU.nome.split(' ')[0] : '');
   el('senha').value = '';
   if (EU.papel === 'professor') { telas('prof'); carregarProf(); ligarAuto(); }
   else if (EU.papel === 'preco') { telas('precos'); carregarPrecos(); }
@@ -358,30 +355,42 @@ async function comecarGrupo() {
     const r = await rpc('listar_alunos', { p_token: EU.token, p_grupo: null });
     if (!r.ok) return expirou(r.erro);
     ALUNOS = r.alunos || [];
-    if (ALUNOS.length < 2) { abrirAlunos(); }
-    else { telas('ambientes'); carregarAmbientes(); }
+    if (!ALUNOS.length) {
+      telas('eusou');
+      el('tituloEuSou').textContent = 'Grupo ' + EU.codigo;
+      msg('avisoEuSou', 'O professor ainda não colocou ninguém neste grupo. '
+        + 'Isso é feito por ele, na aula.', 'info');
+      el('listaEuSou').innerHTML = '';
+      return;
+    }
+    if (SOU && ALUNOS.some(a => a.id === SOU.id)) { telas('ambientes'); carregarAmbientes(); }
+    else escolherQuemSou();
   } catch (err) { msg('avisoLista', err.message, 'erro'); telas('ambientes'); }
 }
-function abrirAlunos() {
-  [1,2,3,4].forEach(i => el('al' + i).value = (ALUNOS[i-1] || {}).nome || '');
-  msg('avisoAlunos','');
-  telas('alunos');
+const PAPEL = { campo:'trabalho de campo', calculo:'cálculos', conferencia:'conferência dos cálculos' };
+function escolherQuemSou() {
+  el('tituloEuSou').textContent = 'Quem está usando agora? · Grupo ' + EU.codigo;
+  msg('avisoEuSou','');
+  el('listaEuSou').innerHTML = ALUNOS.map(a =>
+    '<button class="amb" data-id="' + a.id + '">' +
+    '<span class="n">' + (a.numero || '') + '</span>' +
+    '<span class="t">' + a.nome +
+    '<small>' + (PAPEL[a.equipe] || 'papel ainda não definido') + '</small></span>' +
+    '<span class="st">›</span></button>').join('');
+  document.querySelectorAll('#listaEuSou .amb').forEach(b =>
+    b.addEventListener('click', () => {
+      SOU = ALUNOS.find(a => a.id === +b.dataset.id);
+      guardar();
+      el('eu').textContent = EU.codigo + ' · ' + SOU.nome.split(' ')[0];
+      telas('ambientes'); carregarAmbientes();
+    }));
+  telas('eusou');
 }
-el('btEditarAlunos').addEventListener('click', abrirAlunos);
-el('btAlunos').addEventListener('click', async () => {
-  const nomes = [1,2,3,4].map(i => el('al' + i).value.trim()).filter(x => x);
-  const b = el('btAlunos'); b.disabled = true;
-  try {
-    const r = await rpc('salvar_alunos', { p_token: EU.token, p_nomes: nomes });
-    if (!r.ok) msg('avisoAlunos', r.erro, 'erro');
-    else { await comecarGrupo(); }
-  } catch (err) { msg('avisoAlunos', err.message, 'erro'); }
-  b.disabled = false;
-});
+el('btTrocarEu').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
 el('btSair').addEventListener('click', async () => {
   try { await rpc('sair', { p_token: EU.token }); } catch(e){}
   try { localStorage.removeItem('cene_sessao'); } catch(e){}
-  EU = null; clearInterval(timer);
+  EU = null; SOU = null; ALUNOS = []; clearInterval(timer);
   el('eu').hidden = true; el('btSair').hidden = true;
   el('codigo').value = ''; telas('entrar');
 });
@@ -457,7 +466,7 @@ async function abrirAmbiente(id, lista) {
   TIPO = 'Lâmpada'; montarTipos(); chipsPot(); chipsHoras();
   el('qtd').value = 1; el('pot').value = ''; el('horas').value = ''; el('obs').value = '';
   msg('avisoAmb','');
-  opcoes('quemLanca', 'escolha quem está digitando');
+  el('quemLanca').textContent = SOU ? 'Lançando como ' + SOU.nome + '.' : '';
   ['fContador','fLeitor','fAnotador','fConferente'].forEach(s => opcoes(s, 'escolha'));
   el('ajudaFuncoes').textContent = (AMB.pessoas && AMB.pessoas < 4)
     ? 'Neste ambiente entram ' + AMB.pessoas + ' alunos, então as funções foram em dupla: '
@@ -517,7 +526,7 @@ el('btAdd').addEventListener('click', async () => {
       p_quantidade: parseInt(el('qtd').value, 10),
       p_potencia: num(el('pot').value), p_horas: num(el('horas').value),
       p_obs: el('obs').value,
-      p_aluno: el('quemLanca').value ? parseInt(el('quemLanca').value, 10) : null });
+      p_aluno: SOU ? SOU.id : null });
     if (!r.ok) msg('avisoAmb', r.erro, 'erro');
     else {
       msg('avisoAmb', 'Lançado.', 'bom');
@@ -565,6 +574,75 @@ async function carregarPrecos() {
       await rpc('del_preco', { p_token: EU.token, p_id: +b.dataset.p });
       carregarPrecos();
     }));
+}
+
+/* ---------------- montagem dos grupos ---------------- */
+const GRUPOS_A = ['A1','A2','A3','A4','A5'], GRUPOS_B = ['B1','B2','B3'];
+el('btMontar').addEventListener('click', () => { clearInterval(timer); abrirMontar('1A'); });
+el('btVoltaPainel').addEventListener('click', () => { telas('prof'); carregarProf(); ligarAuto(); });
+el('btT1A').addEventListener('click', () => abrirMontar('1A'));
+el('btT1B').addEventListener('click', () => abrirMontar('1B'));
+
+async function abrirMontar(t) {
+  TURMA = t;
+  el('btT1A').className = 'btn peq' + (t === '1A' ? '' : ' sec');
+  el('btT1B').className = 'btn peq' + (t === '1B' ? '' : ' sec');
+  telas('montar');
+  await carregarMontar();
+}
+async function carregarMontar() {
+  let r;
+  try { r = await rpc('turma', { p_token: EU.token, p_turma: TURMA }); }
+  catch (e) { return msg('avisoMontar', e.message, 'erro'); }
+  if (!r.ok) return msg('avisoMontar', r.erro, 'erro');
+
+  const gs = (r.grupos || []).filter(g => TURMA === '1A'
+    ? GRUPOS_A.indexOf(g.codigo) >= 0 : GRUPOS_B.indexOf(g.codigo) >= 0);
+  const semGrupo = (r.alunos || []).filter(a => !a.grupo).length;
+  el('tabResumoGrupos').innerHTML =
+    '<thead><tr><th>Grupo</th><th>Ambientes</th><th>No grupo</th><th>Campo</th>' +
+    '<th>Cálculo</th><th>Conferência</th></tr></thead><tbody>' +
+    gs.map(g => {
+      const semCampo = +g.campo === 0;
+      return '<tr' + (semCampo ? ' style="background:var(--vermelho2)"' : '') + '>' +
+        '<td><b>' + g.codigo + '</b></td><td class="n">' + g.ambientes + '</td>' +
+        '<td class="n">' + g.quantos + '</td><td class="n">' + g.campo + '</td>' +
+        '<td class="n">' + g.calculo + '</td><td class="n">' + g.conferencia + '</td></tr>';
+    }).join('') +
+    '<tr><td colspan="2"><b>Sem grupo</b></td><td class="n">' + semGrupo +
+    '</td><td colspan="3"></td></tr></tbody>';
+
+  const opts = (TURMA === '1A' ? GRUPOS_A : GRUPOS_B);
+  el('listaTurma').innerHTML = (r.alunos || [])
+    .sort((a,b) => (a.grupo||'zz').localeCompare(b.grupo||'zz') || (a.numero||0)-(b.numero||0))
+    .map(a =>
+    '<div class="item" data-id="' + a.id + '">' +
+      '<span class="q" style="min-width:26px">' + (a.numero || '') + '</span>' +
+      '<span class="d">' + a.nome + '</span>' +
+      '<select class="selGrupo" data-id="' + a.id + '" style="width:auto;padding:6px 8px">' +
+        '<option value="">— sem grupo —</option>' +
+        opts.map(g => '<option value="' + g + '"' + (a.grupo === g ? ' selected' : '') + '>' + g + '</option>').join('') +
+      '</select>' +
+      '<select class="selPapel" data-id="' + a.id + '" style="width:auto;padding:6px 8px"' +
+        (a.grupo ? '' : ' disabled') + '>' +
+        ['campo','calculo','conferencia'].map(p =>
+          '<option value="' + p + '"' + (a.equipe === p ? ' selected' : '') + '>' +
+          ({campo:'campo',calculo:'cálculo',conferencia:'conferência'})[p] + '</option>').join('') +
+      '</select>' +
+    '</div>').join('');
+
+  document.querySelectorAll('#listaTurma select').forEach(s =>
+    s.addEventListener('change', () => salvarAlocacao(+s.dataset.id)));
+}
+async function salvarAlocacao(id) {
+  const linha = document.querySelector('#listaTurma .item[data-id="' + id + '"]');
+  const g = linha.querySelector('.selGrupo').value;
+  const p = linha.querySelector('.selPapel').value || 'campo';
+  const r = await rpc('alocar', { p_token: EU.token, p_aluno: id,
+    p_grupo: g || null, p_equipe: g ? p : null });
+  if (!r.ok) { msg('avisoMontar', r.erro, 'erro'); }
+  else { msg('avisoMontar',''); }
+  await carregarMontar();
 }
 
 /* ---------------- professor ---------------- */
@@ -635,30 +713,36 @@ async function carregarParticipacao() {
   if (!r.ok) return;
   const al = r.alunos || [];
   if (!al.length) {
-    el('ajudaPart').textContent = 'Os grupos ainda não cadastraram os integrantes. '
-      + 'Isso acontece no primeiro acesso de cada grupo ao sistema.';
-    el('tabPart').innerHTML = '<tbody><tr><td>Nenhum aluno cadastrado ainda.</td></tr></tbody>';
+    el('ajudaPart').textContent = 'Nenhum aluno foi colocado em grupo ainda. '
+      + 'Use o botão "Montar os grupos", no alto da página.';
+    el('tabPart').innerHTML = '<tbody><tr><td>Sem alunos em grupo.</td></tr></tbody>';
     return;
   }
-  const semNada = al.filter(a => +a.ambientes === 0).length;
-  const faltaFuncao = al.filter(a =>
+  const soCampo = al.filter(a => a.equipe === 'campo');
+  const semNada = soCampo.filter(a => +a.ambientes === 0).length;
+  const faltaFuncao = soCampo.filter(a =>
     ['contador','leitor','anotador','conferente'].some(f => +a[f] === 0)).length;
   const avisos = [];
-  if (semNada) avisos.push(semNada + ' aluno(s) sem nenhuma participação registrada');
-  if (faltaFuncao) avisos.push(faltaFuncao + ' aluno(s) que ainda não exerceram alguma das quatro funções');
+  if (+r.sem_grupo) avisos.push(r.sem_grupo + ' de ' + r.total_turma
+    + ' alunos ainda sem grupo');
+  if (semNada) avisos.push(semNada + ' aluno(s) de campo sem nenhuma participação registrada');
+  if (faltaFuncao) avisos.push(faltaFuncao + ' aluno(s) de campo que ainda não exerceram alguma das quatro funções');
   if (+r.ambientes_sem_registro) avisos.push(r.ambientes_sem_registro
-    + ' ambiente(s) concluídos antes de o registro de funções existir');
+    + ' ambiente(s) concluídos sem o registro de funções');
   el('ajudaPart').textContent = avisos.length
     ? 'Atenção: ' + avisos.join('; ') + '.'
-    : 'Todos os alunos participaram e exerceram as quatro funções pelo menos uma vez.';
+    : 'Todos os alunos de campo participaram e exerceram as quatro funções pelo menos uma vez.';
 
+  const NOME_EQUIPE = { campo:'campo', calculo:'cálculo', conferencia:'conferência', '—':'—' };
   el('tabPart').innerHTML =
-    '<thead><tr><th>Aluno</th><th>Grupo</th><th>Ambientes</th><th>Contador</th>' +
-    '<th>Leitor</th><th>Anotador</th><th>Conferente</th><th>Lançou</th></tr></thead><tbody>' +
+    '<thead><tr><th>Aluno</th><th>Turma</th><th>Grupo</th><th>Papel</th><th>Ambientes</th>' +
+    '<th>Contador</th><th>Leitor</th><th>Anotador</th><th>Conferente</th>' +
+    '<th>Lançou</th></tr></thead><tbody>' +
     al.map(a => {
-      const zero = +a.ambientes === 0;
+      const zero = a.equipe === 'campo' && +a.ambientes === 0;
       return '<tr' + (zero ? ' style="background:var(--vermelho2)"' : '') + '>' +
-        '<td>' + a.nome + '</td><td><b>' + a.grupo + '</b></td>' +
+        '<td>' + a.nome + '</td><td class="n">' + a.turma + '</td>' +
+        '<td><b>' + a.grupo + '</b></td><td>' + (NOME_EQUIPE[a.equipe] || a.equipe) + '</td>' +
         '<td class="n">' + a.ambientes + '</td><td class="n">' + a.contador + '</td>' +
         '<td class="n">' + a.leitor + '</td><td class="n">' + a.anotador + '</td>' +
         '<td class="n">' + a.conferente + '</td><td class="n">' + a.lancamentos + '</td></tr>';
@@ -765,7 +849,8 @@ el('btCopiar').addEventListener('click', async () => {
 montarTipos(); chipsPot(); chipsHoras();
 try {
   const s = localStorage.getItem('cene_sessao');
-  if (s) { EU = JSON.parse(s); entrou(); }
+  if (s) { const d = JSON.parse(s); EU = d.s || d; SOU = d.q || null;
+           if (EU && EU.token) entrou(); }
 } catch (e) {}
 </script>
 </body>
