@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Inventário de Energia · CENE</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --papel:#FBFAF6; --papel2:#F2F0E8; --tinta:#1A1E18; --tinta2:#5E665B;
+  --linha:#D8D6CB; --azul:#2E3D8F; --azul2:#E9ECF8;
+  --ambar:#C8832A; --ambar2:#FBF1DE; --verde:#36704A; --verde2:#E6F0E6;
+  --vermelho:#A8352B; --vermelho2:#FBEAE8;
+  --d:"Archivo",system-ui,-apple-system,sans-serif;
+  --m:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --papel:#14160F; --papel2:#1D2018; --tinta:#E9E7DD; --tinta2:#9BA294;
+  --linha:#333629; --azul:#A8B6F0; --azul2:#1E2340;
+  --ambar:#E8B256; --ambar2:#32280F; --verde:#8CC79C; --verde2:#182A1C;
+  --vermelho:#E89086; --vermelho2:#3A1C18;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papel);color:var(--tinta);font-family:var(--d);
+  font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));
+     padding-right:max(16px,env(safe-area-inset-right,0px))}
+.col{max-width:760px;margin:0 auto}
+[hidden]{display:none!important}
+h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance}
+p{margin:0 0 .7em}
+button{font-family:var(--d);cursor:pointer}
+input,select{font-family:var(--d);font-size:16px}
+
+header{background:var(--papel2);border-bottom:1px solid var(--linha);
+  padding-top:env(safe-area-inset-top,0px)}
+.hd{display:flex;align-items:center;gap:10px;padding-block:12px;flex-wrap:wrap}
+.hd h1{font-size:1.05rem;font-weight:800;flex:1;min-width:0}
+.hd .eu{font-family:var(--m);font-size:.78rem;background:var(--azul2);color:var(--azul);
+  border:1px solid var(--azul);border-radius:999px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.sai{background:none;border:1px solid var(--vermelho);color:var(--vermelho);
+  border-radius:4px;padding:5px 12px;font-size:.82rem;font-weight:700}
+main{padding-block:22px 80px}
+
+.cx{background:var(--papel2);border:1px solid var(--linha);border-radius:6px;padding:20px;
+  margin-bottom:16px}
+label{display:block;font-size:.78rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--tinta2);margin-bottom:5px}
+input[type=text],input[type=password],input[type=number],select{
+  width:100%;padding:12px;border:1px solid var(--linha);border-radius:5px;
+  background:var(--papel);color:var(--tinta)}
+input:focus,select:focus{outline:2px solid var(--azul);outline-offset:-1px}
+.campo{margin-bottom:14px}
+.btn{width:100%;padding:14px;border:0;border-radius:5px;background:var(--azul);
+  color:#fff;font-weight:700;font-size:1rem}
+.btn:disabled{opacity:.5}
+.btn.sec{background:none;border:1px solid var(--linha);color:var(--tinta)}
+.btn.ok{background:var(--verde)}
+.btn.peq{width:auto;padding:9px 16px;font-size:.88rem}
+.aviso{border-radius:5px;padding:11px 14px;margin-bottom:14px;font-size:.92rem;
+  border:1px solid}
+.aviso.erro{background:var(--vermelho2);border-color:var(--vermelho);color:var(--vermelho)}
+.aviso.bom{background:var(--verde2);border-color:var(--verde);color:var(--verde)}
+.aviso.info{background:var(--ambar2);border-color:var(--ambar);color:var(--ambar)}
+
+.amb{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--papel2);border:1px solid var(--linha);border-left-width:5px;
+  border-left-color:var(--linha);border-radius:5px;padding:14px;margin-bottom:9px;
+  color:var(--tinta);font-size:1rem}
+.amb.feito{border-left-color:var(--verde);background:var(--verde2)}
+.amb.andando{border-left-color:var(--ambar);background:var(--ambar2)}
+.amb .n{font-family:var(--m);font-size:.82rem;color:var(--tinta2);font-weight:600}
+.amb .t{flex:1;min-width:0;font-weight:700}
+.amb .t small{display:block;font-weight:400;font-size:.78rem;color:var(--tinta2);
+  font-family:var(--m);margin-top:2px}
+.amb .st{font-size:1.3rem;line-height:1}
+
+.volta{background:none;border:0;color:var(--azul);font-weight:700;font-size:.9rem;
+  padding:4px 0;margin-bottom:12px}
+.tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:7px;
+  margin-bottom:14px}
+.tipos button{padding:11px 6px;border:1px solid var(--linha);border-radius:5px;
+  background:var(--papel);color:var(--tinta);font-size:.84rem;font-weight:600}
+.tipos button[aria-pressed=true]{background:var(--azul);color:#fff;border-color:var(--azul)}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.chips button{padding:6px 11px;border:1px solid var(--linha);border-radius:999px;
+  background:var(--papel);color:var(--tinta2);font-size:.8rem;font-family:var(--m)}
+.chips button:hover{border-color:var(--azul);color:var(--azul)}
+
+.item{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--linha)}
+.item .q{font-family:var(--m);font-weight:600;color:var(--azul);font-size:1rem;min-width:30px}
+.item .d{flex:1;min-width:0;font-size:.93rem}
+.item .d small{display:block;color:var(--tinta2);font-size:.78rem;font-family:var(--m)}
+.lixo{background:none;border:1px solid var(--vermelho);color:var(--vermelho);
+  border-radius:4px;padding:5px 10px;font-size:.78rem;font-weight:700}
+
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:8px 9px;text-align:left;border-bottom:1px solid var(--linha)}
+th{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta2);
+  background:var(--papel2)}
+td.n{font-family:var(--m);text-align:right;font-variant-numeric:tabular-nums}
+.rol{overflow-x:auto;border:1px solid var(--linha);border-radius:5px;margin-bottom:16px}
+.barra{height:7px;background:var(--linha);border-radius:4px;overflow:hidden;margin-top:6px}
+.barra i{display:block;height:100%;background:var(--verde)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:11px;
+  margin-bottom:18px}
+.kpi{border:1px solid var(--linha);border-radius:5px;padding:13px}
+.kpi b{display:block;font-family:var(--m);font-size:1.5rem;color:var(--azul);font-weight:600}
+.kpi span{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta2)}
+h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
+  border-bottom:2px solid var(--linha)}
+.ajuda{font-size:.85rem;color:var(--tinta2);margin-top:-6px;margin-bottom:14px}
+.parecer{background:var(--papel2);border:1px solid var(--linha);border-radius:6px;padding:20px;
+  font-size:.93rem;line-height:1.6}
+.parecer h4{font-family:var(--d);font-size:.95rem;margin:16px 0 6px}
+.parecer h4:first-child{margin-top:0}
+@media(max-width:440px){.dupla{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="gut"><div class="col hd">
+  <h1>Inventário de Energia · CENE</h1>
+  <span class="eu" id="eu" hidden></span>
+  <button class="sai" id="btSair" hidden>Sair</button>
+</div></header>
+
+<main class="gut"><div class="col">
+
+  <!-- ENTRADA -->
+  <section id="tela-entrar">
+    <div class="cx">
+      <h2 style="font-size:1.2rem;margin-bottom:4px">Entrar</h2>
+      <p class="ajuda">Use o código do seu grupo e a senha que o professor entregou.</p>
+      <div id="erroLogin"></div>
+      <form id="formEntrar">
+        <div class="campo">
+          <label for="codigo">Código do grupo</label>
+          <input type="text" id="codigo" autocomplete="off" autocapitalize="characters"
+                 placeholder="A1" required>
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" autocomplete="off" required>
+        </div>
+        <button class="btn" id="btEntrar" type="submit">Entrar</button>
+      </form>
+    </div>
+    <p class="ajuda">O caderno de papel continua valendo: anote lá durante a coleta e
+    lance aqui depois, com calma.</p>
+  </section>
+
+  <!-- LISTA DE AMBIENTES -->
+  <section id="tela-ambientes" hidden>
+    <div id="avisoLista"></div>
+    <h2 style="font-size:1.15rem" id="tituloLista">Meus ambientes</h2>
+    <p class="ajuda" id="subLista"></p>
+    <div class="barra" style="margin-bottom:16px"><i id="barraLista"></i></div>
+    <div id="listaAmbientes"></div>
+  </section>
+
+  <!-- UM AMBIENTE -->
+  <section id="tela-ambiente" hidden>
+    <button class="volta" id="btVolta">← voltar para a lista</button>
+    <h2 style="font-size:1.15rem" id="tituloAmb"></h2>
+    <p class="ajuda" id="subAmb"></p>
+    <div id="avisoAmb"></div>
+
+    <div class="cx">
+      <label>Que equipamento você está lançando?</label>
+      <div class="tipos" id="tipos"></div>
+      <div class="dupla">
+        <div class="campo">
+          <label for="qtd">Quantos</label>
+          <input type="number" id="qtd" min="1" step="1" inputmode="numeric" value="1">
+        </div>
+        <div class="campo">
+          <label for="pot">Potência em watts</label>
+          <input type="number" id="pot" min="0" step="0.1" inputmode="decimal"
+                 placeholder="deixe vazio se não achou">
+          <div class="chips" id="chipsPot"></div>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="horas">Horas por dia que fica ligado</label>
+        <input type="number" id="horas" min="0" max="24" step="0.5" inputmode="decimal"
+               placeholder="pergunte a quem usa o ambiente">
+        <div class="chips" id="chipsH"></div>
+      </div>
+      <div class="campo">
+        <label for="obs">Observação (opcional)</label>
+        <input type="text" id="obs" placeholder="ex: duas queimadas">
+      </div>
+      <button class="btn" id="btAdd">Lançar este equipamento</button>
+    </div>
+
+    <h3 class="sec">Já lançado neste ambiente</h3>
+    <div id="listaItens"></div>
+    <div style="margin-top:18px"><button class="btn ok" id="btConcluir"></button></div>
+  </section>
+
+  <!-- PREÇOS -->
+  <section id="tela-precos" hidden>
+    <h2 style="font-size:1.15rem">Pesquisa de preço do LED</h2>
+    <p class="ajuda">Pesquise em pelo menos duas lojas da região e lance os dois preços.</p>
+    <div id="avisoPreco"></div>
+    <div class="cx">
+      <div class="campo"><label for="pLoja">Loja</label>
+        <input type="text" id="pLoja" placeholder="nome da loja e bairro"></div>
+      <div class="campo"><label for="pProd">Produto</label>
+        <input type="text" id="pProd" placeholder="ex: LED tubular 18 W 120 cm"></div>
+      <div class="dupla">
+        <div class="campo"><label for="pPot">Potência (W)</label>
+          <input type="number" id="pPot" step="0.1" inputmode="decimal" value="18"></div>
+        <div class="campo"><label for="pPreco">Preço por unidade (R$)</label>
+          <input type="number" id="pPreco" step="0.01" inputmode="decimal" placeholder="21,90"></div>
+      </div>
+      <div class="campo"><label for="pFonte">Como você viu o preço</label>
+        <input type="text" id="pFonte" placeholder="ex: fui na loja em 05/11"></div>
+      <button class="btn" id="btAddPreco">Lançar preço</button>
+    </div>
+    <h3 class="sec">Preços lançados</h3>
+    <div id="listaPrecos"></div>
+  </section>
+
+  <!-- PROFESSOR -->
+  <section id="tela-prof" hidden>
+    <h2 style="font-size:1.15rem">Acompanhamento</h2>
+    <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
+    <div class="kpis" id="kpis"></div>
+    <h3 class="sec">Etapa de cada grupo</h3>
+    <div class="rol"><table id="tabGrupos"></table></div>
+    <h3 class="sec">O que já foi contado</h3>
+    <div class="rol"><table id="tabTipos"></table></div>
+    <h3 class="sec">Preços pesquisados</h3>
+    <div class="rol"><table id="tabPrecos"></table></div>
+    <h3 class="sec">Parecer técnico</h3>
+    <p class="ajuda" id="avisoParecer"></p>
+    <div class="parecer" id="parecer"></div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn peq sec" id="btCopiar">Copiar o parecer</button>
+      <button class="btn peq sec" id="btRecarregar">Atualizar agora</button>
+    </div>
+  </section>
+
+</div></main>
+
+<script>
+const API = "https://bcpmgwjatitovhlrjwjg.supabase.co";
+const KEY = "sb_publishable_vpttM2lEsWdEunByNohB1A_abIutGKp";
+
+const $ = s => document.querySelector(s);
+const el = id => document.getElementById(id);
+let EU = null, AMB = null, TIPO = "Lâmpada", timer = null;
+
+async function rpc(fn, args) {
+  const r = await fetch(API + "/rest/v1/rpc/" + fn, {
+    method: "POST",
+    headers: { "apikey": KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(args || {})
+  });
+  if (!r.ok) throw new Error("Não consegui falar com o servidor (" + r.status + ").");
+  return await r.json();
+}
+function msg(onde, texto, tipo) {
+  el(onde).innerHTML = texto ? '<div class="aviso ' + tipo + '">' + texto + '</div>' : '';
+}
+function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
+function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function telas(qual) {
+  ['entrar','ambientes','ambiente','precos','prof'].forEach(t =>
+    el('tela-' + t).hidden = (t !== qual));
+  window.scrollTo(0,0);
+}
+
+/* ---------------- entrar e sair ---------------- */
+el('formEntrar').addEventListener('submit', async e => {
+  e.preventDefault();
+  const b = el('btEntrar'); b.disabled = true; b.textContent = 'Entrando...';
+  msg('erroLogin','');
+  try {
+    const r = await rpc('entrar', { p_codigo: el('codigo').value, p_senha: el('senha').value });
+    if (!r.ok) { msg('erroLogin', r.erro, 'erro'); }
+    else { EU = r; guardar(); entrou(); }
+  } catch (err) { msg('erroLogin', err.message, 'erro'); }
+  b.disabled = false; b.textContent = 'Entrar';
+});
+function guardar(){ try{ localStorage.setItem('cene_sessao', JSON.stringify(EU)); }catch(e){} }
+function entrou() {
+  el('eu').hidden = false; el('btSair').hidden = false;
+  el('eu').textContent = EU.codigo;
+  el('senha').value = '';
+  if (EU.papel === 'professor') { telas('prof'); carregarProf(); ligarAuto(); }
+  else if (EU.papel === 'preco') { telas('precos'); carregarPrecos(); }
+  else { telas('ambientes'); carregarAmbientes(); }
+}
+el('btSair').addEventListener('click', async () => {
+  try { await rpc('sair', { p_token: EU.token }); } catch(e){}
+  try { localStorage.removeItem('cene_sessao'); } catch(e){}
+  EU = null; clearInterval(timer);
+  el('eu').hidden = true; el('btSair').hidden = true;
+  el('codigo').value = ''; telas('entrar');
+});
+
+/* ---------------- lista de ambientes ---------------- */
+async function carregarAmbientes() {
+  try {
+    const r = await rpc('meus_ambientes', { p_token: EU.token });
+    if (!r.ok) return expirou(r.erro);
+    const lista = r.ambientes || [];
+    const feitos = lista.filter(a => a.concluido).length;
+    el('tituloLista').textContent = 'Grupo ' + EU.codigo;
+    el('subLista').textContent = EU.resumo + ' — ' + feitos + ' de ' + lista.length +
+      ' ambiente' + (lista.length===1?'':'s') + ' concluído' + (feitos===1?'':'s') + '.';
+    el('barraLista').style.width = lista.length ? (feitos/lista.length*100)+'%' : '0';
+    el('listaAmbientes').innerHTML = lista.map(a => {
+      const cls = a.concluido ? 'feito' : (a.itens > 0 ? 'andando' : '');
+      const ic  = a.concluido ? '✓' : (a.itens > 0 ? '•' : '');
+      const det = a.itens > 0
+        ? (a.itens + ' lançamento' + (a.itens===1?'':'s') + ' · ' + a.lampadas + ' lâmpadas')
+        : 'ainda sem lançamento';
+      return '<button class="amb ' + cls + '" data-id="' + a.id + '">' +
+             '<span class="n">' + String(a.ordem).padStart(2,'0') + '</span>' +
+             '<span class="t">' + a.nome + '<small>' + det + '</small></span>' +
+             '<span class="st">' + ic + '</span></button>';
+    }).join('');
+    if (feitos === lista.length && lista.length)
+      msg('avisoLista','Todos os ambientes do seu grupo estão concluídos. Pode avisar o professor.','bom');
+    else msg('avisoLista','');
+    document.querySelectorAll('#listaAmbientes .amb').forEach(b =>
+      b.addEventListener('click', () => abrirAmbiente(+b.dataset.id, lista)));
+  } catch (err) { msg('avisoLista', err.message, 'erro'); }
+}
+function expirou(e) {
+  msg('avisoLista', (e || 'Sessão expirada.') + ' Entre de novo.', 'erro');
+  try { localStorage.removeItem('cene_sessao'); } catch(x){}
+  EU = null; el('eu').hidden = true; el('btSair').hidden = true; telas('entrar');
+}
+
+/* ---------------- um ambiente ---------------- */
+const TIPOS = ['Lâmpada','Ventilador','Ar-condicionado','Computador','Monitor','Projetor',
+               'TV','Geladeira','Bebedouro','Impressora','Exaustor','Bomba','Refletor','Outro'];
+const POTS  = { 'Lâmpada':[15,18,20,32,40], 'Ventilador':[60,100,130],
+                'Ar-condicionado':[1000,1400,2000], 'Computador':[200,300],
+                'Monitor':[25,40], 'Projetor':[250,300], 'TV':[100,150],
+                'Geladeira':[150,250], 'Bebedouro':[70,100], 'Impressora':[300,500],
+                'Exaustor':[100,150], 'Bomba':[370,750], 'Refletor':[100,200,400], 'Outro':[] };
+function montarTipos() {
+  el('tipos').innerHTML = TIPOS.map(t =>
+    '<button type="button" data-t="' + t + '" aria-pressed="' + (t===TIPO) + '">' + t + '</button>').join('');
+  document.querySelectorAll('#tipos button').forEach(b =>
+    b.addEventListener('click', () => { TIPO = b.dataset.t; montarTipos(); chipsPot(); }));
+}
+function chipsPot() {
+  const l = POTS[TIPO] || [];
+  el('chipsPot').innerHTML = l.map(p => '<button type="button" data-p="' + p + '">' + p + ' W</button>').join('')
+    + '<button type="button" data-p="">não achei</button>';
+  document.querySelectorAll('#chipsPot button').forEach(b =>
+    b.addEventListener('click', () => { el('pot').value = b.dataset.p; }));
+}
+function chipsHoras() {
+  el('chipsH').innerHTML = [1,2,4,5,6,8,24].map(h =>
+    '<button type="button" data-h="' + h + '">' + h + ' h</button>').join('');
+  document.querySelectorAll('#chipsH button').forEach(b =>
+    b.addEventListener('click', () => { el('horas').value = b.dataset.h; }));
+}
+async function abrirAmbiente(id, lista) {
+  AMB = (lista || []).find(a => a.id === id) || { id: id, nome: '' };
+  el('tituloAmb').textContent = AMB.nome;
+  el('subAmb').textContent = 'Lance um equipamento de cada vez. Lâmpada por lâmpada, '
+    + 'contando as queimadas também.';
+  TIPO = 'Lâmpada'; montarTipos(); chipsPot(); chipsHoras();
+  el('qtd').value = 1; el('pot').value = ''; el('horas').value = ''; el('obs').value = '';
+  msg('avisoAmb','');
+  telas('ambiente');
+  await carregarItens();
+}
+async function carregarItens() {
+  try {
+    const r = await rpc('itens_do_ambiente', { p_token: EU.token, p_ambiente: AMB.id });
+    if (!r.ok) return msg('avisoAmb', r.erro, 'erro');
+    const its = r.itens || [];
+    el('listaItens').innerHTML = its.length ? its.map(i =>
+      '<div class="item"><span class="q">' + i.quantidade + '×</span>' +
+      '<span class="d">' + i.tipo +
+      '<small>' + (i.potencia_w != null ? i.potencia_w + ' W' : 'potência não identificada') +
+      (i.horas_dia != null ? ' · ' + i.horas_dia + ' h/dia' : '') +
+      (i.obs ? ' · ' + i.obs : '') + '</small></span>' +
+      '<button class="lixo" data-i="' + i.id + '">apagar</button></div>').join('')
+      : '<p class="ajuda">Nada lançado ainda.</p>';
+    document.querySelectorAll('#listaItens .lixo').forEach(b =>
+      b.addEventListener('click', async () => {
+        const rr = await rpc('del_item', { p_token: EU.token, p_item: +b.dataset.i });
+        if (!rr.ok) msg('avisoAmb', rr.erro, 'erro'); else carregarItens();
+      }));
+    el('btConcluir').textContent = AMB.concluido
+      ? 'Reabrir este ambiente' : 'Marcar este ambiente como concluído';
+    el('btConcluir').className = AMB.concluido ? 'btn sec' : 'btn ok';
+  } catch (err) { msg('avisoAmb', err.message, 'erro'); }
+}
+el('btAdd').addEventListener('click', async () => {
+  const b = el('btAdd'); b.disabled = true;
+  try {
+    const r = await rpc('add_item', {
+      p_token: EU.token, p_ambiente: AMB.id, p_tipo: TIPO,
+      p_quantidade: parseInt(el('qtd').value, 10),
+      p_potencia: num(el('pot').value), p_horas: num(el('horas').value),
+      p_obs: el('obs').value });
+    if (!r.ok) msg('avisoAmb', r.erro, 'erro');
+    else {
+      msg('avisoAmb', 'Lançado.', 'bom');
+      el('qtd').value = 1; el('pot').value = ''; el('obs').value = '';
+      await carregarItens();
+      setTimeout(() => msg('avisoAmb',''), 2500);
+    }
+  } catch (err) { msg('avisoAmb', err.message, 'erro'); }
+  b.disabled = false;
+});
+el('btConcluir').addEventListener('click', async () => {
+  const novo = !AMB.concluido;
+  const r = await rpc('concluir', { p_token: EU.token, p_ambiente: AMB.id, p_valor: novo });
+  if (!r.ok) return msg('avisoAmb', r.erro, 'erro');
+  AMB.concluido = novo;
+  el('btConcluir').textContent = novo ? 'Reabrir este ambiente' : 'Marcar este ambiente como concluído';
+  el('btConcluir').className = novo ? 'btn sec' : 'btn ok';
+  msg('avisoAmb', novo ? 'Ambiente concluído.' : 'Ambiente reaberto.', 'bom');
+});
+el('btVolta').addEventListener('click', () => { telas('ambientes'); carregarAmbientes(); });
+
+/* ---------------- preços ---------------- */
+el('btAddPreco').addEventListener('click', async () => {
+  const r = await rpc('add_preco', {
+    p_token: EU.token, p_loja: el('pLoja').value, p_produto: el('pProd').value,
+    p_potencia: num(el('pPot').value), p_preco: num(el('pPreco').value),
+    p_fonte: el('pFonte').value });
+  if (!r.ok) return msg('avisoPreco', r.erro, 'erro');
+  msg('avisoPreco', 'Preço lançado.', 'bom');
+  el('pLoja').value=''; el('pProd').value=''; el('pPreco').value=''; el('pFonte').value='';
+  carregarPrecos();
+});
+async function carregarPrecos() {
+  const r = await rpc('listar_precos', { p_token: EU.token });
+  if (!r.ok) return msg('avisoPreco', r.erro, 'erro');
+  const ps = r.precos || [];
+  el('listaPrecos').innerHTML = ps.length ? ps.map(p =>
+    '<div class="item"><span class="q">' + brl(+p.preco) + '</span>' +
+    '<span class="d">' + p.produto + '<small>' + p.loja +
+    (p.fonte ? ' · ' + p.fonte : '') + '</small></span>' +
+    '<button class="lixo" data-p="' + p.id + '">apagar</button></div>').join('')
+    : '<p class="ajuda">Nenhum preço lançado ainda.</p>';
+  document.querySelectorAll('#listaPrecos .lixo').forEach(b =>
+    b.addEventListener('click', async () => {
+      await rpc('del_preco', { p_token: EU.token, p_id: +b.dataset.p });
+      carregarPrecos();
+    }));
+}
+
+/* ---------------- professor ---------------- */
+function ligarAuto(){ clearInterval(timer); timer = setInterval(carregarProf, 30000); }
+el('btRecarregar').addEventListener('click', carregarProf);
+
+async function carregarProf() {
+  let r;
+  try { r = await rpc('resumo', { p_token: EU.token }); } catch (e) { return; }
+  if (!r.ok) return;
+  const P = {}; (r.parametros || []).forEach(p => P[p.chave] = +p.valor);
+  const feitos = +r.total_concluidos, tot = +r.total_ambientes;
+  const lamp = (r.grupos || []).reduce((s,g) => s + (+g.lampadas), 0);
+  const precos = (r.precos || []).map(p => +p.preco);
+  const precoMed = precos.length ? precos.reduce((a,b)=>a+b,0)/precos.length : P.preco_led;
+
+  el('kpis').innerHTML = [
+    ['<b>' + feitos + ' / ' + tot + '</b><span>ambientes concluídos</span>'],
+    ['<b>' + lamp + '</b><span>lâmpadas contadas</span>'],
+    ['<b>' + (r.grupos||[]).filter(g => +g.concluidos === +g.ambientes && +g.ambientes > 0).length +
+      ' / 8</b><span>grupos que fecharam</span>'],
+    ['<b>' + (precos.length ? brl(precoMed) : '—') + '</b><span>preço médio do LED</span>']
+  ].map(k => '<div class="kpi">' + k + '</div>').join('');
+
+  el('tabGrupos').innerHTML =
+    '<thead><tr><th>Grupo</th><th>Turma</th><th>Ambientes</th><th>Concluídos</th>' +
+    '<th>Lâmpadas</th><th>Situação</th></tr></thead><tbody>' +
+    (r.grupos||[]).map(g => {
+      const c = +g.concluidos, a = +g.ambientes;
+      const sit = a === 0 ? '—' : (c === 0 ? 'não começou' : (c < a ? 'em andamento' : 'concluído'));
+      return '<tr><td><b>' + g.codigo + '</b></td><td>' + g.turma + '</td>' +
+        '<td class="n">' + a + '</td><td class="n">' + c + '</td>' +
+        '<td class="n">' + g.lampadas + '</td><td>' + sit + '</td></tr>';
+    }).join('') + '</tbody>';
+
+  el('tabTipos').innerHTML = (r.tipos||[]).length
+    ? '<thead><tr><th>Equipamento</th><th>Quantidade</th><th>Potência somada</th></tr></thead><tbody>' +
+      r.tipos.map(t => '<tr><td>' + t.tipo + '</td><td class="n">' + t.quantidade +
+        '</td><td class="n">' + (+t.watts).toLocaleString('pt-BR') + ' W</td></tr>').join('') + '</tbody>'
+    : '<tbody><tr><td>Nenhum equipamento lançado ainda.</td></tr></tbody>';
+
+  el('tabPrecos').innerHTML = (r.precos||[]).length
+    ? '<thead><tr><th>Loja</th><th>Produto</th><th>Preço</th></tr></thead><tbody>' +
+      r.precos.map(p => '<tr><td>' + p.loja + '</td><td>' + p.produto +
+        '</td><td class="n">' + brl(+p.preco) + '</td></tr>').join('') + '</tbody>'
+    : '<tbody><tr><td>Nenhum preço pesquisado ainda.</td></tr></tbody>';
+
+  montarParecer(r, P, lamp, precoMed, feitos, tot, precos.length);
+}
+
+function montarParecer(r, P, lamp, precoLed, feitos, tot, qtdPrecos) {
+  const falta = [];
+  if (feitos < tot) falta.push((tot - feitos) + ' ambiente(s) ainda não concluído(s)');
+  if (!qtdPrecos) falta.push('nenhum preço de LED pesquisado');
+  el('avisoParecer').textContent = falta.length
+    ? 'Parcial — ' + falta.join('; ') + '. Os números mudam conforme os grupos lançam.'
+    : 'Inventário completo e preço pesquisado. Este parecer está pronto para o ofício.';
+
+  if (!lamp) { el('parecer').innerHTML = '<p>Assim que o primeiro grupo lançar as lâmpadas, '
+    + 'o parecer aparece aqui com os números reais.</p>'; return; }
+
+  // lampadas que valem troca: as de potencia maior que a do LED
+  const trocaveis = (r.potencias||[])
+    .filter(p => p.potencia_w != null && +p.potencia_w > P.pot_led)
+    .reduce((s,p) => s + (+p.quantidade), 0);
+  const semPot = (r.potencias||[])
+    .filter(p => p.potencia_w == null).reduce((s,p) => s + (+p.quantidade), 0);
+
+  const linhas = [];
+  const cen = [4,5,6,7,8].map(h => {
+    const ec = (P.pot_atual - P.pot_led)/1000 * h * P.dias_mes * P.tarifa;
+    return { h: h, ec: ec, meses: precoLed / ec };
+  });
+  const base = cen.find(c => c.h === P.horas_dia) || cen[2];
+  const invest = trocaveis * precoLed;
+  const econMes = trocaveis * base.ec;
+
+  // troca em lotes: S(m) = a m^2 + b m
+  const a = P.lote_mes * base.ec / 2;
+  const b = P.lote_mes * base.ec / 2 - P.lote_mes * precoLed;
+  const vert = -b / (2*a);
+  const mesesTroca = Math.ceil(trocaveis / P.lote_mes);
+  let saldo = 0, trocadas = 0, pago = null;
+  for (let m = 1; m <= 60 && pago === null; m++) {
+    const novas = Math.min(P.lote_mes, trocaveis - trocadas); trocadas += novas;
+    saldo += trocadas * base.ec - novas * precoLed;
+    if (saldo > 0) pago = m;
+  }
+
+  linhas.push('<h4>1. O que foi levantado</h4><p>Os estudantes percorreram <b>' + tot +
+    ' ambientes</b> da escola e registraram <b>' + lamp + ' pontos de luz</b>. Desses, <b>' +
+    trocaveis + '</b> têm potência acima da do LED e entram no cálculo da troca.' +
+    (semPot ? ' Outros ' + semPot + ' ficaram sem potência identificada e foram deixados de fora.' : '') +
+    '</p>');
+
+  linhas.push('<h4>2. Economia estimada</h4><p>Trocando uma lâmpada de ' + P.pot_atual +
+    ' W por uma de ' + P.pot_led + ' W, com ' + P.horas_dia + ' horas de uso por dia e ' +
+    P.dias_mes + ' dias letivos no mês, a economia é de <b>' + brl(base.ec) +
+    ' por lâmpada por mês</b>. Para as ' + trocaveis + ' lâmpadas, <b>' + brl(econMes) +
+    ' por mês</b>, ou ' + brl(econMes*12) + ' por ano. Tarifa usada: ' +
+    brl(P.tarifa) + ' por kWh.</p>');
+
+  linhas.push('<h4>3. Investimento e retorno</h4><p>Ao preço de <b>' + brl(precoLed) +
+    '</b> por lâmpada' + (qtdPrecos ? ' (média de ' + qtdPrecos + ' loja' + (qtdPrecos===1?'':'s') +
+    ' pesquisada' + (qtdPrecos===1?'':'s') + ')' : ' (valor de referência, ainda sem pesquisa)') +
+    ', a troca completa custa <b>' + brl(invest) + '</b> e se paga em <b>' +
+    base.meses.toFixed(1).replace('.',',') + ' meses</b>. Trocando ' + P.lote_mes +
+    ' lâmpadas por mês, a troca leva ' + mesesTroca + ' meses e o saldo fica positivo no mês <b>' +
+    (pago || '—') + '</b>, com o pior momento de caixa no mês ' +
+    vert.toFixed(1).replace('.',',') + '.</p>');
+
+  linhas.push('<h4>4. Como a resposta muda com as horas de uso</h4>' +
+    '<div class="rol"><table><thead><tr><th>Horas por dia</th><th>Economia por lâmpada</th>' +
+    '<th>Troca se paga em</th></tr></thead><tbody>' +
+    cen.map(c => '<tr' + (c.h === P.horas_dia ? ' style="font-weight:700"' : '') +
+      '><td class="n">' + c.h + ' h</td><td class="n">' + brl(c.ec) + '</td>' +
+      '<td class="n">' + c.meses.toFixed(1).replace('.',',') + ' meses</td></tr>').join('') +
+    '</tbody></table></div>' +
+    '<p>Não há medição de quanto tempo cada luz fica acesa, então a resposta é apresentada ' +
+    'como faixa. Em todos os cenários a troca se paga em menos de um ano e meio.</p>');
+
+  linhas.push('<h4>5. Pedido</h4><p>Solicitamos visita técnica para avaliação de viabilidade e ' +
+    'a inclusão desta unidade escolar em programa de eficiência energética, nos termos da ' +
+    'Lei nº 9.991/2000, que destina percentual da receita das distribuidoras a ações de ' +
+    'eficiência no uso final.</p>');
+
+  linhas.push('<h4>6. Como os dados foram levantados</h4><p>Contagem direta, ponto a ponto, ' +
+    'feita por ' + (r.grupos||[]).length + ' grupos de estudantes da 1ª série do Ensino Médio, ' +
+    'com registro em caderno de campo e conferência por um segundo integrante. ' +
+    'Este levantamento é uma estimativa escolar e não substitui diagnóstico energético ' +
+    'de engenharia.</p>');
+
+  el('parecer').innerHTML = linhas.join('');
+}
+
+el('btCopiar').addEventListener('click', async () => {
+  const t = el('parecer').innerText;
+  try { await navigator.clipboard.writeText(t); el('btCopiar').textContent = 'Copiado'; }
+  catch (e) {
+    const r = document.createRange(); r.selectNodeContents(el('parecer'));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    el('btCopiar').textContent = 'Selecionado — use copiar';
+  }
+  setTimeout(() => el('btCopiar').textContent = 'Copiar o parecer', 2500);
+});
+
+/* ---------------- início ---------------- */
+montarTipos(); chipsPot(); chipsHoras();
+try {
+  const s = localStorage.getItem('cene_sessao');
+  if (s) { EU = JSON.parse(s); entrou(); }
+} catch (e) {}
+</script>
+</body>
+</html>
