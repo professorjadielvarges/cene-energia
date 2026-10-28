@@ -5,163 +5,259 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Inventário de Energia · CENE</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
+/* Inventário de Energia · CENE
+   Identidade: painel de instrumentos de medição — números em primeiro plano,
+   superfícies claras sobre papel quente, azul-noite para estrutura e âmbar
+   para o que ainda pede atenção. Dados sempre em monoespaçada. */
 :root{
-  --papel:#FBFAF6; --papel2:#F2F0E8; --tinta:#1A1E18; --tinta2:#5E665B;
-  --linha:#D8D6CB; --azul:#2E3D8F; --azul2:#E9ECF8;
-  --ambar:#C8832A; --ambar2:#FBF1DE; --verde:#36704A; --verde2:#E6F0E6;
-  --vermelho:#A8352B; --vermelho2:#FBEAE8;
-  --d:"Archivo",system-ui,-apple-system,sans-serif;
-  --m:"IBM Plex Mono",ui-monospace,monospace;
+  --papel:#F7F6F2; --sup:#FFFFFF; --sup2:#F1EFE9;
+  --tinta:#14161C; --tinta2:#6A7080; --tinta3:#9AA0AE;
+  --linha:#E3E0D8; --linha2:#CFCBC0;
+  --azul:#1F3A93; --azul-sup:#EDF0FA; --azul-forte:#16286A;
+  --ambar:#9A5B0C; --ambar-sup:#FBF0DF;
+  --verde:#1C6B3C; --verde-sup:#E6F1E8;
+  --verm:#A32019; --verm-sup:#FBEBE9;
+  --sombra:0 1px 2px rgba(20,22,28,.05), 0 4px 14px rgba(20,22,28,.05);
+  --sombra2:0 2px 4px rgba(20,22,28,.07), 0 12px 30px rgba(20,22,28,.09);
+  --r:10px; --r2:7px;
+  --d:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --c:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --m:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
-  --papel:#14160F; --papel2:#1D2018; --tinta:#E9E7DD; --tinta2:#9BA294;
-  --linha:#333629; --azul:#A8B6F0; --azul2:#1E2340;
-  --ambar:#E8B256; --ambar2:#32280F; --verde:#8CC79C; --verde2:#182A1C;
-  --vermelho:#E89086; --vermelho2:#3A1C18;
+  --papel:#0D0F14; --sup:#161920; --sup2:#1D2029;
+  --tinta:#ECEDF1; --tinta2:#9BA2B2; --tinta3:#6E7585;
+  --linha:#262A34; --linha2:#363B47;
+  --azul:#9DB2F5; --azul-sup:#17203A; --azul-forte:#C3D0FA;
+  --ambar:#E0A64E; --ambar-sup:#2C2110;
+  --verde:#7FC79B; --verde-sup:#122418;
+  --verm:#E89189; --verm-sup:#2C1512;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  --sombra2:0 2px 4px rgba(0,0,0,.5), 0 12px 30px rgba(0,0,0,.45);
   color-scheme:dark;
 }}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:var(--papel);color:var(--tinta);font-family:var(--d);
-  font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
-.gut{padding-left:max(16px,env(safe-area-inset-left,0px));
-     padding-right:max(16px,env(safe-area-inset-right,0px))}
-.col{max-width:760px;margin:0 auto}
+body{background:var(--papel);color:var(--tinta);font-family:var(--c);
+  font-size:15.5px;line-height:1.55;-webkit-text-size-adjust:100%;
+  -webkit-font-smoothing:antialiased}
+.gut{padding-left:max(18px,env(safe-area-inset-left,0px));
+     padding-right:max(18px,env(safe-area-inset-right,0px))}
+.col{max-width:780px;margin:0 auto}
+body.prof .col{max-width:1180px}
 [hidden]{display:none!important}
-h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance}
-p{margin:0 0 .7em}
-button{font-family:var(--d);cursor:pointer}
-input,select{font-family:var(--d);font-size:16px}
+h1,h2,h3,h4{margin:0;line-height:1.18;font-family:var(--d);letter-spacing:-.018em;
+  text-wrap:balance}
+p{margin:0 0 .75em}
+button{font-family:var(--c);cursor:pointer}
+input,select{font-family:var(--c);font-size:16px}
+::selection{background:var(--azul-sup);color:var(--azul-forte)}
 
-header{background:var(--papel2);border-bottom:1px solid var(--linha);
-  padding-top:env(safe-area-inset-top,0px)}
-.hd{display:flex;align-items:center;gap:10px;padding-block:12px;flex-wrap:wrap}
-.hd h1{font-size:1.05rem;font-weight:800;flex:1;min-width:0}
-.hd .eu{font-family:var(--m);font-size:.78rem;background:var(--azul2);color:var(--azul);
-  border:1px solid var(--azul);border-radius:999px;padding:3px 10px;font-weight:600;white-space:nowrap}
-.sai{background:none;border:1px solid var(--vermelho);color:var(--vermelho);
-  border-radius:4px;padding:5px 12px;font-size:.82rem;font-weight:700}
-main{padding-block:22px 80px}
+/* ---------- cabeçalho ---------- */
+header{background:var(--sup);border-bottom:1px solid var(--linha);
+  padding-top:env(safe-area-inset-top,0px);position:sticky;top:0;z-index:30;
+  box-shadow:0 1px 0 rgba(20,22,28,.02)}
+.hd{display:flex;align-items:center;gap:12px;padding-block:14px;flex-wrap:wrap}
+.hd h1{font-size:1.02rem;font-weight:800;flex:1;min-width:0;letter-spacing:-.02em}
+.hd h1 i{display:block;font-style:normal;font-family:var(--c);font-size:.7rem;
+  font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta3);
+  margin-top:3px}
+.eu{font-family:var(--m);font-size:.73rem;background:var(--azul-sup);color:var(--azul);
+  border-radius:999px;padding:5px 12px;font-weight:600;white-space:nowrap;
+  max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+.sai{background:none;border:1px solid var(--linha2);color:var(--tinta2);
+  border-radius:var(--r2);padding:6px 13px;font-size:.8rem;font-weight:600;
+  transition:border-color .15s,color .15s}
+.sai:hover{border-color:var(--verm);color:var(--verm)}
+main{padding-block:26px 90px}
 
-.cx{background:var(--papel2);border:1px solid var(--linha);border-radius:6px;padding:20px;
-  margin-bottom:16px}
-label{display:block;font-size:.78rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.05em;color:var(--tinta2);margin-bottom:5px}
+/* ---------- blocos ---------- */
+.cx{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r);
+  padding:22px;margin-bottom:16px;box-shadow:var(--sombra)}
+label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--tinta2);margin-bottom:6px}
 input[type=text],input[type=password],input[type=number],select{
-  width:100%;padding:12px;border:1px solid var(--linha);border-radius:5px;
-  background:var(--papel);color:var(--tinta)}
-input:focus,select:focus{outline:2px solid var(--azul);outline-offset:-1px}
-.campo{margin-bottom:14px}
-.btn{width:100%;padding:14px;border:0;border-radius:5px;background:var(--azul);
-  color:#fff;font-weight:700;font-size:1rem}
-.btn:disabled{opacity:.5}
-.btn.sec{background:none;border:1px solid var(--linha);color:var(--tinta)}
+  width:100%;padding:11px 13px;border:1px solid var(--linha2);border-radius:var(--r2);
+  background:var(--papel);color:var(--tinta);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:0;border-color:var(--azul);
+  box-shadow:0 0 0 3px var(--azul-sup)}
+.campo{margin-bottom:15px}
+.btn{width:100%;padding:13px 18px;border:0;border-radius:var(--r2);background:var(--azul);
+  color:#fff;font-weight:700;font-size:.97rem;letter-spacing:-.01em;
+  transition:background .15s,transform .06s,box-shadow .15s;box-shadow:var(--sombra)}
+.btn:hover{background:var(--azul-forte)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn.sec{background:var(--sup);border:1px solid var(--linha2);color:var(--tinta);
+  box-shadow:none}
+.btn.sec:hover{background:var(--sup2);border-color:var(--tinta3)}
 .btn.ok{background:var(--verde)}
-.btn.peq{width:auto;padding:9px 16px;font-size:.88rem}
-.aviso{border-radius:5px;padding:11px 14px;margin-bottom:14px;font-size:.92rem;
-  border:1px solid}
-.aviso.erro{background:var(--vermelho2);border-color:var(--vermelho);color:var(--vermelho)}
-.aviso.bom{background:var(--verde2);border-color:var(--verde);color:var(--verde)}
-.aviso.info{background:var(--ambar2);border-color:var(--ambar);color:var(--ambar)}
+.btn.ok:hover{filter:brightness(1.1)}
+.btn.peq{width:auto;padding:9px 16px;font-size:.86rem}
+.aviso{border-radius:var(--r2);padding:12px 15px;margin-bottom:15px;font-size:.9rem;
+  border:1px solid;display:flex;gap:9px;align-items:flex-start;line-height:1.45}
+.aviso::before{font-weight:700;flex:none}
+.aviso.erro{background:var(--verm-sup);border-color:var(--verm);color:var(--verm)}
+.aviso.erro::before{content:"!"}
+.aviso.bom{background:var(--verde-sup);border-color:var(--verde);color:var(--verde)}
+.aviso.bom::before{content:"✓"}
+.aviso.info{background:var(--ambar-sup);border-color:var(--ambar);color:var(--ambar)}
+.aviso.info::before{content:"i"}
 
-.amb{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
-  background:var(--papel2);border:1px solid var(--linha);border-left-width:5px;
-  border-left-color:var(--linha);border-radius:5px;padding:14px;margin-bottom:9px;
-  color:var(--tinta);font-size:1rem}
-.amb.feito{border-left-color:var(--verde);background:var(--verde2)}
-.amb.andando{border-left-color:var(--ambar);background:var(--ambar2)}
-.amb .n{font-family:var(--m);font-size:.82rem;color:var(--tinta2);font-weight:600}
-.amb .t{flex:1;min-width:0;font-weight:700}
-.amb .t small{display:block;font-weight:400;font-size:.78rem;color:var(--tinta2);
-  font-family:var(--m);margin-top:2px}
-.amb .st{font-size:1.3rem;line-height:1}
+/* ---------- lista de ambientes ---------- */
+.amb{display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--sup);border:1px solid var(--linha);border-left:4px solid var(--linha2);
+  border-radius:var(--r2);padding:15px 16px;margin-bottom:9px;color:var(--tinta);
+  font-size:.97rem;box-shadow:var(--sombra);transition:transform .1s,box-shadow .15s,border-color .15s}
+.amb:hover{box-shadow:var(--sombra2);transform:translateY(-1px)}
+.amb.feito{border-left-color:var(--verde);background:var(--verde-sup)}
+.amb.andando{border-left-color:var(--ambar);background:var(--ambar-sup)}
+.amb .n{font-family:var(--m);font-size:.78rem;color:var(--tinta3);font-weight:600;flex:none}
+.amb .t{flex:1;min-width:0;font-weight:600;letter-spacing:-.01em}
+.amb .t small{display:block;font-weight:400;font-size:.76rem;color:var(--tinta2);
+  font-family:var(--m);margin-top:3px;letter-spacing:0}
+.amb .st{font-size:1.15rem;line-height:1;flex:none;color:var(--tinta3)}
+.amb.feito .st{color:var(--verde)} .amb.andando .st{color:var(--ambar)}
 
-.volta{background:none;border:0;color:var(--azul);font-weight:700;font-size:.9rem;
-  padding:4px 0;margin-bottom:12px}
+/* ---------- formulário do ambiente ---------- */
+.volta{background:none;border:0;color:var(--azul);font-weight:600;font-size:.88rem;
+  padding:6px 0;margin-bottom:14px}
+.volta:hover{text-decoration:underline}
 .tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:7px;
-  margin-bottom:14px}
-.tipos button{padding:11px 6px;border:1px solid var(--linha);border-radius:5px;
-  background:var(--papel);color:var(--tinta);font-size:.84rem;font-weight:600}
-.tipos button[aria-pressed=true]{background:var(--azul);color:#fff;border-color:var(--azul)}
-.dupla{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
-.chips button{padding:6px 11px;border:1px solid var(--linha);border-radius:999px;
-  background:var(--papel);color:var(--tinta2);font-size:.8rem;font-family:var(--m)}
-.chips button:hover{border-color:var(--azul);color:var(--azul)}
+  margin-bottom:16px}
+.tipos button{padding:11px 7px;border:1px solid var(--linha2);border-radius:var(--r2);
+  background:var(--papel);color:var(--tinta2);font-size:.82rem;font-weight:600;
+  transition:all .13s}
+.tipos button:hover{border-color:var(--azul);color:var(--azul)}
+.tipos button[aria-pressed=true]{background:var(--azul);color:#fff;border-color:var(--azul);
+  box-shadow:var(--sombra)}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{padding:5px 11px;border:1px solid var(--linha);border-radius:999px;
+  background:var(--papel);color:var(--tinta2);font-size:.77rem;font-family:var(--m);
+  transition:all .13s}
+.chips button:hover{border-color:var(--azul);color:var(--azul);background:var(--azul-sup)}
+.item{display:flex;align-items:center;gap:13px;padding:13px 0;
+  border-top:1px solid var(--linha)}
+.item .q{font-family:var(--m);font-weight:600;color:var(--azul);font-size:1rem;
+  min-width:32px;flex:none}
+.item .d{flex:1;min-width:0;font-size:.92rem}
+.item .d small{display:block;color:var(--tinta2);font-size:.77rem;font-family:var(--m);
+  margin-top:2px}
+.lixo{background:none;border:1px solid var(--linha2);color:var(--tinta2);
+  border-radius:var(--r2);padding:6px 11px;font-size:.76rem;font-weight:600;flex:none;
+  transition:all .13s}
+.lixo:hover{border-color:var(--verm);color:var(--verm);background:var(--verm-sup)}
 
-.item{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--linha)}
-.item .q{font-family:var(--m);font-weight:600;color:var(--azul);font-size:1rem;min-width:30px}
-.item .d{flex:1;min-width:0;font-size:.93rem}
-.item .d small{display:block;color:var(--tinta2);font-size:.78rem;font-family:var(--m)}
-.lixo{background:none;border:1px solid var(--vermelho);color:var(--vermelho);
-  border-radius:4px;padding:5px 10px;font-size:.78rem;font-weight:700}
+/* ---------- tabelas ---------- */
+.rol{overflow-x:auto;border:1px solid var(--linha);border-radius:var(--r);
+  margin-bottom:20px;background:var(--sup);box-shadow:var(--sombra)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;table-layout:auto}
+/* Valores sempre centralizados. A esquerda fica so o que nomeia a linha:
+   a primeira coluna, .nome (texto curto) e .cresce (texto que quebra linha). */
+th,td{padding:11px 14px;text-align:center;border-bottom:1px solid var(--linha);
+  white-space:nowrap;width:1px}
+th:first-child,td:first-child{text-align:left}
+th.cresce,td.cresce{width:auto;white-space:normal;min-width:16ch;text-align:left}
+th.nome,td.nome{text-align:left}
+td.nd{color:var(--tinta3);white-space:normal;padding:26px 14px}
+th{font-family:var(--d);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--tinta2);background:var(--sup2);font-weight:700;position:sticky;top:0}
+td.n{font-family:var(--m);font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--sup2)}
+tbody tr.alerta{background:var(--verm-sup)}
+tbody tr.alerta td:first-child{box-shadow:inset 3px 0 0 var(--verm);font-weight:600}
+tbody tr.alerta:hover{background:var(--verm-sup);filter:brightness(.98)}
 
-table{width:100%;border-collapse:collapse;font-size:.88rem}
-th,td{padding:8px 9px;text-align:left;border-bottom:1px solid var(--linha)}
-th{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta2);
-  background:var(--papel2)}
-td.n{font-family:var(--m);text-align:right;font-variant-numeric:tabular-nums}
-.rol{overflow-x:auto;border:1px solid var(--linha);border-radius:5px;margin-bottom:16px}
-.barra{height:7px;background:var(--linha);border-radius:4px;overflow:hidden;margin-top:6px}
-.barra i{display:block;height:100%;background:var(--verde)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:11px;
-  margin-bottom:18px}
-.kpi{border:1px solid var(--linha);border-radius:5px;padding:13px}
-.kpi b{display:block;font-family:var(--m);font-size:1.5rem;color:var(--azul);font-weight:600}
-.kpi span{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--tinta2)}
-h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
-  border-bottom:2px solid var(--linha)}
-.ajuda{font-size:.85rem;color:var(--tinta2);margin-top:-6px;margin-bottom:14px}
-.parecer{background:var(--papel2);border:1px solid var(--linha);border-radius:6px;padding:20px;
-  font-size:.93rem;line-height:1.6}
-.parecer h4{font-family:var(--d);font-size:.95rem;margin:16px 0 6px}
+/* ---------- indicadores ---------- */
+.barra{height:6px;background:var(--linha);border-radius:3px;overflow:hidden;margin-top:8px}
+.barra i{display:block;height:100%;background:var(--verde);transition:width .3s ease}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:13px;
+  margin-bottom:10px}
+.kpi{border:1px solid var(--linha);border-radius:var(--r);padding:17px 18px;
+  background:var(--sup);box-shadow:var(--sombra)}
+.kpi b{display:block;font-family:var(--m);font-size:1.75rem;color:var(--azul);
+  font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1}
+.kpi span{display:block;font-family:var(--d);font-size:.68rem;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tinta2);margin-top:7px;font-weight:600}
+h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
+  border-bottom:1px solid var(--linha);letter-spacing:-.015em}
+.ajuda{font-size:.87rem;color:var(--tinta2);margin:-4px 0 16px;line-height:1.5}
+.parecer{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r);
+  padding:26px;font-size:.93rem;line-height:1.68;box-shadow:var(--sombra)}
+.parecer h4{font-size:.95rem;margin:22px 0 7px;color:var(--azul)}
 .parecer h4:first-child{margin-top:0}
-@media(max-width:440px){.dupla{grid-template-columns:1fr}}
+.parecer .rol{margin:12px 0 14px}
 
-/* ---- cards dos grupos ---- */
-.cards{display:grid;gap:13px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
-  margin-bottom:8px}
-.gcard{border:1px solid var(--linha);border-radius:6px;overflow:hidden;background:var(--papel2);
-  border-top:4px solid var(--azul);display:flex;flex-direction:column}
-.gcard.vazio{border-top-color:var(--vermelho);opacity:.92}
+/* ---------- cards dos grupos ---------- */
+.cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));
+  margin-bottom:10px}
+.gcard{border:1px solid var(--linha);border-radius:var(--r);overflow:hidden;
+  background:var(--sup);display:flex;flex-direction:column;box-shadow:var(--sombra);
+  border-top:3px solid var(--azul);transition:box-shadow .15s}
+.gcard:hover{box-shadow:var(--sombra2)}
+.gcard.vazio{border-top-color:var(--verm)}
 .gcard.semcampo{border-top-color:var(--ambar)}
-.gcard .top{padding:11px 13px 9px;border-bottom:1px solid var(--linha)}
+.gcard .top{padding:14px 16px 12px;border-bottom:1px solid var(--linha);
+  background:var(--sup2)}
 .gcard .cab{display:flex;align-items:baseline;gap:10px}
-.gcard .cod{font-size:1.25rem;font-weight:800;color:var(--azul);line-height:1}
-.gcard .qtamb{margin-left:auto;font-family:var(--m);font-size:.74rem;color:var(--tinta2);
+.gcard .cod{font-family:var(--d);font-size:1.3rem;font-weight:800;color:var(--azul);
+  line-height:1;letter-spacing:-.03em}
+.gcard .qtamb{margin-left:auto;font-family:var(--m);font-size:.72rem;color:var(--tinta3);
   white-space:nowrap}
-.gcard .res{font-size:.8rem;color:var(--tinta2);margin-top:6px;line-height:1.35}
+.gcard .res{font-size:.79rem;color:var(--tinta2);margin-top:7px;line-height:1.4}
 .gcard .gente{list-style:none;margin:0;padding:0;flex:1}
-.gcard .gente li{display:flex;align-items:center;gap:7px;padding:7px 10px 7px 13px;
+.gcard .gente li{display:flex;align-items:center;gap:8px;padding:9px 12px 9px 16px;
   border-bottom:1px solid var(--linha)}
-.gcard .nm{flex:1;min-width:0;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;
+.gcard .gente li:last-child{border-bottom:0}
+.gcard .nm{flex:1;min-width:0;font-size:.87rem;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
-.gcard select{width:auto;padding:4px 6px;font-size:.76rem;border-radius:4px;flex:none}
-.gcard .x{background:none;border:0;color:var(--vermelho);font-size:1rem;line-height:1;
-  padding:3px 5px;flex:none;font-weight:700}
-.gcard .nada{padding:15px 13px;font-size:.85rem;color:var(--tinta2);flex:1}
-.gcard .pe{padding:8px 13px;font-family:var(--m);font-size:.74rem;display:flex;
-  flex-wrap:wrap;gap:4px 9px;border-top:1px solid var(--linha)}
-.gcard .pe b{font-weight:600}
-.pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:.72rem;
-  font-family:var(--d);font-weight:700}
-.pill.c{background:var(--azul2);color:var(--azul)}
-.pill.k{background:var(--verde2);color:var(--verde)}
-.pill.f{background:var(--ambar2);color:var(--ambar)}
-.pill.p{background:var(--papel);color:var(--tinta2);border:1px solid var(--linha)}
-.pill.erro{background:var(--vermelho2);color:var(--vermelho)}
-.secao-turma{font-family:var(--d);font-size:.74rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.06em;color:var(--tinta2);margin:18px 0 9px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.gcard select{width:auto;padding:4px 7px;font-size:.75rem;border-radius:5px;flex:none;
+  border-color:var(--linha)}
+.gcard .x{background:none;border:0;color:var(--tinta3);font-size:.95rem;line-height:1;
+  padding:4px 6px;flex:none;font-weight:700;border-radius:5px;transition:all .13s}
+.gcard .x:hover{color:var(--verm);background:var(--verm-sup)}
+.gcard .nada{padding:22px 16px;font-size:.84rem;color:var(--tinta3);flex:1;
+  text-align:center}
+.gcard .pe{padding:11px 16px;display:flex;flex-wrap:wrap;gap:6px;
+  border-top:1px solid var(--linha);background:var(--sup2)}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.71rem;
+  font-family:var(--d);font-weight:700;letter-spacing:.01em}
+.pill.c{background:var(--azul-sup);color:var(--azul)}
+.pill.k{background:var(--verde-sup);color:var(--verde)}
+.pill.f{background:var(--ambar-sup);color:var(--ambar)}
+.pill.p{background:var(--sup);color:var(--tinta2);border:1px solid var(--linha2)}
+.pill.erro{background:var(--verm-sup);color:var(--verm)}
+
+/* ---------- abas ---------- */
+.abas{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--linha);
+  margin-bottom:24px;scrollbar-width:none}
+.abas::-webkit-scrollbar{display:none}
+.abas button{font-family:var(--d);font-size:.87rem;font-weight:700;white-space:nowrap;
+  background:none;border:0;border-bottom:2px solid transparent;color:var(--tinta2);
+  padding:12px 15px;margin-bottom:-1px;letter-spacing:-.01em;transition:color .15s}
+.abas button[aria-selected="true"]{color:var(--azul);border-bottom-color:var(--azul)}
+.abas button:hover{color:var(--tinta)}
+.abas button:focus-visible{outline:2px solid var(--azul);outline-offset:-3px}
+
+@media(max-width:460px){
+  .dupla{grid-template-columns:1fr}
+  .cx{padding:18px}
+  .parecer{padding:20px}
+  th,td{padding:10px 12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 
 <header class="gut"><div class="col hd">
-  <h1>Inventário de Energia · CENE</h1>
+  <h1>Inventário de Energia<i>CE de Nova Esperança · Feira de Ciências 2026</i></h1>
   <span class="eu" id="eu" hidden></span>
   <button class="sai" id="btSair" hidden>Sair</button>
 </div></header>
@@ -310,46 +406,56 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     <div id="listaPrecos"></div>
   </section>
 
-  <!-- MONTAGEM DOS GRUPOS -->
-  <section id="tela-montar" hidden>
-    <button class="volta" id="btVoltaPainel">← voltar para o acompanhamento</button>
-    <h2 style="font-size:1.15rem">Montar os grupos</h2>
-    <p class="ajuda">Para cada aluno, escolha o grupo e o papel. Quem ficar sem grupo
-    aparece no fim da lista. Grupo pode ter 3, 4, 5 alunos — o que vocês combinarem.</p>
-    <div id="avisoMontar"></div>
-    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-      <button class="btn peq" id="btT1A">1ª série A</button>
-      <button class="btn peq sec" id="btT1B">1ª série B</button>
-    </div>
-    <div id="cards"></div>
-    <h3 class="sec" id="tituloSemGrupo">Sem grupo</h3>
-    <p class="ajuda">Escolha o grupo de cada um. Entra como campo; depois é só trocar a
-    função dentro do card do grupo.</p>
-    <div id="listaTurma"></div>
-  </section>
-
   <!-- PROFESSOR -->
   <section id="tela-prof" hidden>
-    <div style="margin-bottom:12px"><button class="btn peq" id="btMontar">Montar os grupos</button></div>
-    <h2 style="font-size:1.15rem">Acompanhamento</h2>
-    <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
+    <nav class="abas" id="abas">
+      <button data-ab="geral" aria-selected="true">Visão geral</button>
+      <button data-ab="grupos" aria-selected="false">Grupos</button>
+      <button data-ab="dados" aria-selected="false">Lançamentos</button>
+      <button data-ab="part" aria-selected="false">Participação</button>
+      <button data-ab="parecer" aria-selected="false">Parecer</button>
+    </nav>
     <div id="avisoProf"></div>
-    <div class="kpis" id="kpis"></div>
-    <h3 class="sec">Etapa de cada grupo</h3>
-    <div class="rol"><table id="tabGrupos"></table></div>
-    <h3 class="sec">O que já foi contado</h3>
-    <div class="rol"><table id="tabTipos"></table></div>
-    <h3 class="sec">Preços pesquisados</h3>
-    <div class="rol"><table id="tabPrecos"></table></div>
-    <h3 class="sec">Participação de cada aluno</h3>
-    <p class="ajuda" id="ajudaPart"></p>
-    <div class="rol"><table id="tabPart"></table></div>
-    <h3 class="sec">Parecer técnico</h3>
-    <p class="ajuda" id="avisoParecer"></p>
-    <div class="parecer" id="parecer"></div>
-    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn peq sec" id="btCopiar">Copiar o parecer</button>
-      <button class="btn peq sec" id="btRecarregar">Atualizar agora</button>
+
+    <div class="pag" id="ab-geral">
+      <div class="kpis" id="kpis"></div>
+      <h3 class="sec">Etapa de cada grupo</h3>
+      <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
+      <div class="rol"><table id="tabGrupos"></table></div>
+    </div>
+
+    <div class="pag" id="ab-grupos" hidden>
+      <p class="ajuda">Cada card é um grupo. Troque a função ao lado do nome; o ✕ tira do
+      grupo. Quem ainda não entrou aparece embaixo.</p>
+      <div id="avisoMontar"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn peq" id="btT1A">1ª série A</button>
+        <button class="btn peq sec" id="btT1B">1ª série B</button>
+      </div>
+      <div id="cards"></div>
+      <h3 class="sec" id="tituloSemGrupo">Sem grupo</h3>
+      <div id="listaTurma"></div>
+    </div>
+
+    <div class="pag" id="ab-dados" hidden>
+      <h3 class="sec" style="margin-top:4px">O que já foi contado</h3>
+      <div class="rol"><table id="tabTipos"></table></div>
+      <h3 class="sec">Preços pesquisados</h3>
+      <div class="rol"><table id="tabPrecos"></table></div>
+    </div>
+
+    <div class="pag" id="ab-part" hidden>
+      <p class="ajuda" id="ajudaPart"></p>
+      <div class="rol"><table id="tabPart"></table></div>
+    </div>
+
+    <div class="pag" id="ab-parecer" hidden>
+      <p class="ajuda" id="avisoParecer"></p>
+      <div class="parecer" id="parecer"></div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn peq sec" id="btCopiar">Copiar o parecer</button>
+        <button class="btn peq sec" id="btRecarregar">Atualizar agora</button>
+      </div>
     </div>
   </section>
 
@@ -378,8 +484,9 @@ function msg(onde, texto, tipo) {
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
-  ['entrar','eusou','ambientes','ambiente','precos','prof','montar'].forEach(t =>
+  ['entrar','eusou','ambientes','ambiente','precos','prof'].forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
+  document.body.classList.toggle('prof', qual === 'prof');
   window.scrollTo(0,0);
 }
 function opcoes(sel, vazio) {
@@ -404,7 +511,7 @@ function entrou() {
   el('eu').hidden = false; el('btSair').hidden = false;
   el('eu').textContent = EU.codigo + (SOU ? ' · ' + SOU.nome.split(' ')[0] : '');
   el('senha').value = '';
-  if (EU.papel === 'professor') { telas('prof'); carregarProf(); ligarAuto(); }
+  if (EU.papel === 'professor') { telas('prof'); abrirAba('geral'); carregarProf(); ligarAuto(); }
   else if (EU.papel === 'preco') { telas('precos'); carregarPrecos(); }
   else { comecarGrupo(); }
 }
@@ -692,8 +799,17 @@ async function carregarPrecos() {
 // A 1a serie A formou 3 grupos e a 1a serie B formou 5. Os codigos ficaram
 // como estavam nos cadernos ja impressos, por isso a turma B usa A4 e A5.
 const GRUPOS_A = ['A1','A2','A3'], GRUPOS_B = ['A4','A5','B1','B2','B3'];
-el('btMontar').addEventListener('click', () => { clearInterval(timer); abrirMontar('1A'); });
-el('btVoltaPainel').addEventListener('click', () => { telas('prof'); carregarProf(); ligarAuto(); });
+document.querySelectorAll('#abas button').forEach(b =>
+  b.addEventListener('click', () => abrirAba(b.dataset.ab)));
+function abrirAba(qual) {
+  document.querySelectorAll('#abas button').forEach(b => {
+    const on = b.dataset.ab === qual;
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    el('ab-' + b.dataset.ab).hidden = !on;
+  });
+  window.scrollTo(0, 0);
+  if (qual === 'grupos') abrirMontar(TURMA);
+}
 el('btT1A').addEventListener('click', () => abrirMontar('1A'));
 el('btT1B').addEventListener('click', () => abrirMontar('1B'));
 
@@ -701,7 +817,6 @@ async function abrirMontar(t) {
   TURMA = t;
   el('btT1A').className = 'btn peq' + (t === '1A' ? '' : ' sec');
   el('btT1B').className = 'btn peq' + (t === '1B' ? '' : ' sec');
-  telas('montar');
   await carregarMontar();
 }
 async function carregarMontar() {
@@ -773,6 +888,7 @@ async function aloca(id, grupo, papel) {
     p_grupo: grupo || null, p_equipe: grupo ? papel : null });
   msg('avisoMontar', r.ok ? '' : r.erro, 'erro');
   await carregarMontar();
+  carregarProf();
 }
 
 /* ---------------- professor ---------------- */
@@ -809,30 +925,30 @@ async function carregarProf() {
   ].map(k => '<div class="kpi">' + k + '</div>').join('');
 
   if (!(r.grupos || []).length) {
-    el('tabGrupos').innerHTML = '<tbody><tr><td>Nenhum grupo cadastrado no sistema.</td></tr></tbody>';
+    el('tabGrupos').innerHTML = '<tbody><tr><td class="nd">Nenhum grupo cadastrado no sistema.</td></tr></tbody>';
   } else el('tabGrupos').innerHTML =
-    '<thead><tr><th>Grupo</th><th>Turma</th><th>Ambientes</th><th>Concluídos</th>' +
-    '<th>Lâmpadas</th><th>Situação</th></tr></thead><tbody>' +
+    '<thead><tr><th class="nome">Grupo</th><th>Turma</th><th>Ambientes</th><th>Concluídos</th>' +
+    '<th>Lâmpadas</th><th class="cresce">Situação</th></tr></thead><tbody>' +
     (r.grupos||[]).map(g => {
       const c = +g.concluidos, a = +g.ambientes;
       const sit = a === 0 ? '—' : (c === 0 ? 'não começou' : (c < a ? 'em andamento' : 'concluído'));
-      return '<tr><td><b>' + g.codigo + '</b></td><td>' + g.turma + '</td>' +
+      return '<tr><td class="nome"><b>' + g.codigo + '</b></td><td>' + g.turma + '</td>' +
         '<td class="n">' + a + '</td><td class="n">' + c + '</td>' +
-        '<td class="n">' + g.lampadas + '</td><td>' + sit + '</td></tr>';
+        '<td class="n">' + g.lampadas + '</td><td class="cresce">' + sit + '</td></tr>';
     }).join('') + '</tbody>';
 
   el('tabTipos').innerHTML = (r.tipos||[]).length
-    ? '<thead><tr><th>Equipamento</th><th>Quantidade</th><th>Potência somada</th></tr></thead><tbody>' +
-      r.tipos.map(t => '<tr><td>' + t.tipo + '</td><td class="n">' + t.quantidade +
+    ? '<thead><tr><th class="cresce">Equipamento</th><th>Quantidade</th><th>Potência somada</th></tr></thead><tbody>' +
+      r.tipos.map(t => '<tr><td class="cresce">' + t.tipo + '</td><td class="n">' + t.quantidade +
         '</td><td class="n">' + (+t.watts).toLocaleString('pt-BR') + ' W</td></tr>').join('') + '</tbody>'
-    : '<tbody><tr><td>Nenhum equipamento lançado ainda.</td></tr></tbody>';
+    : '<tbody><tr><td class="nd">Nenhum equipamento lançado ainda.</td></tr></tbody>';
 
   el('tabPrecos').innerHTML = (r.precos||[]).length
-    ? '<thead><tr><th>Loja</th><th>Produto</th><th>Quem pesquisou</th><th>Preço</th></tr></thead><tbody>' +
-      r.precos.map(p => '<tr><td>' + p.loja + '</td><td>' + p.produto +
+    ? '<thead><tr><th class="nome">Loja</th><th class="cresce">Produto</th><th>Quem pesquisou</th><th>Preço</th></tr></thead><tbody>' +
+      r.precos.map(p => '<tr><td class="nome">' + p.loja + '</td><td class="cresce">' + p.produto +
         '</td><td>' + (p.quem || '—') + '</td><td class="n">' + brl(+p.preco) +
         '</td></tr>').join('') + '</tbody>'
-    : '<tbody><tr><td>Nenhum preço pesquisado ainda.</td></tr></tbody>';
+    : '<tbody><tr><td class="nd">Nenhum preço pesquisado ainda.</td></tr></tbody>';
 
   montarParecer(r, P, lamp, precoMed, feitos, tot, precos.length);
   carregarParticipacao();
@@ -846,7 +962,7 @@ async function carregarParticipacao() {
   if (!al.length) {
     el('ajudaPart').textContent = 'Nenhum aluno foi colocado em grupo ainda. '
       + 'Use o botão "Montar os grupos", no alto da página.';
-    el('tabPart').innerHTML = '<tbody><tr><td>Sem alunos em grupo.</td></tr></tbody>';
+    el('tabPart').innerHTML = '<tbody><tr><td class="nd">Sem alunos em grupo.</td></tr></tbody>';
     return;
   }
   const soCampo = al.filter(a => a.equipe === 'campo');
@@ -867,13 +983,13 @@ async function carregarParticipacao() {
   const NOME_EQUIPE = { campo:'campo', calculo:'cálculo', conferencia:'conferência',
                         preco:'preço', '—':'—' };
   el('tabPart').innerHTML =
-    '<thead><tr><th>Aluno</th><th>Turma</th><th>Grupo</th><th>Papel</th><th>Ambientes</th>' +
+    '<thead><tr><th class="cresce">Aluno</th><th>Turma</th><th>Grupo</th><th>Papel</th><th>Ambientes</th>' +
     '<th>Contador</th><th>Leitor</th><th>Anotador</th><th>Conferente</th>' +
     '<th>Lançou</th><th>Preços</th></tr></thead><tbody>' +
     al.map(a => {
       const zero = a.equipe === 'campo' && +a.ambientes === 0;
-      return '<tr' + (zero ? ' style="background:var(--vermelho2)"' : '') + '>' +
-        '<td>' + a.nome + '</td><td class="n">' + a.turma + '</td>' +
+      return '<tr' + (zero ? ' class="alerta"' : '') + '>' +
+        '<td class="cresce">' + a.nome + '</td><td class="n">' + a.turma + '</td>' +
         '<td><b>' + a.grupo + '</b></td><td>' + (NOME_EQUIPE[a.equipe] || a.equipe) + '</td>' +
         '<td class="n">' + a.ambientes + '</td><td class="n">' + a.contador + '</td>' +
         '<td class="n">' + a.leitor + '</td><td class="n">' + a.anotador + '</td>' +
