@@ -198,6 +198,25 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
     e é assim que o professor vê a participação de cada um.</p>
     <div id="avisoEuSou"></div>
     <div id="listaEuSou"></div>
+    <div style="margin-top:16px"><button class="btn sec" id="btNaoEstou">Meu nome não está aqui</button></div>
+
+    <div id="blocoEntrar" hidden style="margin-top:18px">
+      <h3 class="sec">Entrar no grupo <span id="codGrupo"></span></h3>
+      <p class="ajuda">Confira na capa do seu caderno se o código do grupo bate com o
+      que está acima. Depois ache o seu nome e diga o que você faz no grupo.</p>
+      <div class="cx">
+        <div class="campo"><label for="meuNome">Seu nome na chamada</label>
+          <select id="meuNome"></select></div>
+        <div class="campo"><label for="meuPapel">O que você faz no grupo</label>
+          <select id="meuPapel">
+            <option value="campo">Campo — conto as lâmpadas e anoto</option>
+            <option value="calculo">Cálculo — faço as contas depois</option>
+            <option value="conferencia">Conferência — confiro as contas</option>
+            <option value="preco">Preço — pesquiso o preço do LED nas lojas</option>
+          </select></div>
+        <button class="btn" id="btMeIncluir">Entrar no grupo</button>
+      </div>
+    </div>
   </section>
 
   <!-- LISTA DE AMBIENTES -->
@@ -397,9 +416,10 @@ async function comecarGrupo() {
     if (!ALUNOS.length) {
       telas('eusou');
       el('tituloEuSou').textContent = 'Grupo ' + EU.codigo;
-      msg('avisoEuSou', 'O professor ainda não colocou ninguém neste grupo. '
-        + 'Isso é feito por ele, na aula.', 'info');
+      msg('avisoEuSou', 'Ninguém entrou neste grupo ainda. Use o botão abaixo '
+        + 'para achar o seu nome e entrar.', 'info');
       el('listaEuSou').innerHTML = '';
+      abrirEntrarNoGrupo();
       return;
     }
     if (SOU && ALUNOS.some(a => a.id === SOU.id)) {
@@ -413,6 +433,7 @@ const PAPEL = { campo:'trabalho de campo', calculo:'cálculos',
 function escolherQuemSou() {
   el('tituloEuSou').textContent = 'Quem está usando agora? · Grupo ' + EU.codigo;
   msg('avisoEuSou','');
+  el('blocoEntrar').hidden = true; el('btNaoEstou').hidden = false;
   el('listaEuSou').innerHTML = ALUNOS.map(a =>
     '<button class="amb" data-id="' + a.id + '">' +
     '<span class="n">' + (a.numero || '') + '</span>' +
@@ -431,8 +452,44 @@ function escolherQuemSou() {
 el('btTrocarEu').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
 el('btTrocarEu2').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
 
+/* --- o aluno se inclui no próprio grupo --- */
+el('btNaoEstou').addEventListener('click', abrirEntrarNoGrupo);
+async function abrirEntrarNoGrupo() {
+  el('codGrupo').textContent = EU.codigo;
+  el('blocoEntrar').hidden = false;
+  el('btNaoEstou').hidden = true;
+  try {
+    const r = await rpc('chamada_disponivel', { p_token: EU.token });
+    if (!r.ok) return msg('avisoEuSou', r.erro, 'erro');
+    const livres = r.alunos || [];
+    el('meuNome').innerHTML = '<option value="">— ache o seu nome —</option>' +
+      livres.map(a => '<option value="' + a.id + '">' +
+        (a.numero ? a.numero + ' · ' : '') + a.nome + '</option>').join('');
+    if (!livres.length) msg('avisoEuSou',
+      'Todos os alunos da sua turma já estão em algum grupo. Fale com o professor.', 'info');
+  } catch (e) { msg('avisoEuSou', e.message, 'erro'); }
+}
+el('btMeIncluir').addEventListener('click', async () => {
+  const id = el('meuNome').value;
+  if (!id) return msg('avisoEuSou', 'Escolha o seu nome na lista.', 'erro');
+  const b = el('btMeIncluir'); b.disabled = true;
+  try {
+    const r = await rpc('me_incluir', { p_token: EU.token, p_aluno: +id,
+      p_equipe: el('meuPapel').value });
+    if (!r.ok) msg('avisoEuSou', r.erro, 'erro');
+    else {
+      el('blocoEntrar').hidden = true; el('btNaoEstou').hidden = false;
+      SOU = { id: r.id, nome: r.nome, equipe: r.equipe };
+      guardar();
+      await comecarGrupo();
+    }
+  } catch (e) { msg('avisoEuSou', e.message, 'erro'); }
+  b.disabled = false;
+});
+
 // cada papel abre a sua tela
 function irParaMinhaTela() {
+  el('eu').textContent = EU.codigo + (SOU ? ' · ' + SOU.nome.split(' ')[0] : '');
   if (SOU && SOU.equipe === 'preco') {
     el('subPreco').textContent = 'Você é da pesquisa de preço do grupo ' + EU.codigo +
       '. Pesquise em pelo menos duas lojas da região e lance os dois preços.';
