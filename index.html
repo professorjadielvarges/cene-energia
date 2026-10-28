@@ -120,6 +120,41 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
 .parecer h4{font-family:var(--d);font-size:.95rem;margin:16px 0 6px}
 .parecer h4:first-child{margin-top:0}
 @media(max-width:440px){.dupla{grid-template-columns:1fr}}
+
+/* ---- cards dos grupos ---- */
+.cards{display:grid;gap:13px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  margin-bottom:8px}
+.gcard{border:1px solid var(--linha);border-radius:6px;overflow:hidden;background:var(--papel2);
+  border-top:4px solid var(--azul);display:flex;flex-direction:column}
+.gcard.vazio{border-top-color:var(--vermelho);opacity:.92}
+.gcard.semcampo{border-top-color:var(--ambar)}
+.gcard .top{padding:11px 13px 9px;border-bottom:1px solid var(--linha)}
+.gcard .cab{display:flex;align-items:baseline;gap:10px}
+.gcard .cod{font-size:1.25rem;font-weight:800;color:var(--azul);line-height:1}
+.gcard .qtamb{margin-left:auto;font-family:var(--m);font-size:.74rem;color:var(--tinta2);
+  white-space:nowrap}
+.gcard .res{font-size:.8rem;color:var(--tinta2);margin-top:6px;line-height:1.35}
+.gcard .gente{list-style:none;margin:0;padding:0;flex:1}
+.gcard .gente li{display:flex;align-items:center;gap:7px;padding:7px 10px 7px 13px;
+  border-bottom:1px solid var(--linha)}
+.gcard .nm{flex:1;min-width:0;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.gcard select{width:auto;padding:4px 6px;font-size:.76rem;border-radius:4px;flex:none}
+.gcard .x{background:none;border:0;color:var(--vermelho);font-size:1rem;line-height:1;
+  padding:3px 5px;flex:none;font-weight:700}
+.gcard .nada{padding:15px 13px;font-size:.85rem;color:var(--tinta2);flex:1}
+.gcard .pe{padding:8px 13px;font-family:var(--m);font-size:.74rem;display:flex;
+  flex-wrap:wrap;gap:4px 9px;border-top:1px solid var(--linha)}
+.gcard .pe b{font-weight:600}
+.pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:.72rem;
+  font-family:var(--d);font-weight:700}
+.pill.c{background:var(--azul2);color:var(--azul)}
+.pill.k{background:var(--verde2);color:var(--verde)}
+.pill.f{background:var(--ambar2);color:var(--ambar)}
+.pill.p{background:var(--papel);color:var(--tinta2);border:1px solid var(--linha)}
+.pill.erro{background:var(--vermelho2);color:var(--vermelho)}
+.secao-turma{font-family:var(--d);font-size:.74rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--tinta2);margin:18px 0 9px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -234,8 +269,9 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
   <!-- PREÇOS -->
   <section id="tela-precos" hidden>
     <h2 style="font-size:1.15rem">Pesquisa de preço do LED</h2>
-    <p class="ajuda">Pesquise em pelo menos duas lojas da região e lance os dois preços.</p>
+    <p class="ajuda" id="subPreco">Pesquise em pelo menos duas lojas da região e lance os dois preços.</p>
     <div id="avisoPreco"></div>
+    <div style="margin-bottom:14px"><button class="btn sec peq" id="btTrocarEu2">Não sou eu — trocar de pessoa</button></div>
     <div class="cx">
       <div class="campo"><label for="pLoja">Loja</label>
         <input type="text" id="pLoja" placeholder="nome da loja e bairro"></div>
@@ -266,7 +302,10 @@ h3.sec{font-size:1.1rem;font-weight:800;margin:26px 0 10px;padding-bottom:5px;
       <button class="btn peq" id="btT1A">1ª série A</button>
       <button class="btn peq sec" id="btT1B">1ª série B</button>
     </div>
-    <div class="rol"><table id="tabResumoGrupos"></table></div>
+    <div id="cards"></div>
+    <h3 class="sec" id="tituloSemGrupo">Sem grupo</h3>
+    <p class="ajuda">Escolha o grupo de cada um. Entra como campo; depois é só trocar a
+    função dentro do card do grupo.</p>
     <div id="listaTurma"></div>
   </section>
 
@@ -363,11 +402,14 @@ async function comecarGrupo() {
       el('listaEuSou').innerHTML = '';
       return;
     }
-    if (SOU && ALUNOS.some(a => a.id === SOU.id)) { telas('ambientes'); carregarAmbientes(); }
-    else escolherQuemSou();
+    if (SOU && ALUNOS.some(a => a.id === SOU.id)) {
+      SOU = ALUNOS.find(a => a.id === SOU.id);   // papel pode ter mudado
+      irParaMinhaTela();
+    } else escolherQuemSou();
   } catch (err) { msg('avisoLista', err.message, 'erro'); telas('ambientes'); }
 }
-const PAPEL = { campo:'trabalho de campo', calculo:'cálculos', conferencia:'conferência dos cálculos' };
+const PAPEL = { campo:'trabalho de campo', calculo:'cálculos',
+                conferencia:'conferência dos cálculos', preco:'pesquisa de preço do LED' };
 function escolherQuemSou() {
   el('tituloEuSou').textContent = 'Quem está usando agora? · Grupo ' + EU.codigo;
   msg('avisoEuSou','');
@@ -382,11 +424,23 @@ function escolherQuemSou() {
       SOU = ALUNOS.find(a => a.id === +b.dataset.id);
       guardar();
       el('eu').textContent = EU.codigo + ' · ' + SOU.nome.split(' ')[0];
-      telas('ambientes'); carregarAmbientes();
+      irParaMinhaTela();
     }));
   telas('eusou');
 }
 el('btTrocarEu').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
+el('btTrocarEu2').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
+
+// cada papel abre a sua tela
+function irParaMinhaTela() {
+  if (SOU && SOU.equipe === 'preco') {
+    el('subPreco').textContent = 'Você é da pesquisa de preço do grupo ' + EU.codigo +
+      '. Pesquise em pelo menos duas lojas da região e lance os dois preços.';
+    telas('precos'); carregarPrecos();
+  } else {
+    telas('ambientes'); carregarAmbientes();
+  }
+}
 el('btSair').addEventListener('click', async () => {
   try { await rpc('sair', { p_token: EU.token }); } catch(e){}
   try { localStorage.removeItem('cene_sessao'); } catch(e){}
@@ -553,7 +607,7 @@ el('btAddPreco').addEventListener('click', async () => {
   const r = await rpc('add_preco', {
     p_token: EU.token, p_loja: el('pLoja').value, p_produto: el('pProd').value,
     p_potencia: num(el('pPot').value), p_preco: num(el('pPreco').value),
-    p_fonte: el('pFonte').value });
+    p_fonte: el('pFonte').value, p_aluno: SOU ? SOU.id : null });
   if (!r.ok) return msg('avisoPreco', r.erro, 'erro');
   msg('avisoPreco', 'Preço lançado.', 'bom');
   el('pLoja').value=''; el('pProd').value=''; el('pPreco').value=''; el('pFonte').value='';
@@ -566,6 +620,7 @@ async function carregarPrecos() {
   el('listaPrecos').innerHTML = ps.length ? ps.map(p =>
     '<div class="item"><span class="q">' + brl(+p.preco) + '</span>' +
     '<span class="d">' + p.produto + '<small>' + p.loja +
+    (p.quem && p.quem !== '—' ? ' · ' + p.quem : '') +
     (p.fonte ? ' · ' + p.fonte : '') + '</small></span>' +
     '<button class="lixo" data-p="' + p.id + '">apagar</button></div>').join('')
     : '<p class="ajuda">Nenhum preço lançado ainda.</p>';
@@ -598,52 +653,68 @@ async function carregarMontar() {
   catch (e) { return msg('avisoMontar', e.message, 'erro'); }
   if (!r.ok) return msg('avisoMontar', r.erro, 'erro');
 
-  const gs = (r.grupos || []).filter(g => TURMA === '1A'
-    ? GRUPOS_A.indexOf(g.codigo) >= 0 : GRUPOS_B.indexOf(g.codigo) >= 0);
-  const semGrupo = (r.alunos || []).filter(a => !a.grupo).length;
-  el('tabResumoGrupos').innerHTML =
-    '<thead><tr><th>Grupo</th><th>Ambientes</th><th>No grupo</th><th>Campo</th>' +
-    '<th>Cálculo</th><th>Conferência</th></tr></thead><tbody>' +
-    gs.map(g => {
-      const semCampo = +g.campo === 0;
-      return '<tr' + (semCampo ? ' style="background:var(--vermelho2)"' : '') + '>' +
-        '<td><b>' + g.codigo + '</b></td><td class="n">' + g.ambientes + '</td>' +
-        '<td class="n">' + g.quantos + '</td><td class="n">' + g.campo + '</td>' +
-        '<td class="n">' + g.calculo + '</td><td class="n">' + g.conferencia + '</td></tr>';
-    }).join('') +
-    '<tr><td colspan="2"><b>Sem grupo</b></td><td class="n">' + semGrupo +
-    '</td><td colspan="3"></td></tr></tbody>';
-
   const opts = (TURMA === '1A' ? GRUPOS_A : GRUPOS_B);
-  el('listaTurma').innerHTML = (r.alunos || [])
-    .sort((a,b) => (a.grupo||'zz').localeCompare(b.grupo||'zz') || (a.numero||0)-(b.numero||0))
-    .map(a =>
+  const gs = (r.grupos || []).filter(g => opts.indexOf(g.codigo) >= 0);
+  const todos = r.alunos || [];
+  const PAP = { campo:'campo', calculo:'cálculo', conferencia:'conferência', preco:'preço' };
+
+  // um card por grupo, com os integrantes e a função de cada um
+  el('cards').innerHTML = '<div class="cards">' + gs.map(g => {
+    const gente = todos.filter(a => a.grupo === g.codigo)
+                       .sort((a,b) => (a.numero||0)-(b.numero||0));
+    const cls = gente.length === 0 ? ' vazio' : (+g.campo === 0 ? ' semcampo' : '');
+    const corpo = gente.length
+      ? '<ul class="gente">' + gente.map(a =>
+          '<li data-id="' + a.id + '">' +
+            '<span class="nm" title="' + a.nome + '">' + a.nome + '</span>' +
+            '<select class="selPapel" data-id="' + a.id + '">' +
+              ['campo','calculo','conferencia','preco'].map(p =>
+                '<option value="' + p + '"' + (a.equipe === p ? ' selected' : '') + '>' +
+                PAP[p] + '</option>').join('') +
+            '</select>' +
+            '<button class="x" data-tirar="' + a.id + '" title="tirar do grupo">✕</button>' +
+          '</li>').join('') + '</ul>'
+      : '<div class="nada">Ninguém neste grupo ainda.</div>';
+    const pe = gente.length
+      ? (+g.campo ? '<span class="pill c">' + g.campo + ' campo</span>' : '<span class="pill erro">sem ninguém de campo</span>')
+        + (+g.calculo ? '<span class="pill k">' + g.calculo + ' cálculo</span>' : '')
+        + (+g.conferencia ? '<span class="pill f">' + g.conferencia + ' conferência</span>' : '')
+        + (+g.preco ? '<span class="pill p">' + g.preco + ' preço</span>' : '')
+      : '<span class="pill erro">vazio</span>';
+    return '<div class="gcard' + cls + '"><div class="top">' +
+      '<div class="cab"><span class="cod">' + g.codigo + '</span>' +
+      '<span class="qtamb">' + g.ambientes + ' ambientes</span></div>' +
+      '<div class="res">' + g.resumo + '</div></div>' +
+      corpo + '<div class="pe">' + pe + '</div></div>';
+  }).join('') + '</div>';
+
+  // quem ainda não foi alocado
+  const sem = todos.filter(a => !a.grupo).sort((a,b) => (a.numero||0)-(b.numero||0));
+  el('tituloSemGrupo').textContent = 'Sem grupo · ' + sem.length + ' de ' + todos.length;
+  el('listaTurma').innerHTML = sem.length ? sem.map(a =>
     '<div class="item" data-id="' + a.id + '">' +
       '<span class="q" style="min-width:26px">' + (a.numero || '') + '</span>' +
       '<span class="d">' + a.nome + '</span>' +
       '<select class="selGrupo" data-id="' + a.id + '" style="width:auto;padding:6px 8px">' +
-        '<option value="">— sem grupo —</option>' +
-        opts.map(g => '<option value="' + g + '"' + (a.grupo === g ? ' selected' : '') + '>' + g + '</option>').join('') +
-      '</select>' +
-      '<select class="selPapel" data-id="' + a.id + '" style="width:auto;padding:6px 8px"' +
-        (a.grupo ? '' : ' disabled') + '>' +
-        ['campo','calculo','conferencia'].map(p =>
-          '<option value="' + p + '"' + (a.equipe === p ? ' selected' : '') + '>' +
-          ({campo:'campo',calculo:'cálculo',conferencia:'conferência'})[p] + '</option>').join('') +
-      '</select>' +
-    '</div>').join('');
+        '<option value="">— escolher —</option>' +
+        opts.map(g => '<option value="' + g + '">' + g + '</option>').join('') +
+      '</select></div>').join('')
+    : '<p class="ajuda">Todos os alunos desta turma já estão em algum grupo.</p>';
 
-  document.querySelectorAll('#listaTurma select').forEach(s =>
-    s.addEventListener('change', () => salvarAlocacao(+s.dataset.id)));
+  document.querySelectorAll('#listaTurma .selGrupo').forEach(s =>
+    s.addEventListener('change', () => aloca(+s.dataset.id, s.value, 'campo')));
+  document.querySelectorAll('#cards .selPapel').forEach(s =>
+    s.addEventListener('change', () => {
+      const g = s.closest('.gcard').querySelector('.cod').textContent;
+      aloca(+s.dataset.id, g, s.value);
+    }));
+  document.querySelectorAll('#cards .x').forEach(b =>
+    b.addEventListener('click', () => aloca(+b.dataset.tirar, null, null)));
 }
-async function salvarAlocacao(id) {
-  const linha = document.querySelector('#listaTurma .item[data-id="' + id + '"]');
-  const g = linha.querySelector('.selGrupo').value;
-  const p = linha.querySelector('.selPapel').value || 'campo';
+async function aloca(id, grupo, papel) {
   const r = await rpc('alocar', { p_token: EU.token, p_aluno: id,
-    p_grupo: g || null, p_equipe: g ? p : null });
-  if (!r.ok) { msg('avisoMontar', r.erro, 'erro'); }
-  else { msg('avisoMontar',''); }
+    p_grupo: grupo || null, p_equipe: grupo ? papel : null });
+  msg('avisoMontar', r.ok ? '' : r.erro, 'erro');
   await carregarMontar();
 }
 
@@ -700,9 +771,10 @@ async function carregarProf() {
     : '<tbody><tr><td>Nenhum equipamento lançado ainda.</td></tr></tbody>';
 
   el('tabPrecos').innerHTML = (r.precos||[]).length
-    ? '<thead><tr><th>Loja</th><th>Produto</th><th>Preço</th></tr></thead><tbody>' +
+    ? '<thead><tr><th>Loja</th><th>Produto</th><th>Quem pesquisou</th><th>Preço</th></tr></thead><tbody>' +
       r.precos.map(p => '<tr><td>' + p.loja + '</td><td>' + p.produto +
-        '</td><td class="n">' + brl(+p.preco) + '</td></tr>').join('') + '</tbody>'
+        '</td><td>' + (p.quem || '—') + '</td><td class="n">' + brl(+p.preco) +
+        '</td></tr>').join('') + '</tbody>'
     : '<tbody><tr><td>Nenhum preço pesquisado ainda.</td></tr></tbody>';
 
   montarParecer(r, P, lamp, precoMed, feitos, tot, precos.length);
@@ -735,11 +807,12 @@ async function carregarParticipacao() {
     ? 'Atenção: ' + avisos.join('; ') + '.'
     : 'Todos os alunos de campo participaram e exerceram as quatro funções pelo menos uma vez.';
 
-  const NOME_EQUIPE = { campo:'campo', calculo:'cálculo', conferencia:'conferência', '—':'—' };
+  const NOME_EQUIPE = { campo:'campo', calculo:'cálculo', conferencia:'conferência',
+                        preco:'preço', '—':'—' };
   el('tabPart').innerHTML =
     '<thead><tr><th>Aluno</th><th>Turma</th><th>Grupo</th><th>Papel</th><th>Ambientes</th>' +
     '<th>Contador</th><th>Leitor</th><th>Anotador</th><th>Conferente</th>' +
-    '<th>Lançou</th></tr></thead><tbody>' +
+    '<th>Lançou</th><th>Preços</th></tr></thead><tbody>' +
     al.map(a => {
       const zero = a.equipe === 'campo' && +a.ambientes === 0;
       return '<tr' + (zero ? ' style="background:var(--vermelho2)"' : '') + '>' +
@@ -747,7 +820,8 @@ async function carregarParticipacao() {
         '<td><b>' + a.grupo + '</b></td><td>' + (NOME_EQUIPE[a.equipe] || a.equipe) + '</td>' +
         '<td class="n">' + a.ambientes + '</td><td class="n">' + a.contador + '</td>' +
         '<td class="n">' + a.leitor + '</td><td class="n">' + a.anotador + '</td>' +
-        '<td class="n">' + a.conferente + '</td><td class="n">' + a.lancamentos + '</td></tr>';
+        '<td class="n">' + a.conferente + '</td><td class="n">' + a.lancamentos +
+        '</td><td class="n">' + (a.precos || 0) + '</td></tr>';
     }).join('') + '</tbody>';
 }
 
