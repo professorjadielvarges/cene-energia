@@ -577,7 +577,9 @@ async function carregarPrecos() {
 }
 
 /* ---------------- montagem dos grupos ---------------- */
-const GRUPOS_A = ['A1','A2','A3','A4','A5'], GRUPOS_B = ['B1','B2','B3'];
+// A 1a serie A formou 3 grupos e a 1a serie B formou 5. Os codigos ficaram
+// como estavam nos cadernos ja impressos, por isso a turma B usa A4 e A5.
+const GRUPOS_A = ['A1','A2','A3'], GRUPOS_B = ['A4','A5','B1','B2','B3'];
 el('btMontar').addEventListener('click', () => { clearInterval(timer); abrirMontar('1A'); });
 el('btVoltaPainel').addEventListener('click', () => { telas('prof'); carregarProf(); ligarAuto(); });
 el('btT1A').addEventListener('click', () => abrirMontar('1A'));
