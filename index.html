@@ -245,6 +245,162 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .abas button:hover{color:var(--tinta)}
 .abas button:focus-visible{outline:2px solid var(--azul);outline-offset:-3px}
 
+/* ---------- painel: herói, indicadores e gráficos ----------
+   Métrica-âncora no canto superior esquerdo, próxima ação ao lado dela, e
+   só gráficos familiares: barra para comparar, linha para o tempo. Cor só
+   quando ela significa alguma coisa. */
+.heroi{display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,3vw,30px);
+  align-items:center;background:var(--sup);border:1px solid var(--linha);
+  border-radius:var(--r);padding:clamp(18px,2.6vw,26px);box-shadow:var(--sombra);
+  margin-bottom:14px;position:relative;overflow:hidden}
+.heroi::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(130% 150% at 100% 0%,var(--azul-sup) 0%,transparent 60%)}
+.heroi>*{position:relative;z-index:1}
+.anel{flex:none;width:clamp(116px,17vw,146px);height:auto}
+.anel .arco{transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.25,1)}
+.anel .vl{font-family:var(--m);font-weight:600;fill:var(--tinta);
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.anel .lb{font-family:var(--d);font-weight:700;fill:var(--tinta3);
+  text-transform:uppercase;letter-spacing:.1em}
+.heroi .titulo{font-family:var(--d);font-weight:800;font-size:clamp(1.15rem,2.4vw,1.5rem);
+  letter-spacing:-.025em;line-height:1.15;margin-bottom:5px}
+.heroi .frase{font-size:.93rem;color:var(--tinta2);margin:0 0 14px;max-width:52ch}
+.acao{display:flex;gap:11px;align-items:flex-start;border-left:3px solid var(--ambar);
+  background:var(--ambar-sup);border-radius:0 var(--r2) var(--r2) 0;padding:11px 14px;
+  font-size:.89rem;line-height:1.45;color:var(--tinta)}
+.acao.ok{border-left-color:var(--verde);background:var(--verde-sup)}
+.acao b{font-family:var(--d);display:block;font-size:.69rem;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--ambar);margin-bottom:3px}
+.acao.ok b{color:var(--verde)}
+
+.minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:1px;
+  background:var(--linha);border:1px solid var(--linha);border-radius:var(--r);
+  overflow:hidden;margin-bottom:16px;box-shadow:var(--sombra)}
+.mini{background:var(--sup);padding:15px 17px}
+.mini b{display:block;font-family:var(--m);font-size:1.4rem;font-weight:600;
+  color:var(--tinta);font-variant-numeric:tabular-nums;letter-spacing:-.035em;line-height:1.1}
+.mini span{display:block;font-family:var(--d);font-size:.645rem;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--tinta2);margin-top:6px;font-weight:700}
+.mini i{font-style:normal;font-size:.75rem;color:var(--tinta3);font-family:var(--m);
+  margin-left:5px;letter-spacing:0;text-transform:none}
+
+.graf{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r);
+  padding:clamp(16px,2.2vw,22px);box-shadow:var(--sombra);margin-bottom:16px}
+.graf h4{font-family:var(--d);font-size:.95rem;font-weight:700;letter-spacing:-.015em;
+  margin:0 0 3px}
+.graf .sub{font-size:.83rem;color:var(--tinta2);margin:0 0 16px;line-height:1.45}
+.graf .sub:last-child{margin:12px 0 0}
+
+.linhas{display:flex;flex-direction:column;gap:11px}
+.lin{display:grid;grid-template-columns:2.6rem 1fr 5.4rem;gap:12px;align-items:center}
+.lin .cod{font-family:var(--d);font-weight:800;font-size:.88rem;color:var(--azul);
+  letter-spacing:-.02em}
+.lin .trilho{height:11px;background:var(--papel);border-radius:999px;overflow:hidden;
+  box-shadow:inset 0 0 0 1px var(--linha)}
+.lin .fita{display:block;height:100%;width:0;border-radius:999px;background:var(--verde);
+  transition:width 1s cubic-bezier(.2,.8,.25,1)}
+.lin.parado .fita{background:var(--linha2)}
+.lin.andando .fita{background:var(--ambar)}
+.lin .vl{font-family:var(--m);font-size:.78rem;color:var(--tinta2);text-align:right;
+  font-variant-numeric:tabular-nums}
+
+svg.cart{width:100%;height:auto;display:block}
+svg.cart .malha{stroke:var(--linha);stroke-width:1}
+svg.cart .zero{stroke:var(--linha2);stroke-width:1.4;stroke-dasharray:4 4}
+svg.cart .rot{font-family:var(--m);font-size:10.5px;fill:var(--tinta3)}
+svg.cart .rot.forte{fill:var(--tinta2);font-weight:600}
+svg.cart .serie{fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke-dashoffset 1.5s cubic-bezier(.3,.7,.3,1)}
+svg.cart .area{stroke:none;opacity:.1}
+svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
+.legenda{display:flex;gap:7px 18px;flex-wrap:wrap;margin-top:14px;font-size:.82rem;
+  color:var(--tinta2)}
+.legenda span{display:inline-flex;align-items:center;gap:8px}
+.legenda i{width:14px;height:3px;border-radius:2px;flex:none}
+
+.esqueleto{background:linear-gradient(90deg,var(--sup2) 25%,var(--papel) 37%,var(--sup2) 63%);
+  background-size:400% 100%;animation:brilho 1.5s linear infinite;border-radius:var(--r2);
+  color:transparent!important}
+@keyframes brilho{0%{background-position:100% 0}100%{background-position:0 0}}
+.pag{animation:entrapag .3s cubic-bezier(.2,.8,.3,1)}
+@keyframes entrapag{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px;border-radius:3px}
+
+/* ---------- tela do aluno: pessoas, escolha múltipla, passos ----------
+   Tudo que o aluno responde é toque, nunca digitação. Os alvos de toque
+   têm 58px de altura, que é o mínimo confortável num celular. */
+.pessoa{display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  background:var(--sup);border:1px solid var(--linha);border-left:4px solid var(--linha2);
+  border-radius:var(--r2);padding:13px 15px;margin-bottom:9px;color:var(--tinta);
+  box-shadow:var(--sombra);transition:transform .1s,box-shadow .15s,border-color .15s}
+.pessoa:hover{box-shadow:var(--sombra2);transform:translateY(-1px)}
+.pessoa.pronto{border-left-color:var(--verde);background:var(--verde-sup)}
+.ini{width:42px;height:42px;border-radius:50%;background:var(--azul-sup);color:var(--azul);
+  display:grid;place-items:center;font-family:var(--d);font-weight:800;font-size:.88rem;
+  flex:none;letter-spacing:-.02em}
+.pessoa.pronto .ini{background:var(--verde-sup);color:var(--verde);
+  box-shadow:inset 0 0 0 1.5px var(--verde)}
+.pessoa .t{flex:1;min-width:0;font-weight:600;letter-spacing:-.01em;font-size:.95rem}
+.pessoa .t small{display:block;font-weight:400;font-size:.76rem;color:var(--tinta2);
+  margin-top:2px;letter-spacing:0}
+.pessoa .st{flex:none;font-size:1.1rem;color:var(--tinta3);line-height:1}
+.pessoa.pronto .st{color:var(--verde)}
+
+.pergunta{margin-bottom:18px}
+.pergunta>b{display:block;font-size:.95rem;font-weight:600;margin-bottom:9px;
+  letter-spacing:-.01em;line-height:1.35}
+.pergunta>b i{font-style:normal;font-family:var(--d);font-size:.68rem;color:var(--tinta3);
+  display:block;text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px;font-weight:700}
+.opcoes{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.opcoes button{min-height:58px;padding:9px 6px;border:1px solid var(--linha2);
+  border-radius:var(--r2);background:var(--papel);color:var(--tinta2);font-size:.78rem;
+  font-weight:600;line-height:1.25;display:flex;align-items:center;justify-content:center;
+  text-align:center;transition:all .13s}
+.opcoes button:hover{border-color:var(--tinta3);color:var(--tinta)}
+.opcoes button[aria-pressed=true]{color:#fff;box-shadow:var(--sombra);transform:translateY(-1px)}
+.opcoes button[aria-pressed=true][data-v="3"]{background:var(--verde);border-color:var(--verde)}
+.opcoes button[aria-pressed=true][data-v="2"]{background:var(--azul);border-color:var(--azul)}
+.opcoes button[aria-pressed=true][data-v="1"]{background:var(--ambar);border-color:var(--ambar)}
+.opcoes button[aria-pressed=true][data-v="0"]{background:var(--verm);border-color:var(--verm)}
+
+.passos{display:flex;gap:5px;margin:0 0 16px}
+.passos i{flex:1;height:5px;border-radius:3px;background:var(--linha);
+  transition:background .3s}
+.passos i.ok{background:var(--verde)}
+
+.aviso-flutua{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));
+  transform:translate(-50%,16px);background:var(--verde);color:#fff;font-weight:600;
+  font-size:.9rem;padding:12px 20px;border-radius:999px;box-shadow:var(--sombra2);
+  z-index:60;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.aviso-flutua.ver{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- lista de providências da gestão ---------- */
+.trilha{list-style:none;margin:0;padding:0;counter-reset:etapa}
+.trilha li{counter-increment:etapa;position:relative;padding:0 0 22px 46px;
+  border-left:2px solid var(--linha);margin-left:15px}
+.trilha li:last-child{border-left-color:transparent;padding-bottom:0}
+.trilha li::before{content:counter(etapa);position:absolute;left:-17px;top:-2px;
+  width:32px;height:32px;border-radius:50%;background:var(--azul);color:#fff;
+  font-family:var(--d);font-weight:800;font-size:.85rem;display:grid;place-items:center;
+  box-shadow:0 0 0 4px var(--papel)}
+.trilha h5{font-family:var(--d);font-size:.97rem;font-weight:700;margin:3px 0 5px;
+  letter-spacing:-.015em}
+.trilha p{font-size:.89rem;color:var(--tinta2);margin:0 0 6px;line-height:1.5}
+.trilha .quem{display:inline-block;font-family:var(--d);font-size:.66rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;background:var(--sup2);color:var(--tinta2);
+  border-radius:999px;padding:3px 10px;margin-right:6px}
+.trilha .quem.urg{background:var(--ambar-sup);color:var(--ambar)}
+
+@media(max-width:470px){
+  .opcoes{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:620px){
+  .heroi{grid-template-columns:1fr;justify-items:start;gap:16px}
+  .lin{grid-template-columns:2.3rem 1fr;row-gap:4px}
+  .lin .vl{grid-column:2;text-align:left}
+}
+
 @media(max-width:460px){
   .dupla{grid-template-columns:1fr}
   .cx{padding:18px}
@@ -322,7 +478,10 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
     <p class="ajuda" id="subLista"></p>
     <div class="barra" style="margin-bottom:16px"><i id="barraLista"></i></div>
     <div id="listaAmbientes"></div>
-    <div style="margin-top:18px"><button class="btn sec peq" id="btTrocarEu">Não sou eu — trocar de pessoa</button></div>
+    <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn peq sec" id="btAvaliar">Avaliar a equipe</button>
+      <button class="btn peq sec" id="btTrocarEu">Não sou eu — trocar de pessoa</button>
+    </div>
   </section>
 
   <!-- UM AMBIENTE -->
@@ -386,7 +545,10 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
     <h2 style="font-size:1.15rem">Pesquisa de preço do LED</h2>
     <p class="ajuda" id="subPreco">Pesquise em pelo menos duas lojas da região e lance os dois preços.</p>
     <div id="avisoPreco"></div>
-    <div style="margin-bottom:14px"><button class="btn sec peq" id="btTrocarEu2">Não sou eu — trocar de pessoa</button></div>
+    <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn peq sec" id="btAvaliar2">Avaliar a equipe</button>
+      <button class="btn peq sec" id="btTrocarEu2">Não sou eu — trocar de pessoa</button>
+    </div>
     <div class="cx">
       <div class="campo"><label for="pLoja">Loja</label>
         <input type="text" id="pLoja" placeholder="nome da loja e bairro"></div>
@@ -406,19 +568,54 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
     <div id="listaPrecos"></div>
   </section>
 
-  <!-- PROFESSOR -->
+  <!-- AVALIAÇÃO DA EQUIPE -->
+  <section id="tela-avaliar" hidden>
+    <button class="volta" id="btVoltaAval">← voltar</button>
+    <h2 style="font-size:1.15rem" id="tituloAval">Avaliação da equipe</h2>
+    <p class="ajuda" id="subAval"></p>
+    <div id="avisoAval"></div>
+
+    <div id="listaColegas">
+      <div class="passos" id="passosAval"></div>
+      <div id="colegas"></div>
+      <p class="ajuda" style="margin-top:16px">Ninguém vê a sua resposta, só o professor.
+      Responda pensando no trabalho, não na amizade.</p>
+    </div>
+
+    <div id="fichaColega" hidden>
+      <div class="cx" style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
+        <span class="ini" id="iniAlvo"></span>
+        <span style="flex:1;min-width:0">
+          <b id="nomeAlvo" style="display:block;font-size:1rem;letter-spacing:-.015em"></b>
+          <small id="papelAlvo" style="color:var(--tinta2);font-size:.8rem"></small>
+        </span>
+      </div>
+      <div class="cx" id="perguntas"></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn ok peq" id="btSalvarAval">Salvar esta avaliação</button>
+        <button class="btn sec peq" id="btCancelarAval">Voltar sem salvar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFESSOR E GESTÃO -->
   <section id="tela-prof" hidden>
     <nav class="abas" id="abas">
       <button data-ab="geral" aria-selected="true">Visão geral</button>
-      <button data-ab="grupos" aria-selected="false">Grupos</button>
-      <button data-ab="dados" aria-selected="false">Lançamentos</button>
-      <button data-ab="part" aria-selected="false">Participação</button>
+      <button data-ab="grupos" aria-selected="false" data-so="prof">Grupos</button>
+      <button data-ab="dados" aria-selected="false" data-so="prof">Lançamentos</button>
+      <button data-ab="part" aria-selected="false" data-so="prof">Participação</button>
+      <button data-ab="aval" aria-selected="false" data-so="prof">Avaliação</button>
       <button data-ab="parecer" aria-selected="false">Parecer</button>
+      <button data-ab="passos" aria-selected="false">Próximos passos</button>
     </nav>
     <div id="avisoProf"></div>
 
     <div class="pag" id="ab-geral">
-      <div class="kpis" id="kpis"></div>
+      <div id="heroi"></div>
+      <div class="minis" id="minis"></div>
+      <div class="graf" id="grafGrupos"></div>
+      <div class="graf" id="grafSaldo"></div>
       <h3 class="sec">Etapa de cada grupo</h3>
       <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
       <div class="rol"><table id="tabGrupos"></table></div>
@@ -438,6 +635,7 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
     </div>
 
     <div class="pag" id="ab-dados" hidden>
+      <div class="graf" id="grafTipos"></div>
       <h3 class="sec" style="margin-top:4px">O que já foi contado</h3>
       <div class="rol"><table id="tabTipos"></table></div>
       <h3 class="sec">Preços pesquisados</h3>
@@ -447,6 +645,18 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
     <div class="pag" id="ab-part" hidden>
       <p class="ajuda" id="ajudaPart"></p>
       <div class="rol"><table id="tabPart"></table></div>
+    </div>
+
+    <div class="pag" id="ab-aval" hidden>
+      <p class="ajuda" id="ajudaAval"></p>
+      <div class="rol"><table id="tabAval"></table></div>
+      <p class="ajuda">A nota de cada linha é a média do que os colegas de grupo
+      responderam, de 0 a 15. Compare sempre com a aba Participação: lá estão os
+      números que o sistema mediu sozinho, sem opinião de ninguém.</p>
+    </div>
+
+    <div class="pag" id="ab-passos" hidden>
+      <div id="passosGestao"></div>
     </div>
 
     <div class="pag" id="ab-parecer" hidden>
@@ -484,7 +694,7 @@ function msg(onde, texto, tipo) {
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
-  ['entrar','eusou','ambientes','ambiente','precos','prof'].forEach(t =>
+  ['entrar','eusou','ambientes','ambiente','precos','avaliar','prof'].forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
   document.body.classList.toggle('prof', qual === 'prof');
   window.scrollTo(0,0);
@@ -511,7 +721,13 @@ function entrou() {
   el('eu').hidden = false; el('btSair').hidden = false;
   el('eu').textContent = EU.codigo + (SOU ? ' · ' + SOU.nome.split(' ')[0] : '');
   el('senha').value = '';
-  if (EU.papel === 'professor') { telas('prof'); abrirAba('geral'); carregarProf(); ligarAuto(); }
+  if (EU.papel === 'professor' || EU.papel === 'gestao') {
+    const soLeitura = EU.papel === 'gestao';
+    document.querySelectorAll('#abas button[data-so="prof"]')
+      .forEach(b => { b.hidden = soLeitura; });
+    el('eu').textContent = soLeitura ? 'DIREÇÃO' : EU.codigo;
+    telas('prof'); abrirAba('geral'); carregarProf(); ligarAuto();
+  }
   else if (EU.papel === 'preco') { telas('precos'); carregarPrecos(); }
   else { comecarGrupo(); }
 }
@@ -916,13 +1132,11 @@ async function carregarProf() {
   const precos = (r.precos || []).map(p => +p.preco);
   const precoMed = precos.length ? precos.reduce((a,b)=>a+b,0)/precos.length : P.preco_led;
 
-  el('kpis').innerHTML = [
-    ['<b>' + feitos + ' / ' + tot + '</b><span>ambientes concluídos</span>'],
-    ['<b>' + lamp + '</b><span>lâmpadas contadas</span>'],
-    ['<b>' + (r.grupos||[]).filter(g => +g.concluidos === +g.ambientes && +g.ambientes > 0).length +
-      ' / 8</b><span>grupos que fecharam</span>'],
-    ['<b>' + (precos.length ? brl(precoMed) : '—') + '</b><span>preço médio do LED</span>']
-  ].map(k => '<div class="kpi">' + k + '</div>').join('');
+  const C = contas(r, P, lamp, precoMed);
+  pintarHeroi(r, feitos, tot, lamp, precos.length);
+  pintarMinis(r, P, C, lamp, precoMed, precos.length);
+  pintarGrafGrupos(r.grupos || []);
+  pintarGrafSaldo(C, P, lamp);
 
   if (!(r.grupos || []).length) {
     el('tabGrupos').innerHTML = '<tbody><tr><td class="nd">Nenhum grupo cadastrado no sistema.</td></tr></tbody>';
@@ -942,6 +1156,7 @@ async function carregarProf() {
       r.tipos.map(t => '<tr><td class="cresce">' + t.tipo + '</td><td class="n">' + t.quantidade +
         '</td><td class="n">' + (+t.watts).toLocaleString('pt-BR') + ' W</td></tr>').join('') + '</tbody>'
     : '<tbody><tr><td class="nd">Nenhum equipamento lançado ainda.</td></tr></tbody>';
+  pintarGrafTipos(r.tipos || []);
 
   el('tabPrecos').innerHTML = (r.precos||[]).length
     ? '<thead><tr><th class="nome">Loja</th><th class="cresce">Produto</th><th>Quem pesquisou</th><th>Preço</th></tr></thead><tbody>' +
@@ -951,7 +1166,8 @@ async function carregarProf() {
     : '<tbody><tr><td class="nd">Nenhum preço pesquisado ainda.</td></tr></tbody>';
 
   montarParecer(r, P, lamp, precoMed, feitos, tot, precos.length);
-  carregarParticipacao();
+  montarPassos();
+  if (EU.papel === 'professor') { carregarParticipacao(); carregarAvaliacao(); }
 }
 
 async function carregarParticipacao() {
@@ -998,6 +1214,524 @@ async function carregarParticipacao() {
     }).join('') + '</tbody>';
 }
 
+
+/* =================== painel do professor: contas e gráficos ===================
+   Uma conta só, usada pelo painel e pelo parecer, para os dois nunca
+   divergirem. Os gráficos são SVG escrito à mão: nenhuma biblioteca, nada
+   para baixar, funciona no celular da escola mesmo com internet ruim. */
+
+function contas(r, P, lamp, precoLed) {
+  const trocaveis = (r.potencias||[])
+    .filter(p => p.potencia_w != null && +p.potencia_w > P.pot_led)
+    .reduce((s,p) => s + (+p.quantidade), 0);
+  const semPot = (r.potencias||[])
+    .filter(p => p.potencia_w == null).reduce((s,p) => s + (+p.quantidade), 0);
+  const cen = [4,5,6,7,8].map(h => {
+    const ec = (P.pot_atual - P.pot_led)/1000 * h * P.dias_mes * P.tarifa;
+    return { h: h, ec: ec, meses: precoLed / ec };
+  });
+  const base = cen.find(c => c.h === P.horas_dia) || cen[2];
+  const invest = trocaveis * precoLed;
+  const econMes = trocaveis * base.ec;
+  const a = P.lote_mes * base.ec / 2;
+  const b = P.lote_mes * base.ec / 2 - P.lote_mes * precoLed;
+  const vert = a ? -b / (2*a) : 0;
+  const mesesTroca = P.lote_mes ? Math.ceil(trocaveis / P.lote_mes) : 0;
+
+  let saldo = 0, trocadas = 0, pago = null;
+  const serieLote = [{ m:0, v:0 }], serieTudo = [{ m:0, v:-invest }];
+  const LIM = 48;
+  for (let m = 1; m <= LIM; m++) {
+    const novas = Math.min(P.lote_mes, trocaveis - trocadas); trocadas += novas;
+    saldo += trocadas * base.ec - novas * precoLed;
+    serieLote.push({ m:m, v:saldo });
+    serieTudo.push({ m:m, v: econMes * m - invest });
+    if (saldo > 0 && pago === null) pago = m;
+  }
+  const pagoTudo = econMes > 0 ? invest / econMes : null;
+  return { trocaveis:trocaveis, semPot:semPot, cen:cen, base:base, invest:invest,
+           econMes:econMes, a:a, b:b, vert:vert, mesesTroca:mesesTroca, pago:pago,
+           pagoTudo:pagoTudo, serieLote:serieLote, serieTudo:serieTudo };
+}
+
+const MOV = !(window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches);
+function animar(fn) {
+  if (!MOV) { fn(); return; }
+  requestAnimationFrame(function(){ requestAnimationFrame(fn); });
+}
+function contar(no, alvo, fmt) {
+  if (!no) return;
+  if (!MOV || !window.performance) { no.textContent = fmt(alvo); return; }
+  const t0 = performance.now(), dur = 850;
+  (function passo(t){
+    const k = Math.min(1, (t - t0) / dur);
+    no.textContent = fmt(alvo * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(passo);
+  })(t0);
+}
+function esc(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* a próxima coisa a fazer, em uma frase */
+function proximaAcao(r, feitos, tot, lamp, qtdPrecos) {
+  const g = r.grupos || [];
+  if (EU && EU.papel === 'gestao') {
+    const fech = g.filter(x => +x.ambientes > 0 && +x.concluidos === +x.ambientes).length;
+    if (!lamp) return { rotulo:'Situação', texto:'O levantamento ainda não começou. '
+      + 'Os grupos estão sendo formados nas duas turmas da 1ª série.' };
+    if (feitos < tot) return { rotulo:'Situação', texto:'Levantamento em andamento: '
+      + fech + ' de ' + g.length + ' grupos já fecharam a parte deles. '
+      + 'O relatório técnico sai quando os ' + tot + ' ambientes estiverem contados.' };
+    if (!qtdPrecos) return { rotulo:'Situação', texto:'Os ' + tot + ' ambientes foram '
+      + 'contados. Falta a pesquisa de preço do LED para o relatório sair com valores '
+      + 'de mercado em vez de valor de referência.' };
+    return { ok:true, rotulo:'Pronto para a gestão', texto:'Levantamento concluído e preço '
+      + 'pesquisado. O relatório técnico está completo — a aba Próximos passos traz o que '
+      + 'falta do lado administrativo.' };
+  }
+  const nunca = g.filter(x => +x.concluidos === 0 && +x.ambientes > 0).map(x => x.codigo);
+  const fechados = g.filter(x => +x.ambientes > 0 && +x.concluidos === +x.ambientes).length;
+  if (!g.length)
+    return { rotulo:'Comece por aqui', texto:'Nenhum grupo cadastrado ainda. Monte os grupos na aba Grupos.' };
+  if (!lamp)
+    return { rotulo:'Próximo passo', texto:'Ninguém lançou lâmpada ainda. Entregue as senhas e peça ao responsável de cada grupo que lance o primeiro ambiente.' };
+  if (nunca.length) {
+    const lista = nunca.length === 1 ? nunca[0]
+      : nunca.slice(0, -1).join(', ') + ' e ' + nunca[nunca.length - 1];
+    return { rotulo:'Próximo passo', texto: nunca.length === 1
+      ? 'Falta o grupo ' + lista + ' começar. Cobre o responsável dele.'
+      : 'Faltam os grupos ' + lista + ' começarem. Cobre o responsável de cada um.' };
+  }
+  if (feitos < tot)
+    return { rotulo:'Próximo passo', texto:'Faltam ' + (tot - feitos) + ' ambiente(s) para fechar o inventário. '
+      + fechados + ' de ' + g.length + ' grupos já terminaram.' };
+  if (!qtdPrecos)
+    return { rotulo:'Próximo passo', texto:'Inventário fechado. Agora libere a equipe de preço (senha PREÇO) para pesquisar o LED nas lojas — sem isso o parecer usa valor de referência.' };
+  return { ok:true, rotulo:'Tudo pronto', texto:'Inventário completo e preço pesquisado. O parecer da aba Parecer já pode virar ofício.' };
+}
+
+function pintarHeroi(r, feitos, tot, lamp, qtdPrecos) {
+  const pct = tot ? feitos / tot : 0;
+  const VOLTA = 2 * Math.PI * 52;
+  const acao = proximaAcao(r, feitos, tot, lamp, qtdPrecos);
+  el('heroi').className = 'heroi';
+  el('heroi').innerHTML =
+    '<svg class="anel" viewBox="0 0 120 120" role="img" aria-label="'
+      + Math.round(pct * 100) + ' por cento dos ambientes concluídos">'
+    + '<circle cx="60" cy="60" r="52" fill="none" stroke="var(--linha)" stroke-width="13"/>'
+    + '<circle class="arco" id="arco" cx="60" cy="60" r="52" fill="none" '
+    +   'stroke="var(--verde)" stroke-width="13" stroke-linecap="round" '
+    +   'transform="rotate(-90 60 60)" stroke-dasharray="' + VOLTA.toFixed(1)
+    +   '" stroke-dashoffset="' + VOLTA.toFixed(1) + '"/>'
+    + '<text class="vl" id="arcoVl" x="60" y="59" text-anchor="middle" font-size="26">0%</text>'
+    + '<text class="lb" x="60" y="76" text-anchor="middle" font-size="8">concluído</text>'
+    + '</svg>'
+    + '<div><div class="titulo">' + feitos + ' de ' + tot + ' ambientes fechados</div>'
+    + '<p class="frase">O inventário termina quando os ' + tot + ' ambientes estiverem '
+    + 'concluídos e a equipe de preço tiver pesquisado o LED. Só então o parecer sai '
+    + 'com números próprios da escola.</p>'
+    + '<div class="acao' + (acao.ok ? ' ok' : '') + '"><div><b>' + esc(acao.rotulo)
+    + '</b>' + esc(acao.texto) + '</div></div></div>';
+  animar(function(){
+    const arco = el('arco');
+    if (arco) arco.style.strokeDashoffset = (VOLTA * (1 - pct)).toFixed(1);
+  });
+  contar(el('arcoVl'), pct * 100, function(v){ return Math.round(v) + '%'; });
+}
+
+function pintarMinis(r, P, C, lamp, precoMed, qtdPrecos) {
+  const kwh = C.trocaveis * (P.pot_atual - P.pot_led) / 1000 * P.horas_dia * P.dias_mes;
+  const itens = [
+    ['lamp', lamp, 'pontos de luz contados', '', v => Math.round(v)],
+    ['troc', C.trocaveis, 'valem a troca', 'de ' + lamp, v => Math.round(v)],
+    ['econ', C.econMes, 'economia por mês', '≈ ' + Math.round(kwh) + ' kWh', brl],
+    ['prec', qtdPrecos ? precoMed : 0, 'preço do LED',
+      qtdPrecos ? (qtdPrecos + ' loja' + (qtdPrecos === 1 ? '' : 's')) : 'referência', brl]
+  ];
+  el('minis').innerHTML = itens.map(function(it){
+    return '<div class="mini"><b id="mini_' + it[0] + '">0</b>'
+      + '<span>' + esc(it[2]) + (it[3] ? '<i>' + esc(it[3]) + '</i>' : '') + '</span></div>';
+  }).join('');
+  itens.forEach(function(it){ contar(el('mini_' + it[0]), it[1], it[4]); });
+}
+
+function pintarGrafGrupos(grupos) {
+  const cx = el('grafGrupos');
+  if (!grupos.length) {
+    cx.innerHTML = '<h4>Avanço de cada grupo</h4>'
+      + '<p class="sub">Nenhum grupo cadastrado. Monte os grupos na aba <b>Grupos</b> '
+      + 'para este painel começar a mostrar o avanço.</p>';
+    return;
+  }
+  cx.innerHTML = '<h4>Avanço de cada grupo</h4>'
+    + '<p class="sub">Ambientes concluídos sobre o total de cada grupo. '
+    + 'Cinza é grupo que ainda não começou; âmbar está no meio; verde fechou.</p>'
+    + '<div class="linhas">' + grupos.map(function(g){
+        const a = +g.ambientes, c = +g.concluidos, pct = a ? c / a : 0;
+        const est = a === 0 ? 'parado' : (c === 0 ? 'parado' : (c < a ? 'andando' : ''));
+        return '<div class="lin ' + est + '"><span class="cod">' + esc(g.codigo) + '</span>'
+          + '<span class="trilho"><i class="fita" data-pct="' + (pct * 100).toFixed(1) + '"></i></span>'
+          + '<span class="vl">' + c + ' de ' + a + '</span></div>';
+      }).join('') + '</div>';
+  animar(function(){
+    const fitas = cx.querySelectorAll('.fita');
+    for (let i = 0; i < fitas.length; i++) fitas[i].style.width = fitas[i].dataset.pct + '%';
+  });
+}
+
+/* linha do saldo: a matemática do projeto desenhada */
+function pintarGrafSaldo(C, P, lamp) {
+  const cx = el('grafSaldo');
+  if (!C.trocaveis) {
+    cx.innerHTML = '<h4>Quando a troca se paga</h4>'
+      + '<p class="sub">O gráfico aparece assim que houver lâmpadas lançadas com '
+      + 'potência acima da do LED. É ele que responde a pergunta do projeto.</p>';
+    return;
+  }
+  const N = Math.min(36, Math.max(14, (C.pago || 12) + 4, C.mesesTroca + 4));
+  const A = C.serieTudo.filter(d => d.m <= N), B = C.serieLote.filter(d => d.m <= N);
+  const vals = A.concat(B).map(d => d.v);
+  let yMin = Math.min.apply(null, vals), yMax = Math.max.apply(null, vals);
+  const folga = (yMax - yMin) * 0.1 || 1;
+  yMin -= folga; yMax += folga;
+  // degraus redondos, para a malha cair em 5.000, 0, -5.000 e nao em 6.689,63
+  const bruto = (yMax - yMin) / 4;
+  const esc10 = Math.pow(10, Math.floor(Math.log(Math.abs(bruto) || 1) / Math.LN10));
+  const n = bruto / esc10;
+  const passoY = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * esc10;
+  yMin = Math.floor(yMin / passoY) * passoY;
+  yMax = Math.ceil(yMax / passoY) * passoY;
+
+  const estreito = window.innerWidth < 620;
+  const curto = function(v){
+    const sinal = v < 0 ? '−' : '', a = Math.abs(v);
+    if (estreito) return sinal + (a >= 1000 ? Math.round(a / 1000) + ' mil' : Math.round(a));
+    return sinal + Math.round(a).toLocaleString('pt-BR');
+  };
+  const L = estreito ? 420 : 720, Al = 300;
+  const mE = estreito ? 54 : 74, mD = estreito ? 10 : 16, mT = 16, mB = 34;
+  const px = m => mE + (L - mE - mD) * (m / N);
+  const py = v => mT + (Al - mT - mB) * (1 - (v - yMin) / (yMax - yMin));
+  const caminho = serie => serie.map(function(d, i){
+    return (i ? 'L' : 'M') + px(d.m).toFixed(1) + ' ' + py(d.v).toFixed(1);
+  }).join(' ');
+
+  const passo = Math.ceil(N / (estreito ? 4 : 6));
+  let g = '';
+  for (let v = yMin; v <= yMax + passoY / 2; v += passoY) {
+    const y = py(v);
+    g += '<line class="malha" x1="' + mE + '" y1="' + y.toFixed(1) + '" x2="' + (L - mD)
+       + '" y2="' + y.toFixed(1) + '"/>'
+       + '<text class="rot" x="' + (mE - 9) + '" y="' + (y + 3.5).toFixed(1)
+       + '" text-anchor="end">' + curto(v) + '</text>';
+  }
+  g += '<line class="zero" x1="' + mE + '" y1="' + py(0).toFixed(1) + '" x2="' + (L - mD)
+     + '" y2="' + py(0).toFixed(1) + '"/>';
+  for (let m = 0; m <= N; m += passo) {
+    g += '<text class="rot" x="' + px(m).toFixed(1) + '" y="' + (Al - 9)
+       + '" text-anchor="middle">' + m + '</text>';
+  }
+
+  const marcos = [];
+  if (C.pagoTudo && C.pagoTudo <= N)
+    marcos.push([C.pagoTudo, 0, 'var(--azul)', C.pagoTudo.toFixed(1).replace('.', ',') + ' meses']);
+  if (C.pago && C.pago <= N)
+    marcos.push([C.pago, 0, 'var(--ambar)', C.pago + ' meses']);
+
+  cx.innerHTML = '<h4>Quando a troca se paga</h4>'
+    + '<p class="sub">Saldo acumulado da escola em reais (altura) ao longo dos meses '
+    + '(base), com os números que os grupos já lançaram. Acima da linha tracejada, '
+    + 'a troca virou lucro.</p>'
+    + '<svg class="cart" viewBox="0 0 ' + L + ' ' + Al + '" role="img" '
+    + 'aria-label="Saldo acumulado ao longo dos meses nas duas estratégias de troca">'
+    + g
+    + '<path class="serie" id="sTudo" d="' + caminho(A) + '" stroke="var(--azul)"/>'
+    + '<path class="serie" id="sLote" d="' + caminho(B) + '" stroke="var(--ambar)"/>'
+    + marcos.map(function(mk){
+        return '<circle class="marco" cx="' + px(mk[0]).toFixed(1) + '" cy="' + py(mk[1]).toFixed(1)
+          + '" r="5.5" fill="' + mk[2] + '"/>';
+      }).join('')
+
+    + '</svg>'
+    + '<div class="legenda">'
+    + '<span><i style="background:var(--azul)"></i>Trocar tudo de uma vez — '
+    + (C.pagoTudo ? C.pagoTudo.toFixed(1).replace('.', ',') + ' meses' : '—') + '</span>'
+    + '<span><i style="background:var(--ambar)"></i>Trocar ' + P.lote_mes + ' por mês — '
+    + (C.pago ? C.pago + ' meses' : 'mais de ' + N + ' meses') + '</span></div>'
+    + '<p class="sub">Investimento de ' + brl(C.invest) + ' para as ' + C.trocaveis
+    + ' lâmpadas que valem a troca. Parcelar adia o retorno: é o preço de não ter o '
+    + 'dinheiro todo hoje. O fundo da curva âmbar, no mês '
+    + C.vert.toFixed(1).replace('.', ',') + ', é o pior momento de caixa.</p>';
+
+  animar(function(){
+    ['sTudo', 'sLote'].forEach(function(id){
+      const no = el(id);
+      if (!no || !no.getTotalLength) return;
+      const c = no.getTotalLength();
+      no.style.strokeDasharray = c; no.style.strokeDashoffset = c;
+      requestAnimationFrame(function(){ no.style.strokeDashoffset = 0; });
+    });
+  });
+}
+
+function pintarGrafTipos(tipos) {
+  const cx = el('grafTipos');
+  if (!cx) return;
+  if (!tipos.length) {
+    cx.innerHTML = '<h4>O que existe na escola</h4>'
+      + '<p class="sub">Nada lançado ainda. Assim que os grupos registrarem os '
+      + 'primeiros ambientes, o perfil dos equipamentos aparece aqui.</p>';
+    return;
+  }
+  const lista = tipos.slice().sort(function(a,b){ return +b.quantidade - +a.quantidade; }).slice(0, 8);
+  const maior = Math.max.apply(null, lista.map(t => +t.quantidade));
+  cx.innerHTML = '<h4>O que existe na escola</h4>'
+    + '<p class="sub">Os equipamentos mais contados, do mais comum para o menos comum.</p>'
+    + '<div class="linhas">' + lista.map(function(t){
+        return '<div class="lin" style="grid-template-columns:minmax(7rem,12rem) 1fr 4.2rem">'
+          + '<span class="cod" style="color:var(--tinta);font-size:.8rem;font-family:var(--c);'
+          + 'font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'
+          + esc(t.tipo) + '">' + esc(t.tipo) + '</span>'
+          + '<span class="trilho"><i class="fita" style="background:var(--azul)" data-pct="'
+          + (+t.quantidade / maior * 100).toFixed(1) + '"></i></span>'
+          + '<span class="vl">' + t.quantidade + '</span></div>';
+      }).join('') + '</div>';
+  animar(function(){
+    const f = cx.querySelectorAll('.fita');
+    for (let i = 0; i < f.length; i++) f[i].style.width = f[i].dataset.pct + '%';
+  });
+}
+
+
+/* =================== avaliação entre os integrantes ===================
+   Cinco perguntas, quatro opções cada, nada para digitar. A resposta da
+   esquerda vale 3 e a da direita vale 0. */
+const QUESTOES = [
+  { k:'presenca', t:'Apareceu nos dias combinados de contagem?',
+    o:['Sempre','Quase sempre','Poucas vezes','Não apareceu'] },
+  { k:'tarefa', t:'Fez a parte dele sem precisar ser cobrado?',
+    o:['Sempre','Quase sempre','Só quando cobrado','Não fez'] },
+  { k:'cuidado', t:'Anotou e conferiu com cuidado?',
+    o:['Sem nenhum erro','Com erro pequeno','Precisou refazer','Não anotou'] },
+  { k:'ajuda', t:'Ajudou quando alguém do grupo travou?',
+    o:['Sempre','Às vezes','Raramente','Nunca'] },
+  { k:'regras', t:'Respeitou as regras de segurança?',
+    o:['Sempre','Quase sempre','Precisou ser avisado','Não respeitou'] }
+];
+let COLEGAS = [], ALVO = null, RESP = {};
+
+function iniciais(nome) {
+  const p = String(nome).trim().split(/\s+/);
+  return ((p[0] || '')[0] || '') + ((p.length > 1 ? p[p.length - 1] : '')[0] || '');
+}
+function recado(texto) {
+  let no = el('recado');
+  if (!no) {
+    no = document.createElement('div');
+    no.id = 'recado'; no.className = 'aviso-flutua';
+    no.setAttribute('role', 'status');
+    document.body.appendChild(no);
+  }
+  no.textContent = texto;
+  no.classList.add('ver');
+  clearTimeout(no._t);
+  no._t = setTimeout(() => no.classList.remove('ver'), 2400);
+}
+
+async function abrirAvaliacao() {
+  if (!SOU) { escolherQuemSou(); return; }
+  telas('avaliar');
+  el('fichaColega').hidden = true; el('listaColegas').hidden = false;
+  msg('avisoAval','');
+  el('tituloAval').textContent = 'Avaliação da equipe · Grupo ' + EU.codigo;
+  el('colegas').innerHTML = '<p class="ajuda">Carregando...</p>';
+  try {
+    const r = await rpc('colegas', { p_token: EU.token, p_autor: SOU.id });
+    if (!r.ok) { msg('avisoAval', r.erro, 'erro'); el('colegas').innerHTML = ''; return; }
+    COLEGAS = r.colegas || [];
+    pintarColegas();
+  } catch (e) { msg('avisoAval', e.message, 'erro'); el('colegas').innerHTML = ''; }
+}
+
+function pintarColegas() {
+  const feitos = COLEGAS.filter(c => c.respondido).length;
+  el('subAval').textContent = COLEGAS.length
+    ? 'Responda sobre cada colega do seu grupo. ' + feitos + ' de ' + COLEGAS.length
+      + ' já respondido' + (feitos === 1 ? '' : 's') + '. Dá para mudar depois.'
+    : 'Você é o único do grupo cadastrado até agora. Quando os colegas entrarem, eles aparecem aqui.';
+  el('passosAval').innerHTML = COLEGAS.map(c =>
+    '<i class="' + (c.respondido ? 'ok' : '') + '"></i>').join('');
+  el('colegas').innerHTML = COLEGAS.length
+    ? COLEGAS.map(c =>
+        '<button class="pessoa' + (c.respondido ? ' pronto' : '') + '" data-id="' + c.id + '">'
+        + '<span class="ini">' + esc(iniciais(c.nome)) + '</span>'
+        + '<span class="t">' + esc(c.nome)
+        + '<small>' + (c.respondido ? 'já avaliado — toque para rever'
+                                    : 'ainda não avaliado') + '</small></span>'
+        + '<span class="st">' + (c.respondido ? '✓' : '›') + '</span></button>').join('')
+    : '';
+  document.querySelectorAll('#colegas .pessoa').forEach(b =>
+    b.addEventListener('click', () => abrirFicha(+b.dataset.id)));
+}
+
+function abrirFicha(id) {
+  ALVO = COLEGAS.find(c => c.id === id);
+  if (!ALVO) return;
+  RESP = {};
+  QUESTOES.forEach(q => { if (ALVO[q.k] !== null && ALVO[q.k] !== undefined) RESP[q.k] = +ALVO[q.k]; });
+  el('listaColegas').hidden = true; el('fichaColega').hidden = false;
+  el('iniAlvo').textContent = iniciais(ALVO.nome);
+  el('nomeAlvo').textContent = ALVO.nome;
+  el('papelAlvo').textContent = PAPEL[ALVO.equipe] || 'papel ainda não definido';
+  el('perguntas').innerHTML = QUESTOES.map((q, i) =>
+    '<div class="pergunta"><b><i>Pergunta ' + (i + 1) + ' de ' + QUESTOES.length + '</i>'
+    + esc(q.t) + '</b><div class="opcoes" data-q="' + q.k + '">'
+    + q.o.map((texto, j) => {
+        const v = 3 - j;
+        return '<button type="button" data-v="' + v + '" aria-pressed="'
+          + (RESP[q.k] === v ? 'true' : 'false') + '">' + esc(texto) + '</button>';
+      }).join('') + '</div></div>').join('');
+  document.querySelectorAll('#perguntas .opcoes').forEach(bloco =>
+    bloco.querySelectorAll('button').forEach(b =>
+      b.addEventListener('click', () => {
+        RESP[bloco.dataset.q] = +b.dataset.v;
+        bloco.querySelectorAll('button').forEach(x =>
+          x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      })));
+  window.scrollTo(0, 0);
+}
+
+el('btAvaliar').addEventListener('click', abrirAvaliacao);
+el('btAvaliar2').addEventListener('click', abrirAvaliacao);
+el('btVoltaAval').addEventListener('click', () => {
+  if (!el('fichaColega').hidden) { el('fichaColega').hidden = true; el('listaColegas').hidden = false; }
+  else irParaMinhaTela();
+});
+el('btCancelarAval').addEventListener('click', () => {
+  el('fichaColega').hidden = true; el('listaColegas').hidden = false; window.scrollTo(0,0);
+});
+el('btSalvarAval').addEventListener('click', async () => {
+  const falta = QUESTOES.filter(q => RESP[q.k] === undefined);
+  if (falta.length) {
+    msg('avisoAval', 'Faltou responder ' + falta.length + ' pergunta'
+      + (falta.length === 1 ? '' : 's') + '. Toque em uma opção de cada uma.', 'erro');
+    window.scrollTo(0,0);
+    return;
+  }
+  const b = el('btSalvarAval'); b.disabled = true; b.textContent = 'Salvando...';
+  try {
+    const r = await rpc('avaliar', { p_token: EU.token, p_autor: SOU.id, p_alvo: ALVO.id,
+      p_presenca: RESP.presenca, p_tarefa: RESP.tarefa, p_cuidado: RESP.cuidado,
+      p_ajuda: RESP.ajuda, p_regras: RESP.regras });
+    if (!r.ok) msg('avisoAval', r.erro, 'erro');
+    else {
+      ALVO.respondido = true;
+      QUESTOES.forEach(q => { ALVO[q.k] = RESP[q.k]; });
+      msg('avisoAval','');
+      el('fichaColega').hidden = true; el('listaColegas').hidden = false;
+      pintarColegas();
+      recado('Avaliação de ' + ALVO.nome.split(' ')[0] + ' salva');
+      window.scrollTo(0,0);
+    }
+  } catch (e) { msg('avisoAval', e.message, 'erro'); }
+  b.disabled = false; b.textContent = 'Salvar esta avaliação';
+});
+
+/* =================== o professor lê as avaliações =================== */
+async function carregarAvaliacao() {
+  if (EU.papel !== 'professor') return;
+  let r;
+  try { r = await rpc('relatorio_avaliacao', { p_token: EU.token }); } catch (e) { return; }
+  if (!r.ok) return;
+  const al = r.alunos || [];
+  const semEnviar = al.filter(a => +a.colegas > 0 && +a.enviadas < +a.colegas).length;
+  el('ajudaAval').textContent = !al.length
+    ? 'Ninguém está em grupo ainda.'
+    : (+r.total === 0
+        ? 'Nenhuma avaliação respondida até agora. Os alunos respondem pelo botão "Avaliar a equipe", na própria tela deles.'
+        : r.total + ' avaliação(ões) respondida(s). '
+          + (semEnviar ? semEnviar + ' aluno(s) ainda não avaliaram todos os colegas.'
+                       : 'Todos já avaliaram os colegas.'));
+  if (!al.length) {
+    el('tabAval').innerHTML = '<tbody><tr><td class="nd">Sem alunos em grupo.</td></tr></tbody>';
+    return;
+  }
+  const n1 = v => (v === null || v === undefined) ? '—' : String(v).replace('.', ',');
+  el('tabAval').innerHTML =
+    '<thead><tr><th class="cresce">Aluno</th><th>Grupo</th><th>Recebidas</th>'
+    + '<th>Enviadas</th><th>Média</th><th>Presença</th><th>Tarefa</th><th>Cuidado</th>'
+    + '<th>Ajuda</th><th>Regras</th></tr></thead><tbody>'
+    + al.map(a => {
+        const devendo = +a.colegas > 0 && +a.enviadas < +a.colegas;
+        return '<tr' + (devendo ? ' class="alerta"' : '') + '>'
+          + '<td class="cresce">' + esc(a.nome) + '</td>'
+          + '<td><b>' + esc(a.grupo) + '</b></td>'
+          + '<td class="n">' + a.recebidas + '</td>'
+          + '<td class="n">' + a.enviadas + ' de ' + a.colegas + '</td>'
+          + '<td class="n"><b>' + n1(a.media) + '</b></td>'
+          + '<td class="n">' + n1(a.presenca) + '</td><td class="n">' + n1(a.tarefa) + '</td>'
+          + '<td class="n">' + n1(a.cuidado) + '</td><td class="n">' + n1(a.ajuda) + '</td>'
+          + '<td class="n">' + n1(a.regras) + '</td></tr>';
+      }).join('') + '</tbody>';
+}
+
+/* =================== o que a gestão precisa fazer =================== */
+const PROVIDENCIAS = [
+  ['Fechar o inventário e gerar o relatório técnico', 'Professor e estudantes', true,
+   'Os 43 ambientes contados ponto a ponto. Esse levantamento não existe em nenhum outro '
+   + 'lugar, e é ele que transforma "a escola gasta muito" num pedido com número. Sem o '
+   + 'relatório fechado, não há o que protocolar.'],
+  ['Protocolar o pedido no programa de eficiência da distribuidora', 'Direção', true,
+   'A Lei nº 9.991/2000 obriga as distribuidoras a aplicar parte da receita em '
+   + 'eficiência energética no uso final — é essa lei que sustenta o pedido. O projeto '
+   + 'Eficiência em Prédios da Neoenergia recebe pedidos por e-mail, em '
+   + 'eficiencia@neoenergia.com, com o aval de quem é dono do prédio. Os critérios '
+   + 'publicados são verificados pela própria distribuidora — a escola não precisa levantar '
+   + 'nada sobre consumo, porque esse dado quem tem é a concessionária. A escola entra com '
+   + 'o inventário e com a pergunta.'],
+  ['Protocolar o mesmo pedido no NTE e na Secretaria da Educação', 'Direção', true,
+   'O prédio é do Estado. Sem o aval de quem é dono do imóvel, nenhuma intervenção '
+   + 'elétrica é executada, mesmo que a distribuidora aprove. Os dois caminhos andam '
+   + 'juntos, não um depois do outro.'],
+  ['Colher as assinaturas do relatório', 'Direção, professor e estudantes', false,
+   'Direção, professor e dois representantes por turma. O documento sai da escola assinado '
+   + 'por quem fez o levantamento — é isso que o distingue de um pedido genérico.'],
+  ['Pedir visita técnica para o diagnóstico', 'Direção', false,
+   'A medição de consumo e o diagnóstico elétrico são da distribuidora. O papel da escola '
+   + 'termina no inventário e no pedido formal.'],
+  ['Resolver o destino das lâmpadas fluorescentes retiradas', 'Direção', false,
+   'Fluorescente contém mercúrio e não pode ir para o lixo comum. A Política Nacional de '
+   + 'Resíduos Sólidos (Lei nº 12.305/2010) prevê logística reversa para esse tipo de '
+   + 'lâmpada. Confirme com a prefeitura ou com o próprio fornecedor onde entregar.'],
+  ['Combinar como a economia será verificada depois', 'Professor e direção', false,
+   'A escola não tem acesso a medição, então a verificação é por contagem: refazer o '
+   + 'inventário depois da troca e comparar a potência instalada, em watts, antes e '
+   + 'depois. É o único número que a escola consegue medir sozinha — e é suficiente para '
+   + 'mostrar que a previsão se cumpriu.']
+];
+
+function montarPassos() {
+  const gestao = EU && EU.papel === 'gestao';
+  el('passosGestao').innerHTML =
+    '<h3 class="sec" style="margin-top:4px">O que falta para a troca acontecer</h3>'
+    + '<p class="ajuda">' + (gestao
+      ? 'Esta lista é a parte da gestão. O trabalho dos estudantes produz o levantamento; '
+        + 'daqui para frente o que decide é o caminho administrativo.'
+      : 'Leve esta lista para a direção. O relatório dos alunos é a peça técnica; estas '
+        + 'são as providências que fazem a troca sair do papel.') + '</p>'
+    + '<div class="graf"><ol class="trilha">'
+    + PROVIDENCIAS.map(pr =>
+        '<li><h5>' + esc(pr[0]) + '</h5>'
+        + '<p><span class="quem' + (pr[2] ? ' urg' : '') + '">' + esc(pr[1]) + '</span>'
+        + esc(pr[3]) + '</p></li>').join('')
+    + '</ol></div>'
+    + '<p class="ajuda">Os três pontos em âmbar travam o resto: sem o relatório fechado '
+    + 'e sem os dois protocolos, nada depois tem como andar. As condições do programa da '
+    + 'distribuidora e o ponto de entrega das lâmpadas mudam com o tempo — confirme os '
+    + 'dois antes de enviar.</p>';
+}
+
 function montarParecer(r, P, lamp, precoLed, feitos, tot, qtdPrecos) {
   const falta = [];
   if (feitos < tot) falta.push((tot - feitos) + ' ambiente(s) ainda não concluído(s)');
@@ -1009,33 +1743,11 @@ function montarParecer(r, P, lamp, precoLed, feitos, tot, qtdPrecos) {
   if (!lamp) { el('parecer').innerHTML = '<p>Assim que o primeiro grupo lançar as lâmpadas, '
     + 'o parecer aparece aqui com os números reais.</p>'; return; }
 
-  // lampadas que valem troca: as de potencia maior que a do LED
-  const trocaveis = (r.potencias||[])
-    .filter(p => p.potencia_w != null && +p.potencia_w > P.pot_led)
-    .reduce((s,p) => s + (+p.quantidade), 0);
-  const semPot = (r.potencias||[])
-    .filter(p => p.potencia_w == null).reduce((s,p) => s + (+p.quantidade), 0);
-
+  const K = contas(r, P, lamp, precoLed);
+  const trocaveis = K.trocaveis, semPot = K.semPot, cen = K.cen, base = K.base;
+  const invest = K.invest, econMes = K.econMes, vert = K.vert;
+  const mesesTroca = K.mesesTroca, pago = K.pago;
   const linhas = [];
-  const cen = [4,5,6,7,8].map(h => {
-    const ec = (P.pot_atual - P.pot_led)/1000 * h * P.dias_mes * P.tarifa;
-    return { h: h, ec: ec, meses: precoLed / ec };
-  });
-  const base = cen.find(c => c.h === P.horas_dia) || cen[2];
-  const invest = trocaveis * precoLed;
-  const econMes = trocaveis * base.ec;
-
-  // troca em lotes: S(m) = a m^2 + b m
-  const a = P.lote_mes * base.ec / 2;
-  const b = P.lote_mes * base.ec / 2 - P.lote_mes * precoLed;
-  const vert = -b / (2*a);
-  const mesesTroca = Math.ceil(trocaveis / P.lote_mes);
-  let saldo = 0, trocadas = 0, pago = null;
-  for (let m = 1; m <= 60 && pago === null; m++) {
-    const novas = Math.min(P.lote_mes, trocaveis - trocadas); trocadas += novas;
-    saldo += trocadas * base.ec - novas * precoLed;
-    if (saldo > 0) pago = m;
-  }
 
   linhas.push('<h4>1. O que foi levantado</h4><p>Os estudantes percorreram <b>' + tot +
     ' ambientes</b> da escola e registraram <b>' + lamp + ' pontos de luz</b>. Desses, <b>' +
