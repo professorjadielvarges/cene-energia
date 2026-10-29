@@ -153,10 +153,15 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
   transition:all .13s}
 .lixo:hover{border-color:var(--verm);color:var(--verm);background:var(--verm-sup)}
 
-/* ---------- tabelas ---------- */
-.rol{overflow-x:auto;border:1px solid var(--linha);border-radius:var(--r);
-  margin-bottom:20px;background:var(--sup);box-shadow:var(--sombra)}
-table{width:100%;border-collapse:collapse;font-size:.88rem;table-layout:auto}
+/* ---------- tabelas ----------
+   Uma tabela boa não é uma grade de números: é um instrumento. Cada uma aqui
+   tem a leitura visual embutida na célula, ordena no clique do cabeçalho e,
+   no celular, deixa de ser tabela e vira lista de cartões. */
+.rol{overflow-x:auto;border:1px solid var(--linha);border-radius:14px;
+  margin-bottom:20px;background:var(--sup);box-shadow:var(--sombra);
+  -webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:.88rem;
+  table-layout:auto}
 /* Valores sempre centralizados. A esquerda fica so o que nomeia a linha:
    a primeira coluna, .nome (texto curto) e .cresce (texto que quebra linha). */
 th,td{padding:11px 14px;text-align:center;border-bottom:1px solid var(--linha);
@@ -165,11 +170,44 @@ th:first-child,td:first-child{text-align:left}
 th.cresce,td.cresce{width:auto;white-space:normal;min-width:16ch;text-align:left}
 th.nome,td.nome{text-align:left}
 td.nd{color:var(--tinta3);white-space:normal;padding:26px 14px}
-th{font-family:var(--d);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;
-  color:var(--tinta2);background:var(--sup2);font-weight:700;position:sticky;top:0}
-td.n{font-family:var(--m);font-variant-numeric:tabular-nums}
+th{font-family:var(--d);font-size:.66rem;text-transform:uppercase;letter-spacing:.085em;
+  color:var(--tinta2);font-weight:700;position:sticky;top:0;z-index:2;
+  background:var(--sup2);box-shadow:inset 0 -1px 0 var(--linha2);
+  padding-top:13px;padding-bottom:13px;user-select:none;border-bottom:0}
+th.ord{cursor:pointer;transition:color .13s}
+th.ord:hover{color:var(--azul)}
+th.ord::after{content:"";display:inline-block;width:0;height:0;margin-left:6px;
+  vertical-align:middle;border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid var(--tinta3);opacity:0;transition:opacity .15s,transform .15s}
+th.ord:hover::after{opacity:.45}
+th.ord[data-dir="asc"]::after{opacity:1;transform:rotate(180deg);border-top-color:var(--azul)}
+th.ord[data-dir="desc"]::after{opacity:1;border-top-color:var(--azul)}
+td.n{font-family:var(--m);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 tbody tr:last-child td{border-bottom:0}
+tbody tr{transition:background .12s}
 tbody tr:hover{background:var(--sup2)}
+tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--azul)}
+
+/* leitura visual dentro da célula */
+.dbar{display:block;height:5px;border-radius:3px;background:var(--linha);
+  margin-top:5px;overflow:hidden;min-width:52px}
+.dbar i{display:block;height:100%;width:0;border-radius:3px;background:var(--verde);
+  transition:width .8s cubic-bezier(.2,.8,.25,1)}
+.dbar.am i{background:var(--ambar)} .dbar.az i{background:var(--azul)}
+.dbar.cz i{background:var(--linha2)}
+.pts{display:inline-flex;gap:5px;align-items:center}
+.pts i{width:10px;height:10px;border-radius:50%;background:var(--linha);flex:none;
+  box-shadow:inset 0 0 0 1px var(--linha2);transition:background .2s}
+.pts i.on{background:var(--verde);box-shadow:none}
+.pts i.falta{background:var(--verm-sup);box-shadow:inset 0 0 0 1px var(--verm)}
+.tag{display:inline-block;font-family:var(--d);font-size:.66rem;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
+  background:var(--sup2);color:var(--tinta2)}
+.tag.v{background:var(--verde-sup);color:var(--verde)}
+.tag.a{background:var(--ambar-sup);color:var(--ambar)}
+.tag.c{background:var(--linha);color:var(--tinta2)}
+.tag.az{background:var(--azul-sup);color:var(--azul)}
+.destaque-cel{font-weight:700;color:var(--verde)}
 tbody tr.alerta{background:var(--verm-sup)}
 tbody tr.alerta td:first-child{box-shadow:inset 3px 0 0 var(--verm);font-weight:600}
 tbody tr.alerta:hover{background:var(--verm-sup);filter:brightness(.98)}
@@ -399,6 +437,28 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   .heroi{grid-template-columns:1fr;justify-items:start;gap:16px}
   .lin{grid-template-columns:2.3rem 1fr;row-gap:4px}
   .lin .vl{grid-column:2;text-align:left}
+}
+
+@media(max-width:620px){
+  .rol{overflow:visible;border:0;background:none;box-shadow:none;border-radius:0}
+  table,tbody,tr,td{display:block;width:auto}
+  thead{display:none}
+  tbody tr{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r);
+    box-shadow:var(--sombra);margin-bottom:10px;padding:4px 2px;overflow:hidden}
+  tbody tr:hover td:first-child{box-shadow:none}
+  tbody tr.alerta{border-color:var(--verm)}
+  td{border-bottom:1px solid var(--linha);text-align:right!important;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:9px 14px!important;white-space:normal;width:auto!important}
+  td:first-child{text-align:left!important;display:block;font-weight:700;
+    font-size:1rem;background:var(--sup2);padding:11px 14px!important;
+    font-family:var(--d);letter-spacing:-.015em}
+  td:last-child{border-bottom:0}
+  td[data-r]::before{content:attr(data-r);font-family:var(--d);font-size:.63rem;
+    font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tinta2);
+    text-align:left;flex:none}
+  td.nd{display:block;text-align:center!important}
+  .dbar{min-width:70px}
 }
 
 @media(max-width:460px){
@@ -1140,33 +1200,68 @@ async function carregarProf() {
 
   if (!(r.grupos || []).length) {
     el('tabGrupos').innerHTML = '<tbody><tr><td class="nd">Nenhum grupo cadastrado no sistema.</td></tr></tbody>';
-  } else el('tabGrupos').innerHTML =
-    '<thead><tr><th class="nome">Grupo</th><th>Turma</th><th>Ambientes</th><th>Concluídos</th>' +
-    '<th>Lâmpadas</th><th class="cresce">Situação</th></tr></thead><tbody>' +
+  } else {
+    const maiorL = Math.max.apply(null, (r.grupos||[]).map(g => +g.lampadas).concat([1]));
+    el('tabGrupos').innerHTML =
+    '<thead><tr><th class="nome">Grupo</th><th>Turma</th><th>Ambientes</th>' +
+    '<th>Concluídos</th><th>Lâmpadas</th><th>Situação</th></tr></thead><tbody>' +
     (r.grupos||[]).map(g => {
-      const c = +g.concluidos, a = +g.ambientes;
-      const sit = a === 0 ? '—' : (c === 0 ? 'não começou' : (c < a ? 'em andamento' : 'concluído'));
-      return '<tr><td class="nome"><b>' + g.codigo + '</b></td><td>' + g.turma + '</td>' +
-        '<td class="n">' + a + '</td><td class="n">' + c + '</td>' +
-        '<td class="n">' + g.lampadas + '</td><td class="cresce">' + sit + '</td></tr>';
+      const c = +g.concluidos, a = +g.ambientes, pct = a ? c / a * 100 : 0;
+      const est = a === 0 ? ['c','—'] : (c === 0 ? ['c','não começou']
+                : (c < a ? ['a','em andamento'] : ['v','concluído']));
+      return '<tr><td class="nome"><b>' + esc(g.codigo) + '</b></td>' +
+        '<td data-r="Turma">' + esc(g.turma) + '</td>' +
+        '<td class="n" data-r="Ambientes" data-v="' + a + '">' + a + '</td>' +
+        '<td class="n" data-r="Concluídos" data-v="' + pct.toFixed(2) + '">' + c + ' de ' + a +
+          dbar(pct, est[0] === 'v' ? '' : (est[0] === 'a' ? 'am' : 'cz')) + '</td>' +
+        '<td class="n" data-r="Lâmpadas" data-v="' + g.lampadas + '">' + g.lampadas +
+          dbar(+g.lampadas / maiorL * 100, 'az') + '</td>' +
+        '<td data-r="Situação" data-v="' + pct.toFixed(2) + '"><span class="tag ' + est[0] +
+          '">' + est[1] + '</span></td></tr>';
     }).join('') + '</tbody>';
+    ordenavel('tabGrupos');
+  }
 
-  el('tabTipos').innerHTML = (r.tipos||[]).length
-    ? '<thead><tr><th class="cresce">Equipamento</th><th>Quantidade</th><th>Potência somada</th></tr></thead><tbody>' +
-      r.tipos.map(t => '<tr><td class="cresce">' + t.tipo + '</td><td class="n">' + t.quantidade +
-        '</td><td class="n">' + (+t.watts).toLocaleString('pt-BR') + ' W</td></tr>').join('') + '</tbody>'
-    : '<tbody><tr><td class="nd">Nenhum equipamento lançado ainda.</td></tr></tbody>';
+  if ((r.tipos||[]).length) {
+    const maiorQ = Math.max.apply(null, r.tipos.map(t => +t.quantidade).concat([1]));
+    const somaQ = r.tipos.reduce((x, t) => x + (+t.quantidade), 0) || 1;
+    el('tabTipos').innerHTML =
+      '<thead><tr><th class="cresce">Equipamento</th><th>Quantidade</th>' +
+      '<th>Fatia</th><th>Potência somada</th></tr></thead><tbody>' +
+      r.tipos.map(t => '<tr><td class="cresce">' + esc(t.tipo) + '</td>' +
+        '<td class="n" data-r="Quantidade" data-v="' + t.quantidade + '">' + t.quantidade +
+          dbar(+t.quantidade / maiorQ * 100, 'az') + '</td>' +
+        '<td class="n" data-r="Fatia" data-v="' + (+t.quantidade / somaQ) + '">' +
+          (+t.quantidade / somaQ * 100).toFixed(0) + '%</td>' +
+        '<td class="n" data-r="Potência somada" data-v="' + t.watts + '">' +
+          (+t.watts).toLocaleString('pt-BR') + ' W</td></tr>').join('') + '</tbody>';
+    ordenavel('tabTipos');
+  } else el('tabTipos').innerHTML =
+    '<tbody><tr><td class="nd">Nenhum equipamento lançado ainda.</td></tr></tbody>';
   pintarGrafTipos(r.tipos || []);
 
-  el('tabPrecos').innerHTML = (r.precos||[]).length
-    ? '<thead><tr><th class="nome">Loja</th><th class="cresce">Produto</th><th>Quem pesquisou</th><th>Preço</th></tr></thead><tbody>' +
-      r.precos.map(p => '<tr><td class="nome">' + p.loja + '</td><td class="cresce">' + p.produto +
-        '</td><td>' + (p.quem || '—') + '</td><td class="n">' + brl(+p.preco) +
-        '</td></tr>').join('') + '</tbody>'
-    : '<tbody><tr><td class="nd">Nenhum preço pesquisado ainda.</td></tr></tbody>';
+  if ((r.precos||[]).length) {
+    const vals = r.precos.map(p => +p.preco);
+    const menor = Math.min.apply(null, vals), maior = Math.max.apply(null, vals);
+    el('tabPrecos').innerHTML =
+      '<thead><tr><th class="nome">Loja</th><th class="cresce">Produto</th>' +
+      '<th>Quem pesquisou</th><th>Preço</th></tr></thead><tbody>' +
+      r.precos.map(p => {
+        const v = +p.preco, barato = v === menor && vals.length > 1;
+        return '<tr><td class="nome">' + esc(p.loja) + '</td>' +
+          '<td class="cresce" data-r="Produto">' + esc(p.produto) + '</td>' +
+          '<td data-r="Quem pesquisou">' + esc(p.quem || '—') + '</td>' +
+          '<td class="n' + (barato ? ' destaque-cel' : '') + '" data-r="Preço" data-v="' + v +
+          '">' + brl(v) + (barato ? ' <span class="tag v">menor</span>' : '') +
+          dbar(maior ? v / maior * 100 : 0, barato ? '' : 'az') + '</td></tr>';
+      }).join('') + '</tbody>';
+    ordenavel('tabPrecos');
+  } else el('tabPrecos').innerHTML =
+    '<tbody><tr><td class="nd">Nenhum preço pesquisado ainda.</td></tr></tbody>';
 
   montarParecer(r, P, lamp, precoMed, feitos, tot, precos.length);
   montarPassos();
+  encherBarras();
   if (EU.papel === 'professor') { carregarParticipacao(); carregarAvaliacao(); }
 }
 
@@ -1198,20 +1293,40 @@ async function carregarParticipacao() {
 
   const NOME_EQUIPE = { campo:'campo', calculo:'cálculo', conferencia:'conferência',
                         preco:'preço', '—':'—' };
+  const FUNC = [['contador','Contador'], ['leitor','Leitor'],
+                ['anotador','Anotador'], ['conferente','Conferente']];
+  const maiorA = Math.max.apply(null, al.map(a => +a.ambientes).concat([1]));
   el('tabPart').innerHTML =
-    '<thead><tr><th class="cresce">Aluno</th><th>Turma</th><th>Grupo</th><th>Papel</th><th>Ambientes</th>' +
-    '<th>Contador</th><th>Leitor</th><th>Anotador</th><th>Conferente</th>' +
-    '<th>Lançou</th><th>Preços</th></tr></thead><tbody>' +
+    '<thead><tr><th class="cresce">Aluno</th><th>Turma</th><th>Grupo</th><th>Papel</th>' +
+    '<th>Ambientes</th><th>As quatro funções</th><th>Lançou</th><th>Preços</th>' +
+    '</tr></thead><tbody>' +
     al.map(a => {
-      const zero = a.equipe === 'campo' && +a.ambientes === 0;
+      const campo = a.equipe === 'campo';
+      const zero = campo && +a.ambientes === 0;
+      const feitas = FUNC.filter(f => +a[f[0]] > 0).length;
+      const bolas = FUNC.map(f => {
+        const n = +a[f[0]];
+        const cls = n > 0 ? 'on' : (campo ? 'falta' : '');
+        return '<i class="' + cls + '" title="' + f[1] + ': ' + n + '"></i>';
+      }).join('');
       return '<tr' + (zero ? ' class="alerta"' : '') + '>' +
-        '<td class="cresce">' + a.nome + '</td><td class="n">' + a.turma + '</td>' +
-        '<td><b>' + a.grupo + '</b></td><td>' + (NOME_EQUIPE[a.equipe] || a.equipe) + '</td>' +
-        '<td class="n">' + a.ambientes + '</td><td class="n">' + a.contador + '</td>' +
-        '<td class="n">' + a.leitor + '</td><td class="n">' + a.anotador + '</td>' +
-        '<td class="n">' + a.conferente + '</td><td class="n">' + a.lancamentos +
-        '</td><td class="n">' + (a.precos || 0) + '</td></tr>';
+        '<td class="cresce">' + esc(a.nome) + '</td>' +
+        '<td data-r="Turma">' + esc(a.turma) + '</td>' +
+        '<td data-r="Grupo"><b>' + esc(a.grupo) + '</b></td>' +
+        '<td data-r="Papel"><span class="tag az">' +
+          esc(NOME_EQUIPE[a.equipe] || a.equipe) + '</span></td>' +
+        '<td class="n" data-r="Ambientes" data-v="' + a.ambientes + '">' + a.ambientes +
+          dbar(+a.ambientes / maiorA * 100, 'az') + '</td>' +
+        '<td data-r="As quatro funções" data-v="' + feitas + '" ' +
+          'title="Contador ' + a.contador + ' · Leitor ' + a.leitor +
+          ' · Anotador ' + a.anotador + ' · Conferente ' + a.conferente + '">' +
+          '<span class="pts">' + bolas + '</span></td>' +
+        '<td class="n" data-r="Lançou" data-v="' + a.lancamentos + '">' + a.lancamentos + '</td>' +
+        '<td class="n" data-r="Preços" data-v="' + (a.precos || 0) + '">' + (a.precos || 0) +
+        '</td></tr>';
     }).join('') + '</tbody>';
+  ordenavel('tabPart');
+  encherBarras();
 }
 
 
@@ -1269,6 +1384,55 @@ function contar(no, alvo, fmt) {
     if (k < 1) requestAnimationFrame(passo);
   })(t0);
 }
+/* ordena qualquer tabela pelo clique no cabecalho */
+function ordenavel(id) {
+  const t = el(id);
+  if (!t) return;
+  const ths = Array.prototype.slice.call(t.querySelectorAll('thead th'));
+  if (!ths.length) return;
+  ths.forEach(function (th, i) {
+    th.classList.add('ord');
+    th.setAttribute('role', 'button');
+    th.setAttribute('tabindex', '0');
+    th.title = 'Clique para ordenar por ' + th.textContent.toLowerCase();
+    function agir() {
+      const dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+      ths.forEach(function (x) { delete x.dataset.dir; });
+      th.dataset.dir = dir;
+      const corpo = t.querySelector('tbody');
+      if (!corpo) return;
+      const linhas = Array.prototype.slice.call(corpo.querySelectorAll('tr'));
+      linhas.sort(function (a, b) {
+        const ca = a.children[i], cb = b.children[i];
+        if (!ca || !cb) return 0;
+        const va = ca.dataset.v, vb = cb.dataset.v;
+        let r;
+        if (va !== undefined && vb !== undefined) r = (+va) - (+vb);
+        else r = String(ca.textContent).localeCompare(String(cb.textContent), 'pt-BR',
+                   { numeric: true, sensitivity: 'base' });
+        return dir === 'asc' ? r : -r;
+      });
+      linhas.forEach(function (l) { corpo.appendChild(l); });
+    }
+    th.addEventListener('click', agir);
+    th.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); agir(); }
+    });
+  });
+}
+
+/* barra fina dentro da celula */
+function dbar(pct, classe) {
+  return '<span class="dbar' + (classe ? ' ' + classe : '') + '"><i data-pct="'
+    + Math.max(0, Math.min(100, pct)).toFixed(1) + '"></i></span>';
+}
+function encherBarras() {
+  animar(function () {
+    const f = document.querySelectorAll('.dbar i[data-pct]');
+    for (let i = 0; i < f.length; i++) f[i].style.width = f[i].dataset.pct + '%';
+  });
+}
+
 function esc(t) {
   return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -1664,16 +1828,26 @@ async function carregarAvaliacao() {
     + '<th>Ajuda</th><th>Regras</th></tr></thead><tbody>'
     + al.map(a => {
         const devendo = +a.colegas > 0 && +a.enviadas < +a.colegas;
+        const m = a.media === null || a.media === undefined ? null : +a.media;
+        const dims = [['Presença', a.presenca], ['Tarefa', a.tarefa], ['Cuidado', a.cuidado],
+                      ['Ajuda', a.ajuda], ['Regras', a.regras]];
         return '<tr' + (devendo ? ' class="alerta"' : '') + '>'
           + '<td class="cresce">' + esc(a.nome) + '</td>'
-          + '<td><b>' + esc(a.grupo) + '</b></td>'
-          + '<td class="n">' + a.recebidas + '</td>'
-          + '<td class="n">' + a.enviadas + ' de ' + a.colegas + '</td>'
-          + '<td class="n"><b>' + n1(a.media) + '</b></td>'
-          + '<td class="n">' + n1(a.presenca) + '</td><td class="n">' + n1(a.tarefa) + '</td>'
-          + '<td class="n">' + n1(a.cuidado) + '</td><td class="n">' + n1(a.ajuda) + '</td>'
-          + '<td class="n">' + n1(a.regras) + '</td></tr>';
+          + '<td data-r="Grupo"><b>' + esc(a.grupo) + '</b></td>'
+          + '<td class="n" data-r="Recebidas" data-v="' + a.recebidas + '">' + a.recebidas + '</td>'
+          + '<td class="n" data-r="Enviadas" data-v="'
+            + (+a.colegas ? +a.enviadas / +a.colegas : 0) + '">' + a.enviadas + ' de '
+            + a.colegas + '</td>'
+          + '<td class="n" data-r="Média" data-v="' + (m === null ? -1 : m) + '"><b>'
+            + n1(a.media) + '</b>' + (m === null ? '' : dbar(m / 15 * 100,
+              m >= 11 ? '' : (m >= 7 ? 'am' : 'cz'))) + '</td>'
+          + dims.map(d => '<td class="n" data-r="' + d[0] + '" data-v="'
+              + (d[1] === null || d[1] === undefined ? -1 : d[1]) + '">' + n1(d[1])
+              + '</td>').join('')
+          + '</tr>';
       }).join('') + '</tbody>';
+  ordenavel('tabAval');
+  encherBarras();
 }
 
 /* =================== o que a gestão precisa fazer =================== */
