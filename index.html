@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 /* Inventário de Energia · CENE
-   Identidade: painel de instrumentos de medição — números em primeiro plano,
+   Identidade: painel de instrumentos de medição, com números em primeiro plano,
    superfícies claras sobre papel quente, azul-noite para estrutura e âmbar
    para o que ainda pede atenção. Dados sempre em monoespaçada. */
 :root{
@@ -63,6 +63,13 @@ header{background:var(--sup);border-bottom:1px solid var(--linha);
   box-shadow:0 1px 0 rgba(20,22,28,.02)}
 .hd{display:flex;align-items:center;gap:12px;padding-block:14px;flex-wrap:wrap}
 .hd h1{font-size:1.02rem;font-weight:800;flex:1;min-width:0;letter-spacing:-.02em}
+body.pendente .hd h1 i{display:none}
+body.pendente .situacao{order:3}
+@media(max-width:560px){
+  .hd{row-gap:8px}
+  .hd h1{flex:1 1 100%}
+  .situacao{order:3}
+}
 .hd h1 i{display:block;font-style:normal;font-family:var(--c);font-size:.7rem;
   font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta3);
   margin-top:3px}
@@ -384,6 +391,21 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 .pessoa .st{flex:none;font-size:1.1rem;color:var(--tinta3);line-height:1}
 .pessoa.pronto .st{color:var(--verde)}
 
+.situacao{display:none;align-items:center;gap:7px;font-family:var(--d);font-size:.72rem;
+  font-weight:700;letter-spacing:.03em;border-radius:999px;padding:6px 13px;
+  border:1px solid transparent;white-space:nowrap;cursor:default}
+.situacao.ver{display:inline-flex}
+.situacao.fora{background:var(--ambar-sup);color:var(--ambar);border-color:var(--ambar)}
+.situacao.fila{background:var(--azul-sup);color:var(--azul);border-color:var(--azul);
+  cursor:pointer}
+.situacao.indo{background:var(--verde-sup);color:var(--verde);border-color:var(--verde)}
+.situacao.ruim{background:var(--verm-sup);color:var(--verm);border-color:var(--verm);
+  cursor:pointer}
+.situacao b{display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:currentColor;flex:none}
+.situacao.indo b{animation:pisca 1s ease-in-out infinite}
+@keyframes pisca{0%,100%{opacity:.25}50%{opacity:1}}
+
 .pergunta{margin-bottom:18px}
 .pergunta>b{display:block;font-size:.95rem;font-weight:600;margin-bottom:9px;
   letter-spacing:-.01em;line-height:1.35}
@@ -474,6 +496,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 
 <header class="gut"><div class="col hd">
   <h1>Inventário de Energia<i>CE de Nova Esperança · Feira de Ciências 2026</i></h1>
+  <span class="situacao" id="situacao" role="status"></span>
   <span class="eu" id="eu" hidden></span>
   <button class="sai" id="btSair" hidden>Sair</button>
 </div></header>
@@ -521,10 +544,10 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
           <select id="meuNome"></select></div>
         <div class="campo"><label for="meuPapel">O que você faz no grupo</label>
           <select id="meuPapel">
-            <option value="campo">Campo — conto as lâmpadas e anoto</option>
-            <option value="calculo">Cálculo — faço as contas depois</option>
-            <option value="conferencia">Conferência — confiro as contas</option>
-            <option value="preco">Preço — pesquiso o preço do LED nas lojas</option>
+            <option value="campo">Campo: conto as lâmpadas e anoto</option>
+            <option value="calculo">Cálculo: faço as contas depois</option>
+            <option value="conferencia">Conferência: confiro as contas</option>
+            <option value="preco">Preço: pesquiso o preço do LED nas lojas</option>
           </select></div>
         <button class="btn" id="btMeIncluir">Entrar no grupo</button>
       </div>
@@ -540,7 +563,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div id="listaAmbientes"></div>
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn peq sec" id="btAvaliar">Avaliar a equipe</button>
-      <button class="btn peq sec" id="btTrocarEu">Não sou eu — trocar de pessoa</button>
+      <button class="btn peq sec" id="btTrocarEu">Não sou eu, trocar de pessoa</button>
     </div>
   </section>
 
@@ -586,13 +609,13 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <h3 class="sec">Quem fez cada função aqui</h3>
     <p class="ajuda" id="ajudaFuncoes"></p>
     <div class="cx">
-      <div class="campo"><label for="fContador">Contador — contou em voz alta</label>
+      <div class="campo"><label for="fContador">Contador: contou em voz alta</label>
         <select id="fContador"></select></div>
-      <div class="campo"><label for="fLeitor">Leitor — leu as potências</label>
+      <div class="campo"><label for="fLeitor">Leitor: leu as potências</label>
         <select id="fLeitor"></select></div>
-      <div class="campo"><label for="fAnotador">Anotador — preencheu a ficha</label>
+      <div class="campo"><label for="fAnotador">Anotador: preencheu a ficha</label>
         <select id="fAnotador"></select></div>
-      <div class="campo"><label for="fConferente">Conferente — fotografou e reconferiu</label>
+      <div class="campo"><label for="fConferente">Conferente: fotografou e reconferiu</label>
         <select id="fConferente"></select></div>
       <button class="btn sec" id="btFuncoes">Salvar quem fez o quê</button>
     </div>
@@ -607,7 +630,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div id="avisoPreco"></div>
     <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn peq sec" id="btAvaliar2">Avaliar a equipe</button>
-      <button class="btn peq sec" id="btTrocarEu2">Não sou eu — trocar de pessoa</button>
+      <button class="btn peq sec" id="btTrocarEu2">Não sou eu, trocar de pessoa</button>
     </div>
     <div class="cx">
       <div class="campo"><label for="pLoja">Loja</label>
@@ -739,14 +762,261 @@ const $ = s => document.querySelector(s);
 const el = id => document.getElementById(id);
 let EU = null, SOU = null, AMB = null, TIPO = "Lâmpada", timer = null, ALUNOS = [], TURMA = '1A';
 
-async function rpc(fn, args) {
-  const r = await fetch(API + "/rest/v1/rpc/" + fn, {
-    method: "POST",
-    headers: { "apikey": KEY, "Content-Type": "application/json" },
+/* ==================== funcionar sem internet ====================
+   A página fica guardada no celular pelo service worker. Os lançamentos
+   feitos sem sinal entram numa fila no próprio aparelho e sobem sozinhos
+   quando a internet volta. Nada é apagado da fila antes de o servidor
+   confirmar. */
+
+const GRAVA = ['add_item','del_item','concluir','salvar_participacao',
+               'add_preco','del_preco','avaliar'];
+const GUARDA = ['meus_ambientes','itens_do_ambiente','listar_precos','colegas',
+                'listar_alunos','ver_participacao','chamada_disponivel'];
+
+const Disco = {
+  ler(k, pad) {
+    try { const v = localStorage.getItem('cene_' + k); return v ? JSON.parse(v) : pad; }
+    catch (e) { return pad; }
+  },
+  grava(k, v) {
+    try { localStorage.setItem('cene_' + k, JSON.stringify(v)); return true; }
+    catch (e) { return false; }
+  }
+};
+
+let FILA = Disco.ler('fila', []);
+let PROBLEMAS = Disco.ler('problemas', []);
+let CACHE = Disco.ler('cache', {});
+let ONLINE = typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
+let ENVIANDO = false, PRECISA_ENTRAR = false;
+
+function sorteio() {
+  return 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+}
+function semToken(args) {
+  const a = Object.assign({}, args || {});
+  delete a.p_token;
+  return a;
+}
+function chaveCache(fn, args) { return fn + '|' + JSON.stringify(semToken(args)); }
+
+async function rede(fn, args) {
+  const r = await fetch(API + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify(args || {})
   });
-  if (!r.ok) throw new Error("Não consegui falar com o servidor (" + r.status + ").");
+  if (!r.ok) throw new Error('Não consegui falar com o servidor (' + r.status + ').');
   return await r.json();
+}
+
+function marcar(online) {
+  if (ONLINE === online) { pintarSituacao(); return; }
+  ONLINE = online;
+  pintarSituacao();
+  if (online) enviarFila();
+}
+
+/* guarda um lançamento no celular e devolve a resposta que a tela espera */
+function enfileirar(fn, args) {
+  const op = { id: sorteio(), fn: fn, args: semToken(args), em: Date.now() };
+  if (fn === 'add_item' || fn === 'add_preco') op.args.p_chave = op.id;
+  FILA.push(op);
+  if (!Disco.grava('fila', FILA)) {
+    FILA.pop();
+    return { ok: false, erro: 'A memória do celular encheu. Conecte na internet antes de continuar.' };
+  }
+  pintarSituacao();
+  recado('Guardado no celular. Sobe quando a internet voltar.');
+  if (fn === 'add_item' || fn === 'add_preco') return { ok: true, id: 'local:' + op.id, fila: true };
+  return { ok: true, fila: true };
+}
+
+/* põe por cima da resposta guardada o que ainda está na fila */
+function aplicarFila(fn, args, r) {
+  if (!r || !r.ok || !FILA.length) return r;
+  const pend = FILA.slice();
+
+  if (fn === 'meus_ambientes' && r.ambientes) {
+    pend.forEach(op => {
+      if (op.fn === 'concluir') {
+        const a = r.ambientes.find(x => +x.id === +op.args.p_ambiente);
+        if (a) a.concluido = !!op.args.p_valor;
+      }
+      if (op.fn === 'add_item') {
+        const a = r.ambientes.find(x => +x.id === +op.args.p_ambiente);
+        if (a) {
+          a.itens = (+a.itens || 0) + 1;
+          if (/l.mpada/i.test(op.args.p_tipo || '')) {
+            a.lampadas = (+a.lampadas || 0) + (+op.args.p_quantidade || 0);
+          } else { a.lampadas = +a.lampadas || 0; }
+        }
+      }
+    });
+  }
+
+  if (fn === 'itens_do_ambiente' && r.itens) {
+    pend.forEach(op => {
+      if (op.fn === 'add_item' && +op.args.p_ambiente === +args.p_ambiente) {
+        r.itens.push({ id: 'local:' + op.id, tipo: op.args.p_tipo,
+          quantidade: op.args.p_quantidade, potencia_w: op.args.p_potencia,
+          horas_dia: op.args.p_horas, obs: op.args.p_obs, fila: true });
+      }
+      if (op.fn === 'del_item') {
+        r.itens = r.itens.filter(i => String(i.id) !== String(op.args.p_item));
+      }
+    });
+  }
+
+  if (fn === 'listar_precos' && r.precos) {
+    pend.forEach(op => {
+      if (op.fn === 'add_preco') {
+        r.precos.push({ id: 'local:' + op.id, loja: op.args.p_loja,
+          produto: op.args.p_produto, potencia_w: op.args.p_potencia,
+          preco: op.args.p_preco, fonte: op.args.p_fonte, fila: true });
+      }
+      if (op.fn === 'del_preco') {
+        r.precos = r.precos.filter(x => String(x.id) !== String(op.args.p_id));
+      }
+    });
+  }
+
+  if (fn === 'colegas' && r.colegas) {
+    pend.forEach(op => {
+      if (op.fn !== 'avaliar') return;
+      const c = r.colegas.find(x => +x.id === +op.args.p_alvo);
+      if (c) {
+        c.respondido = true;
+        ['presenca','tarefa','cuidado','ajuda','regras'].forEach(k => { c[k] = op.args['p_' + k]; });
+      }
+    });
+  }
+
+  return r;
+}
+
+async function rpc(fn, args) {
+  args = args || {};
+
+  if (GRAVA.indexOf(fn) >= 0) {
+    if (!ONLINE) return enfileirar(fn, args);
+    if (FILA.length) {                       // não deixa passar na frente da fila
+      await enviarFila();
+      if (FILA.length) return enfileirar(fn, args);
+    }
+    try {
+      const r = await rede(fn, args);
+      marcar(true);
+      return r;
+    } catch (e) {
+      marcar(false);
+      return enfileirar(fn, args);
+    }
+  }
+
+  try {
+    const r = await rede(fn, args);
+    marcar(true);
+    if (GUARDA.indexOf(fn) >= 0 && r && r.ok) {
+      CACHE[chaveCache(fn, args)] = r;
+      Disco.grava('cache', CACHE);
+    }
+    return aplicarFila(fn, args, JSON.parse(JSON.stringify(r)));
+  } catch (e) {
+    marcar(false);
+    const guardado = CACHE[chaveCache(fn, args)];
+    if (guardado) return aplicarFila(fn, args, JSON.parse(JSON.stringify(guardado)));
+    // tela nunca aberta com internet: mostra ao menos o que o aluno lançou agora,
+    // avisando que a lista está incompleta para ninguém recontar o que já existe
+    if (fn === 'itens_do_ambiente') {
+      return aplicarFila(fn, args, { ok: true, itens: [], incompleto: true });
+    }
+    if (fn === 'listar_precos') {
+      return aplicarFila(fn, args, { ok: true, precos: [], incompleto: true });
+    }
+    throw new Error('Sem internet, e esta tela ainda não tinha sido aberta neste aparelho.');
+  }
+}
+
+async function enviarFila() {
+  if (ENVIANDO || !FILA.length) { pintarSituacao(); return; }
+  if (!EU || !EU.token) { pintarSituacao(); return; }
+  ENVIANDO = true; PRECISA_ENTRAR = false;
+  pintarSituacao();
+  while (FILA.length) {
+    const op = FILA[0];
+    let r;
+    try {
+      r = await rede(op.fn, Object.assign({}, op.args, { p_token: EU.token }));
+    } catch (e) { marcar(false); break; }
+    if (r && r.ok === false) {
+      if (/sess/i.test(r.erro || '')) { PRECISA_ENTRAR = true; break; }
+      PROBLEMAS.push({ op: op, erro: r.erro || 'recusado pelo servidor' });
+      Disco.grava('problemas', PROBLEMAS);
+    }
+    FILA.shift();
+    Disco.grava('fila', FILA);
+    pintarSituacao();
+  }
+  ENVIANDO = false;
+  if (!FILA.length && !PRECISA_ENTRAR) marcar(true);
+  pintarSituacao();
+  return !FILA.length;
+}
+
+function pintarSituacao() {
+  const no = el('situacao');
+  if (!no) return;
+  let cls = '', txt = '';
+  if (PROBLEMAS.length) {
+    cls = 'ruim';
+    txt = PROBLEMAS.length + (PROBLEMAS.length === 1 ? ' recusado' : ' recusados');
+  } else if (ENVIANDO) {
+    cls = 'indo'; txt = 'enviando...';
+  } else if (PRECISA_ENTRAR) {
+    cls = 'ruim'; txt = 'entre de novo para enviar';
+  } else if (FILA.length) {
+    cls = 'fila';
+    txt = FILA.length + (FILA.length === 1 ? ' para enviar' : ' para enviar');
+  } else if (!ONLINE) {
+    cls = 'fora'; txt = 'sem internet';
+  }
+  no.className = 'situacao' + (txt ? ' ver ' + cls : '');
+  document.body.classList.toggle('pendente', !!txt);
+  no.innerHTML = txt ? '<b></b>' + esc(txt) : '';
+  no.title = txt && cls === 'fila' ? 'Toque para tentar enviar agora' : '';
+}
+
+function contarFila() { return FILA.length; }
+
+el('situacao').addEventListener('click', () => {
+  if (PROBLEMAS.length) {
+    const lista = PROBLEMAS.map(p => '· ' + p.op.fn + ': ' + p.erro).join('\n');
+    if (window.confirm('O servidor recusou estes lançamentos:\n\n' + lista
+        + '\n\nApagar esta lista de avisos?')) {
+      PROBLEMAS = []; Disco.grava('problemas', PROBLEMAS); pintarSituacao();
+    }
+    return;
+  }
+  if (FILA.length) enviarFila().then(() => { if (typeof recarregarTela === 'function') recarregarTela(); });
+});
+
+window.addEventListener('online', () => marcar(true));
+window.addEventListener('offline', () => marcar(false));
+
+function recarregarTela() {
+  if (!EU) return;
+  if (!el('tela-ambientes').hidden) carregarAmbientes();
+  else if (!el('tela-ambiente').hidden && AMB) carregarItens();
+  else if (!el('tela-precos').hidden) carregarPrecos();
+  else if (!el('tela-prof').hidden) carregarProf();
+}
+
+/* guarda a página no aparelho */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
 }
 function msg(onde, texto, tipo) {
   el(onde).innerHTML = texto ? '<div class="aviso ' + tipo + '">' + texto + '</div>' : '';
@@ -845,7 +1115,7 @@ async function abrirEntrarNoGrupo() {
     const r = await rpc('chamada_disponivel', { p_token: EU.token });
     if (!r.ok) return msg('avisoEuSou', r.erro, 'erro');
     const livres = r.alunos || [];
-    el('meuNome').innerHTML = '<option value="">— ache o seu nome —</option>' +
+    el('meuNome').innerHTML = '<option value="">ache o seu nome</option>' +
       livres.map(a => '<option value="' + a.id + '">' +
         (a.numero ? a.numero + ' · ' : '') + a.nome + '</option>').join('');
     if (!livres.length) msg('avisoEuSou',
@@ -897,7 +1167,7 @@ async function carregarAmbientes() {
     const lista = r.ambientes || [];
     const feitos = lista.filter(a => a.concluido).length;
     el('tituloLista').textContent = 'Grupo ' + EU.codigo;
-    el('subLista').textContent = EU.resumo + ' — ' + feitos + ' de ' + lista.length +
+    el('subLista').textContent = EU.resumo + ' · ' + feitos + ' de ' + lista.length +
       ' ambiente' + (lista.length===1?'':'s') + ' concluído' + (feitos===1?'':'s') + '.';
     el('barraLista').style.width = lista.length ? (feitos/lista.length*100)+'%' : '0';
     el('listaAmbientes').innerHTML = lista.map(a => {
@@ -994,6 +1264,11 @@ async function carregarItens() {
     const r = await rpc('itens_do_ambiente', { p_token: EU.token, p_ambiente: AMB.id });
     if (!r.ok) return msg('avisoAmb', r.erro, 'erro');
     const its = r.itens || [];
+    if (r.incompleto) {
+      msg('avisoAmb', 'Sem internet. Aqui aparece só o que você lançou agora neste '
+        + 'aparelho. O que já estava no servidor volta assim que a internet voltar, '
+        + 'então não conte de novo o que já foi contado.', 'info');
+    }
     el('listaItens').innerHTML = its.length ? its.map(i =>
       '<div class="item"><span class="q">' + i.quantidade + '×</span>' +
       '<span class="d">' + i.tipo +
@@ -1060,7 +1335,7 @@ async function carregarPrecos() {
   el('listaPrecos').innerHTML = ps.length ? ps.map(p =>
     '<div class="item"><span class="q">' + brl(+p.preco) + '</span>' +
     '<span class="d">' + p.produto + '<small>' + p.loja +
-    (p.quem && p.quem !== '—' ? ' · ' + p.quem : '') +
+    (p.quem && p.quem !== '-' ? ' · ' + p.quem : '') +
     (p.fonte ? ' · ' + p.fonte : '') + '</small></span>' +
     '<button class="lixo" data-p="' + p.id + '">apagar</button></div>').join('')
     : '<p class="ajuda">Nenhum preço lançado ainda.</p>';
@@ -1144,7 +1419,7 @@ async function carregarMontar() {
       '<span class="q" style="min-width:26px">' + (a.numero || '') + '</span>' +
       '<span class="d">' + a.nome + '</span>' +
       '<select class="selGrupo" data-id="' + a.id + '" style="width:auto;padding:6px 8px">' +
-        '<option value="">— escolher —</option>' +
+        '<option value="">escolher</option>' +
         opts.map(g => '<option value="' + g + '">' + g + '</option>').join('') +
       '</select></div>').join('')
     : '<p class="ajuda">Todos os alunos desta turma já estão em algum grupo.</p>';
@@ -1207,7 +1482,7 @@ async function carregarProf() {
     '<th>Concluídos</th><th>Lâmpadas</th><th>Situação</th></tr></thead><tbody>' +
     (r.grupos||[]).map(g => {
       const c = +g.concluidos, a = +g.ambientes, pct = a ? c / a * 100 : 0;
-      const est = a === 0 ? ['c','—'] : (c === 0 ? ['c','não começou']
+      const est = a === 0 ? ['c','sem ambientes'] : (c === 0 ? ['c','não começou']
                 : (c < a ? ['a','em andamento'] : ['v','concluído']));
       return '<tr><td class="nome"><b>' + esc(g.codigo) + '</b></td>' +
         '<td data-r="Turma">' + esc(g.turma) + '</td>' +
@@ -1250,7 +1525,7 @@ async function carregarProf() {
         const v = +p.preco, barato = v === menor && vals.length > 1;
         return '<tr><td class="nome">' + esc(p.loja) + '</td>' +
           '<td class="cresce" data-r="Produto">' + esc(p.produto) + '</td>' +
-          '<td data-r="Quem pesquisou">' + esc(p.quem || '—') + '</td>' +
+          '<td data-r="Quem pesquisou">' + esc(p.quem || '-') + '</td>' +
           '<td class="n' + (barato ? ' destaque-cel' : '') + '" data-r="Preço" data-v="' + v +
           '">' + brl(v) + (barato ? ' <span class="tag v">menor</span>' : '') +
           dbar(maior ? v / maior * 100 : 0, barato ? '' : 'az') + '</td></tr>';
@@ -1292,7 +1567,7 @@ async function carregarParticipacao() {
     : 'Todos os alunos de campo participaram e exerceram as quatro funções pelo menos uma vez.';
 
   const NOME_EQUIPE = { campo:'campo', calculo:'cálculo', conferencia:'conferência',
-                        preco:'preço', '—':'—' };
+                        preco:'preço', '-':'-' };
   const FUNC = [['contador','Contador'], ['leitor','Leitor'],
                 ['anotador','Anotador'], ['conferente','Conferente']];
   const maiorA = Math.max.apply(null, al.map(a => +a.ambientes).concat([1]));
@@ -1451,7 +1726,7 @@ function proximaAcao(r, feitos, tot, lamp, qtdPrecos) {
       + 'contados. Falta a pesquisa de preço do LED para o relatório sair com valores '
       + 'de mercado em vez de valor de referência.' };
     return { ok:true, rotulo:'Pronto para a gestão', texto:'Levantamento concluído e preço '
-      + 'pesquisado. O relatório técnico está completo — a aba Próximos passos traz o que '
+      + 'pesquisado. O relatório técnico está completo. A aba Próximos passos traz o que '
       + 'falta do lado administrativo.' };
   }
   const nunca = g.filter(x => +x.concluidos === 0 && +x.ambientes > 0).map(x => x.codigo);
@@ -1471,7 +1746,7 @@ function proximaAcao(r, feitos, tot, lamp, qtdPrecos) {
     return { rotulo:'Próximo passo', texto:'Faltam ' + (tot - feitos) + ' ambiente(s) para fechar o inventário. '
       + fechados + ' de ' + g.length + ' grupos já terminaram.' };
   if (!qtdPrecos)
-    return { rotulo:'Próximo passo', texto:'Inventário fechado. Agora libere a equipe de preço (senha PREÇO) para pesquisar o LED nas lojas — sem isso o parecer usa valor de referência.' };
+    return { rotulo:'Próximo passo', texto:'Inventário fechado. Agora libere a equipe de preço (senha PREÇO) para pesquisar o LED nas lojas. Sem isso o parecer usa valor de referência.' };
   return { ok:true, rotulo:'Tudo pronto', texto:'Inventário completo e preço pesquisado. O parecer da aba Parecer já pode virar ofício.' };
 }
 
@@ -1619,9 +1894,9 @@ function pintarGrafSaldo(C, P, lamp) {
 
     + '</svg>'
     + '<div class="legenda">'
-    + '<span><i style="background:var(--azul)"></i>Trocar tudo de uma vez — '
-    + (C.pagoTudo ? C.pagoTudo.toFixed(1).replace('.', ',') + ' meses' : '—') + '</span>'
-    + '<span><i style="background:var(--ambar)"></i>Trocar ' + P.lote_mes + ' por mês — '
+    + '<span><i style="background:var(--azul)"></i>Trocar tudo de uma vez: '
+    + (C.pagoTudo ? C.pagoTudo.toFixed(1).replace('.', ',') + ' meses' : '-') + '</span>'
+    + '<span><i style="background:var(--ambar)"></i>Trocar ' + P.lote_mes + ' por mês: '
     + (C.pago ? C.pago + ' meses' : 'mais de ' + N + ' meses') + '</span></div>'
     + '<p class="sub">Investimento de ' + brl(C.invest) + ' para as ' + C.trocaveis
     + ' lâmpadas que valem a troca. Parcelar adia o retorno: é o preço de não ter o '
@@ -1731,7 +2006,7 @@ function pintarColegas() {
         '<button class="pessoa' + (c.respondido ? ' pronto' : '') + '" data-id="' + c.id + '">'
         + '<span class="ini">' + esc(iniciais(c.nome)) + '</span>'
         + '<span class="t">' + esc(c.nome)
-        + '<small>' + (c.respondido ? 'já avaliado — toque para rever'
+        + '<small>' + (c.respondido ? 'já avaliado, toque para rever'
                                     : 'ainda não avaliado') + '</small></span>'
         + '<span class="st">' + (c.respondido ? '✓' : '›') + '</span></button>').join('')
     : '';
@@ -1821,7 +2096,7 @@ async function carregarAvaliacao() {
     el('tabAval').innerHTML = '<tbody><tr><td class="nd">Sem alunos em grupo.</td></tr></tbody>';
     return;
   }
-  const n1 = v => (v === null || v === undefined) ? '—' : String(v).replace('.', ',');
+  const n1 = v => (v === null || v === undefined) ? '-' : String(v).replace('.', ',');
   el('tabAval').innerHTML =
     '<thead><tr><th class="cresce">Aluno</th><th>Grupo</th><th>Recebidas</th>'
     + '<th>Enviadas</th><th>Média</th><th>Presença</th><th>Tarefa</th><th>Cuidado</th>'
@@ -1858,10 +2133,10 @@ const PROVIDENCIAS = [
    + 'relatório fechado, não há o que protocolar.'],
   ['Protocolar o pedido no programa de eficiência da distribuidora', 'Direção', true,
    'A Lei nº 9.991/2000 obriga as distribuidoras a aplicar parte da receita em '
-   + 'eficiência energética no uso final — é essa lei que sustenta o pedido. O projeto '
+   + 'eficiência energética no uso final, e é essa lei que sustenta o pedido. O projeto '
    + 'Eficiência em Prédios da Neoenergia recebe pedidos por e-mail, em '
    + 'eficiencia@neoenergia.com, com o aval de quem é dono do prédio. Os critérios '
-   + 'publicados são verificados pela própria distribuidora — a escola não precisa levantar '
+   + 'publicados são verificados pela própria distribuidora, e a escola não precisa levantar '
    + 'nada sobre consumo, porque esse dado quem tem é a concessionária. A escola entra com '
    + 'o inventário e com a pergunta.'],
   ['Protocolar o mesmo pedido no NTE e na Secretaria da Educação', 'Direção', true,
@@ -1870,7 +2145,7 @@ const PROVIDENCIAS = [
    + 'juntos, não um depois do outro.'],
   ['Colher as assinaturas do relatório', 'Direção, professor e estudantes', false,
    'Direção, professor e dois representantes por turma. O documento sai da escola assinado '
-   + 'por quem fez o levantamento — é isso que o distingue de um pedido genérico.'],
+   + 'por quem fez o levantamento, e é isso que o distingue de um pedido genérico.'],
   ['Pedir visita técnica para o diagnóstico', 'Direção', false,
    'A medição de consumo e o diagnóstico elétrico são da distribuidora. O papel da escola '
    + 'termina no inventário e no pedido formal.'],
@@ -1878,11 +2153,12 @@ const PROVIDENCIAS = [
    'Fluorescente contém mercúrio e não pode ir para o lixo comum. A Política Nacional de '
    + 'Resíduos Sólidos (Lei nº 12.305/2010) prevê logística reversa para esse tipo de '
    + 'lâmpada. Confirme com a prefeitura ou com o próprio fornecedor onde entregar.'],
-  ['Combinar como a economia será verificada depois', 'Professor e direção', false,
-   'A escola não tem acesso a medição, então a verificação é por contagem: refazer o '
-   + 'inventário depois da troca e comparar a potência instalada, em watts, antes e '
-   + 'depois. É o único número que a escola consegue medir sozinha — e é suficiente para '
-   + 'mostrar que a previsão se cumpriu.']
+  ['Pedir o relatório de medição a quem executar a troca', 'Direção', false,
+   'Programas de eficiência energética regulados pela ANEEL exigem medição e verificação '
+   + 'feitas por quem executa a obra. Ou seja, o número da economia volta num relatório, '
+   + 'sem a escola precisar medir nada. Se a troca acabar sendo feita por compra própria, '
+   + 'essa medição não existe: nesse caso o projeto registra apenas o que foi trocado e '
+   + 'assume que a economia continua sendo uma previsão, não um valor conferido.']
 ];
 
 function montarPassos() {
@@ -1902,7 +2178,7 @@ function montarPassos() {
     + '</ol></div>'
     + '<p class="ajuda">Os três pontos em âmbar travam o resto: sem o relatório fechado '
     + 'e sem os dois protocolos, nada depois tem como andar. As condições do programa da '
-    + 'distribuidora e o ponto de entrega das lâmpadas mudam com o tempo — confirme os '
+    + 'distribuidora e o ponto de entrega das lâmpadas mudam com o tempo, então confirme os '
     + 'dois antes de enviar.</p>';
 }
 
@@ -1911,7 +2187,7 @@ function montarParecer(r, P, lamp, precoLed, feitos, tot, qtdPrecos) {
   if (feitos < tot) falta.push((tot - feitos) + ' ambiente(s) ainda não concluído(s)');
   if (!qtdPrecos) falta.push('nenhum preço de LED pesquisado');
   el('avisoParecer').textContent = falta.length
-    ? 'Parcial — ' + falta.join('; ') + '. Os números mudam conforme os grupos lançam.'
+    ? 'Parcial: ' + falta.join('; ') + '. Os números mudam conforme os grupos lançam.'
     : 'Inventário completo e preço pesquisado. Este parecer está pronto para o ofício.';
 
   if (!lamp) { el('parecer').innerHTML = '<p>Assim que o primeiro grupo lançar as lâmpadas, '
@@ -1942,7 +2218,7 @@ function montarParecer(r, P, lamp, precoLed, feitos, tot, qtdPrecos) {
     ', a troca completa custa <b>' + brl(invest) + '</b> e se paga em <b>' +
     base.meses.toFixed(1).replace('.',',') + ' meses</b>. Trocando ' + P.lote_mes +
     ' lâmpadas por mês, a troca leva ' + mesesTroca + ' meses e o saldo fica positivo no mês <b>' +
-    (pago || '—') + '</b>, com o pior momento de caixa no mês ' +
+    (pago || '-') + '</b>, com o pior momento de caixa no mês ' +
     vert.toFixed(1).replace('.',',') + '.</p>');
 
   linhas.push('<h4>4. Como a resposta muda com as horas de uso</h4>' +
@@ -1975,7 +2251,7 @@ el('btCopiar').addEventListener('click', async () => {
   catch (e) {
     const r = document.createRange(); r.selectNodeContents(el('parecer'));
     const s = getSelection(); s.removeAllRanges(); s.addRange(r);
-    el('btCopiar').textContent = 'Selecionado — use copiar';
+    el('btCopiar').textContent = 'Selecionado, use copiar';
   }
   setTimeout(() => el('btCopiar').textContent = 'Copiar o parecer', 2500);
 });
