@@ -176,6 +176,38 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
   transition:all .13s}
 .chips button:hover{border-color:var(--azul);color:var(--azul);background:var(--azul-sup)}
 .chips button.on{background:var(--azul);border-color:var(--azul);color:#fff}
+.planta{display:block;background:var(--sup);border:1px solid var(--linha);
+  border-radius:var(--r);overflow:hidden;text-decoration:none;box-shadow:var(--sombra)}
+.planta img{display:block;width:100%;height:auto;background:#fff}
+.planta span{display:block;padding:9px 14px;font-size:.78rem;color:var(--azul);
+  font-weight:600;border-top:1px solid var(--linha);background:var(--azul-sup)}
+.planta:hover span{background:var(--azul);color:#fff}
+.amb-mapa{background:var(--sup);border:1px solid var(--linha);border-left:3px solid var(--linha2);
+  border-radius:var(--r);padding:14px 16px;margin-bottom:11px}
+.amb-mapa.pronto{border-left-color:var(--verde);background:var(--verde-sup)}
+.amb-mapa.nao{border-left-color:var(--verm);background:var(--verm-sup)}
+.amb-mapa h4{margin:0 0 3px;font-size:.98rem;font-family:var(--d);font-weight:700}
+.amb-mapa .ond{font-family:var(--m);font-size:.7rem;color:var(--tinta3);
+  letter-spacing:.05em;text-transform:uppercase}
+.amb-mapa .linha{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;margin-top:11px}
+.amb-mapa .campo{flex:1;min-width:112px;margin:0}
+.amb-mapa label{display:block;font-family:var(--d);font-size:.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;color:var(--tinta2);margin-bottom:4px}
+.amb-mapa input[type=time],.amb-mapa input[type=text]{width:100%;padding:9px 11px;
+  border:1px solid var(--linha2);border-radius:var(--r2);background:var(--papel);
+  color:var(--tinta);font-size:16px;font-family:var(--c)}
+.sim-nao{display:flex;gap:0;border:1px solid var(--linha2);border-radius:var(--r2);
+  overflow:hidden;margin-top:10px}
+.sim-nao button{flex:1;padding:9px 6px;border:0;background:var(--papel);
+  color:var(--tinta2);font-size:.82rem;font-weight:600;font-family:var(--c)}
+.sim-nao button+button{border-left:1px solid var(--linha2)}
+.sim-nao button[aria-pressed=true]{background:var(--azul);color:#fff}
+.sim-nao button.perigo[aria-pressed=true]{background:var(--verm);color:#fff}
+.vinte4{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:.85rem;
+  color:var(--tinta2);cursor:pointer}
+.vinte4 input{width:18px;height:18px;flex:none;accent-color:var(--azul)}
+.horas-ok{font-family:var(--m);font-size:.8rem;color:var(--verde);font-weight:600;
+  margin-top:9px}
 .chips button.on:hover{background:var(--azul-forte);color:#fff}
 .item{display:flex;align-items:center;gap:13px;padding:13px 0;
   border-top:1px solid var(--linha)}
@@ -599,6 +631,29 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     </div>
   </section>
 
+  <!-- EQUIPE DO MAPA -->
+  <section id="tela-mapa" hidden>
+    <h2 style="font-size:1.15rem">A planta da escola</h2>
+    <p class="ajuda">Confirme, ambiente por ambiente, se ele existe de verdade e a que
+    horas a luz dele acende e apaga. Quem sabe disso é o funcionário, não a planta.</p>
+    <div id="avisoMapa"></div>
+
+    <a class="planta" id="linkPlanta" href="planta.png" target="_blank" rel="noopener">
+      <img src="planta.png" alt="Planta de implantação do CE de Nova Esperança" loading="lazy">
+      <span>Toque na planta para abrir grande e dar zoom</span>
+    </a>
+
+    <div class="barra" style="margin:16px 0 6px"><i id="barraMapa"></i></div>
+    <p class="ajuda" id="subMapa" style="margin-bottom:12px"></p>
+
+    <div class="chips" id="filtroMapa" style="margin-bottom:14px"></div>
+    <div id="listaMapa"></div>
+
+    <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn peq sec" id="btTrocarEu3">Não sou eu, trocar de pessoa</button>
+    </div>
+  </section>
+
   <!-- CONFERIR A CONTA -->
   <section id="tela-conta" hidden>
     <button class="volta" id="btVoltaConta">← voltar para a lista</button>
@@ -755,6 +810,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <button data-ab="dados" aria-selected="false" data-so="prof">Lançamentos</button>
       <button data-ab="part" aria-selected="false" data-so="prof">Participação</button>
       <button data-ab="aval" aria-selected="false" data-so="prof">Avaliação</button>
+      <button data-ab="mapa" aria-selected="false">Mapa e horários</button>
       <button data-ab="conf" aria-selected="false" data-so="prof">Conferência</button>
       <button data-ab="notas" aria-selected="false" data-so="prof">Notas</button>
       <button data-ab="parecer" aria-selected="false">Parecer</button>
@@ -804,6 +860,15 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <p class="ajuda">A nota de cada linha é a média do que os colegas de grupo
       responderam, de 0 a 15. Compare sempre com a aba Participação: lá estão os
       números que o sistema mediu sozinho, sem opinião de ninguém.</p>
+    </div>
+
+    <div class="pag" id="ab-mapa" hidden>
+      <div id="resumoMapaProf" class="minis"></div>
+      <p class="ajuda" id="ajudaMapaProf"></p>
+      <div class="rol"><table id="tabMapaProf"></table></div>
+      <div style="margin-top:14px">
+        <button class="btn peq sec" id="btAtualizarMapa">Atualizar agora</button>
+      </div>
     </div>
 
     <div class="pag" id="ab-conf" hidden>
@@ -1147,7 +1212,8 @@ function msg(onde, texto, tipo) {
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
-  ['entrar','eusou','ambientes','ambiente','precos','avaliar','conta','prof'].forEach(t =>
+  ['entrar','eusou','ambientes','ambiente','precos','avaliar','conta','mapa','prof']
+    .forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
   document.body.classList.toggle('prof', qual === 'prof');
   window.scrollTo(0,0);
@@ -1266,6 +1332,7 @@ el('btMeIncluir').addEventListener('click', async () => {
 // cada papel abre a sua tela
 function irParaMinhaTela() {
   el('eu').textContent = EU.codigo + (SOU ? ' · ' + SOU.nome.split(' ')[0] : '');
+  if (EU.tipo === 'mapa') { telas('mapa'); carregarMapa(); return; }
   if (SOU && SOU.equipe === 'preco') {
     el('subPreco').textContent = 'Você é da pesquisa de preço do grupo ' + EU.codigo +
       '. Pesquise em pelo menos duas lojas da região e lance os dois preços.';
@@ -1661,6 +1728,7 @@ async function carregarProf() {
   montarPassos();
   encherBarras();
   if (EU.papel === 'professor') { carregarParticipacao(); carregarAvaliacao(); carregarNotas(); carregarConferencia(); }
+  carregarMapaProf();
 }
 
 async function carregarParticipacao() {
@@ -2248,6 +2316,192 @@ async function carregarAvaliacao() {
   encherBarras();
 }
 
+/* ==================== a equipe do mapa ====================
+   Percorre a planta inteira e confirma duas coisas por ambiente: se ele foi
+   construído de verdade e a que horas a luz dele acende e apaga. As horas vêm
+   de perguntar a quem opera, nunca de medição, por isso o nome e a função de
+   quem informou ficam registrados junto. */
+
+let MAPA = [], VENDO_MAPA = 'falta', PODE_MAPA = false;
+
+async function carregarMapa() {
+  el('listaMapa').innerHTML = '<p class="ajuda">Carregando a lista de ambientes...</p>';
+  let r;
+  try { r = await rpc('mapa_ambientes', { p_token: EU.token }); }
+  catch (e) { msg('avisoMapa', e.message, 'erro');
+    el('listaMapa').innerHTML = ''; return; }
+  if (!r.ok) { msg('avisoMapa', r.erro, 'erro'); el('listaMapa').innerHTML = ''; return; }
+  MAPA = r.ambientes || [];
+  PODE_MAPA = !!r.pode_escrever;
+  pintarFiltroMapa();
+  pintarMapa();
+}
+
+function prontoNoMapa(a) {
+  if (a.existe === false) return true;                 // não construído já é resposta
+  return a.existe === true && a.horas !== null && a.horas !== undefined;
+}
+
+function pintarFiltroMapa() {
+  const falta = MAPA.filter(a => !prontoNoMapa(a)).length;
+  el('filtroMapa').innerHTML = [
+    ['falta', 'Falta preencher (' + falta + ')'],
+    ['todos', 'Todos (' + MAPA.length + ')'],
+    ['prontos', 'Prontos (' + (MAPA.length - falta) + ')']
+  ].map(x => '<button type="button" data-f="' + x[0] + '"'
+    + (x[0] === VENDO_MAPA ? ' class="on"' : '') + '>' + x[1] + '</button>').join('');
+  el('filtroMapa').querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => {
+      VENDO_MAPA = b.dataset.f; pintarFiltroMapa(); pintarMapa();
+    }));
+}
+
+function pintarMapa() {
+  const feitos = MAPA.filter(prontoNoMapa).length;
+  const pct = MAPA.length ? feitos / MAPA.length * 100 : 0;
+  animar(() => { el('barraMapa').style.width = pct.toFixed(1) + '%'; });
+  el('subMapa').textContent = feitos + ' de ' + MAPA.length
+    + ' ambientes conferidos' + (PODE_MAPA ? '' : ' · esta tela é só de leitura para você');
+
+  const vista = VENDO_MAPA === 'todos' ? MAPA
+              : VENDO_MAPA === 'prontos' ? MAPA.filter(prontoNoMapa)
+              : MAPA.filter(a => !prontoNoMapa(a));
+  if (!vista.length) {
+    el('listaMapa').innerHTML = '<div class="cx"><p class="ajuda" style="margin:0">'
+      + (VENDO_MAPA === 'falta' ? 'Tudo conferido. Bom trabalho.' : 'Nada aqui ainda.')
+      + '</p></div>';
+    return;
+  }
+  el('listaMapa').innerHTML = vista.map(cartaoMapa).join('');
+  vista.forEach(ligarCartaoMapa);
+}
+
+function cartaoMapa(a) {
+  const nao = a.existe === false, pronto = prontoNoMapa(a);
+  const d = (x) => x === null || x === undefined ? '' : x;
+  return '<div class="amb-mapa' + (nao ? ' nao' : (pronto ? ' pronto' : '')) + '" id="m-' + a.id + '">'
+    + '<div class="ond">' + esc(a.grupo) + ' · ambiente ' + a.ordem + '</div>'
+    + '<h4>' + esc(a.nome) + '</h4>'
+    + '<div class="sim-nao" role="group" aria-label="Este ambiente existe?">'
+    +   '<button type="button" data-e="sim" aria-pressed="' + (a.existe === true) + '">'
+    +     'Existe na escola</button>'
+    +   '<button type="button" class="perigo" data-e="nao" aria-pressed="' + nao + '">'
+    +     'Não foi construído</button>'
+    + '</div>'
+    + '<div class="corpo-mapa"' + (nao ? ' hidden' : '') + '>'
+    +   '<label class="vinte4"><input type="checkbox" class="v24"'
+    +     (a.sempre ? ' checked' : '') + '> Fica aceso 24 horas, sem desligar</label>'
+    +   '<div class="linha horas"' + (a.sempre ? ' hidden' : '') + '>'
+    +     '<div class="campo"><label>Acende às</label>'
+    +       '<input type="time" class="liga" value="' + d(a.liga) + '"></div>'
+    +     '<div class="campo"><label>Apaga às</label>'
+    +       '<input type="time" class="desliga" value="' + d(a.desliga) + '"></div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="linha">'
+    +   '<div class="campo"><label>Quem informou</label>'
+    +     '<input type="text" class="fnome" placeholder="nome" value="'
+    +     esc(d(a.fonte_nome)) + '"></div>'
+    +   '<div class="campo"><label>Função</label>'
+    +     '<input type="text" class="ffun" placeholder="porteiro, auxiliar..." value="'
+    +     esc(d(a.fonte_funcao)) + '"></div>'
+    + '</div>'
+    + '<div class="campo" style="margin-top:9px"><label>Observação</label>'
+    +   '<input type="text" class="obs" placeholder="opcional" value="'
+    +   esc(d(a.obs)) + '"></div>'
+    + (PODE_MAPA ? '<div style="margin-top:12px"><button class="btn peq ok grava"'
+        + ' style="width:auto">Salvar este ambiente</button></div>' : '')
+    + '<div class="res"></div>'
+    + (a.horas != null ? '<div class="horas-ok">Fica aceso ' + horasTexto(a.horas)
+        + ' por dia</div>' : '')
+    + (a.quem_registrou ? '<p class="ajuda" style="margin:9px 0 0;font-size:.76rem">'
+        + 'Registrado por ' + esc(a.quem_registrou) + '</p>' : '')
+    + '</div>';
+}
+
+function horasTexto(h) {
+  const n = +h;
+  if (n === 24) return '24 horas';
+  const i = Math.floor(n), m = Math.round((n - i) * 60);
+  return i + ' hora' + (i === 1 ? '' : 's') + (m ? ' e ' + m + ' minutos' : '');
+}
+
+function ligarCartaoMapa(a) {
+  const cx = el('m-' + a.id);
+  if (!cx) return;
+  const corpo = cx.querySelector('.corpo-mapa');
+  const horas = cx.querySelector('.horas');
+  const v24   = cx.querySelector('.v24');
+
+  cx.querySelectorAll('.sim-nao button').forEach(b =>
+    b.addEventListener('click', () => {
+      if (!PODE_MAPA) return;
+      const existe = b.dataset.e === 'sim';
+      cx.querySelectorAll('.sim-nao button').forEach(x =>
+        x.setAttribute('aria-pressed', (x.dataset.e === 'sim') === existe));
+      corpo.hidden = !existe;
+    }));
+
+  if (v24) v24.addEventListener('change', () => { horas.hidden = v24.checked; });
+
+  const bt = cx.querySelector('.grava');
+  if (bt) bt.addEventListener('click', () => salvarMapa(a.id, cx, bt));
+}
+
+async function salvarMapa(id, cx, bt) {
+  const onde = cx.querySelector('.res');
+  const pressed = cx.querySelector('.sim-nao button[aria-pressed="true"]');
+  if (!pressed) {
+    onde.innerHTML = '<div class="aviso erro">Diga primeiro se este ambiente existe.</div>';
+    return;
+  }
+  const existe = pressed.dataset.e === 'sim';
+  const v24 = cx.querySelector('.v24').checked;
+  const liga = cx.querySelector('.liga').value;
+  const desliga = cx.querySelector('.desliga').value;
+  if (existe && !v24 && (!liga || !desliga)) {
+    onde.innerHTML = '<div class="aviso erro">Informe a hora que acende e a que apaga, '
+      + 'ou marque que fica aceso 24 horas.</div>';
+    return;
+  }
+  const fnome = cx.querySelector('.fnome').value.trim();
+  if (existe && !fnome) {
+    onde.innerHTML = '<div class="aviso erro">Escreva o nome de quem informou o horário. '
+      + 'Sem isso o dado não vale como fonte.</div>';
+    return;
+  }
+  if (!ONLINE) {
+    onde.innerHTML = '<div class="aviso erro">Para salvar é preciso estar com internet. '
+      + 'Anote no papel e lance quando pegar sinal.</div>';
+    return;
+  }
+  bt.disabled = true; bt.textContent = 'Salvando...';
+  let r;
+  try {
+    r = await rpc('salvar_mapa', { p_token: EU.token, p_ambiente: id, p_existe: existe,
+      p_liga: v24 ? null : liga, p_desliga: v24 ? null : desliga, p_sempre: v24,
+      p_fonte_nome: fnome, p_fonte_funcao: cx.querySelector('.ffun').value.trim(),
+      p_obs: cx.querySelector('.obs').value.trim(), p_aluno: SOU ? SOU.id : null });
+  } catch (e) {
+    onde.innerHTML = '<div class="aviso erro">' + esc(e.message) + '</div>';
+    bt.disabled = false; bt.textContent = 'Salvar este ambiente'; return;
+  }
+  bt.disabled = false; bt.textContent = 'Salvar este ambiente';
+  if (!r.ok) { onde.innerHTML = '<div class="aviso erro">' + esc(r.erro) + '</div>'; return; }
+  onde.innerHTML = '<div class="aviso bom">Guardado'
+    + (r.horas != null ? ': fica aceso ' + horasTexto(r.horas) + ' por dia' : '') + '.</div>';
+  const i = MAPA.findIndex(x => x.id === id);
+  if (i >= 0) {
+    MAPA[i].existe = existe; MAPA[i].sempre = v24;
+    MAPA[i].liga = v24 ? null : liga; MAPA[i].desliga = v24 ? null : desliga;
+    MAPA[i].horas = r.horas; MAPA[i].fonte_nome = fnome;
+  }
+  pintarFiltroMapa();
+  setTimeout(() => { pintarMapa(); }, 1400);
+}
+
+el('btTrocarEu3').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
+
 /* ==================== conferir a conta do aluno ====================
    O aluno faz a conta no caderno e digita só o resultado. Quem compara é o
    servidor, não a página, para a resposta certa não ficar no código à vista.
@@ -2383,6 +2637,52 @@ async function conferir(passo) {
 el('btConta').addEventListener('click', abrirConta);
 el('btVoltaConta').addEventListener('click', () => { telas('ambientes'); carregarAmbientes(); });
 el('horasConta').addEventListener('input', () => { FEITO = {}; marcarHora(); });
+
+/* ------------- o mapa visto pelo professor e pela direção ------------- */
+async function carregarMapaProf() {
+  if (!EU || (EU.papel !== 'professor' && EU.papel !== 'gestao')) return;
+  let r;
+  try { r = await rpc('relatorio_mapa', { p_token: EU.token }); }
+  catch (e) { el('ajudaMapaProf').textContent = e.message; return; }
+  if (!r.ok) { el('ajudaMapaProf').textContent = r.erro; return; }
+
+  const z = r.resumo || {};
+  el('resumoMapaProf').innerHTML = [
+    [(+z.verificados || 0) + '<i>de ' + (+z.total || 0) + '</i>', 'ambientes conferidos'],
+    [+z.nao_construidos || 0, 'não construídos'],
+    [+z.com_horario || 0,     'com horário levantado'],
+    [+z.vinte_e_quatro || 0,  'acesos 24 horas']
+  ].map(x => '<div class="mini"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
+
+  const a = r.ambientes || [];
+  const semFonte = a.filter(x => x.existe === true && x.horas != null && !x.fonte_nome).length;
+  el('ajudaMapaProf').textContent = semFonte
+    ? semFonte + ' ambiente(s) com horário mas sem o nome de quem informou.'
+    : 'Toda hora levantada tem fonte registrada.';
+
+  el('tabMapaProf').innerHTML =
+    '<thead><tr><th class="cresce">Ambiente</th><th>Grupo</th><th>Existe</th>'
+    + '<th>Acende</th><th>Apaga</th><th>Horas por dia</th>'
+    + '<th class="cresce">Quem informou</th></tr></thead><tbody>'
+    + a.map(x => {
+        const sit = x.existe === false ? '<span class="tag c">não construído</span>'
+                  : x.existe === true  ? '<span class="tag v">sim</span>'
+                  : '<span class="tag a">a conferir</span>';
+        return '<tr><td class="cresce">' + esc(x.nome) + '</td>'
+          + '<td data-r="Grupo"><b>' + esc(x.grupo) + '</b></td>'
+          + '<td data-r="Existe" data-v="' + (x.existe === true ? 2 : x.existe === false ? 0 : 1)
+          + '">' + sit + '</td>'
+          + '<td data-r="Acende">' + (x.sempre ? '24h' : esc(x.liga || '')) + '</td>'
+          + '<td data-r="Apaga">' + (x.sempre ? '24h' : esc(x.desliga || '')) + '</td>'
+          + '<td data-r="Horas por dia" data-v="' + (x.horas == null ? -1 : x.horas) + '"><b>'
+          + (x.horas == null ? '' : (+x.horas).toLocaleString('pt-BR')) + '</b></td>'
+          + '<td class="cresce" data-r="Quem informou">'
+          + (x.fonte_nome ? esc(x.fonte_nome)
+              + (x.fonte_funcao ? ', ' + esc(x.fonte_funcao) : '') : '') + '</td></tr>';
+      }).join('') + '</tbody>';
+  ordenavel('tabMapaProf');
+}
+el('btAtualizarMapa').addEventListener('click', carregarMapaProf);
 
 /* ------------- o que o professor vê ------------- */
 async function carregarConferencia() {
