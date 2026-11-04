@@ -161,6 +161,10 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
 .volta{background:none;border:0;color:var(--azul);font-weight:600;font-size:.88rem;
   padding:6px 0;margin-bottom:14px}
 .volta:hover{text-decoration:underline}
+/* saída discreta da tela de entrar, para o acesso do professor */
+.elo{background:none;border:0;color:var(--tinta3);font-size:.82rem;padding:12px 0 0;
+  text-decoration:underline;text-underline-offset:3px}
+.elo:hover{color:var(--azul)}
 .tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:7px;
   margin-bottom:16px}
 .tipos button{padding:11px 7px;border:1px solid var(--linha2);border-radius:var(--r2);
@@ -169,6 +173,28 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
 .tipos button:hover{border-color:var(--azul);color:var(--azul)}
 .tipos button[aria-pressed=true]{background:var(--azul);color:#fff;border-color:var(--azul);
   box-shadow:var(--sombra)}
+.tipos button.mais{border-style:dashed;color:var(--tinta3);font-family:var(--m);
+  font-size:.78rem}
+.tipos button.mais:hover{border-style:solid}
+
+/* botão de repetir o último grupo, na lista de quem está sem grupo */
+.item .rep{flex:none;padding:6px 11px;border:1px solid var(--azul);border-radius:999px;
+  background:var(--azul-sup);color:var(--azul);font-family:var(--m);font-size:.78rem;
+  font-weight:600;white-space:nowrap}
+.item .rep:hover{background:var(--azul);color:#fff}
+
+/* bloco que abre e fecha, para instrução longa não empurrar o formulário */
+.dobra{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r);
+  padding:0 18px;margin-bottom:14px;box-shadow:var(--sombra)}
+.dobra summary{font-family:var(--d);font-weight:700;font-size:.92rem;padding:15px 0;
+  cursor:pointer;list-style:none;display:flex;align-items:center;gap:9px;
+  letter-spacing:-.015em}
+.dobra summary::-webkit-details-marker{display:none}
+.dobra summary::before{content:"▸";color:var(--azul);font-size:.85rem;
+  transition:transform .15s;flex:none}
+.dobra[open] summary::before{transform:rotate(90deg)}
+.dobra summary:hover{color:var(--azul)}
+.dobra>p{padding-bottom:16px}
 .dupla{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chips button{padding:5px 11px;border:1px solid var(--linha);border-radius:999px;
@@ -408,7 +434,14 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .mini span{display:block;font-family:var(--d);font-size:.645rem;text-transform:uppercase;
   letter-spacing:.09em;color:var(--tinta2);margin-top:6px;font-weight:700}
 .mini i{font-style:normal;font-size:.75rem;color:var(--tinta3);font-family:var(--m);
+  /* num celular estreito o complemento desce para a linha de baixo, senão o
+     próprio número se parte no meio: "R$" numa linha e "36.470,05" na outra */
   margin-left:5px;letter-spacing:0;text-transform:none}
+@media(max-width:430px){
+  .mini{padding:13px 14px}
+  .mini b{font-size:1.1rem;letter-spacing:-.02em}
+  .mini i{display:block;margin-left:0;margin-top:2px;font-size:.7rem}
+}
 
 .graf{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r);
   padding:clamp(16px,2.2vw,22px);box-shadow:var(--sombra);margin-bottom:16px}
@@ -430,6 +463,21 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .lin .vl{font-family:var(--m);font-size:.78rem;color:var(--tinta2);text-align:right;
   font-variant-numeric:tabular-nums}
 
+/* Gráfico do saldo: o texto dentro de SVG não herda a cor do tema sozinho, então
+   fica preto e some no modo escuro. E num celular estreito o desenho inteiro
+   encolhe até a letra virar borrão, por isso ele ganha largura mínima e desliza
+   para o lado dentro da caixa, em vez de diminuir. */
+svg.svg{width:100%;height:auto;display:block}
+svg.svg .eixo{font-family:var(--m);font-size:13px;fill:var(--tinta2)}
+.dica-rolar{display:none}
+@media(max-width:700px){
+  svg.svg{min-width:620px}
+  .dica-rolar{display:block}
+  /* a regra geral de .rol tira a rolagem no celular para a tabela virar cartão;
+     aqui dentro é desenho, não tabela, então a rolagem precisa voltar */
+  .rol.grafico{overflow-x:auto;border:1px solid var(--linha);border-radius:12px;
+    background:var(--papel)}
+}
 svg.cart{width:100%;height:auto;display:block}
 svg.cart .malha{stroke:var(--linha);stroke-width:1}
 svg.cart .zero{stroke:var(--linha2);stroke-width:1.4;stroke-dasharray:4 4}
@@ -631,13 +679,39 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   <section id="tela-entrar">
     <div class="cx">
       <h2 style="font-size:1.2rem;margin-bottom:4px">Entrar</h2>
-      <p class="ajuda">Use o código do seu grupo e a senha que o professor entregou.</p>
+      <p class="ajuda" id="ajudaEntrar">Escolha o seu grupo na lista e digite a senha
+      que o professor entregou.</p>
       <div id="erroLogin"></div>
       <form id="formEntrar">
         <div class="campo">
           <label for="codigo">Código do grupo</label>
-          <input type="text" id="codigo" autocomplete="off" autocapitalize="characters"
-                 placeholder="A1" required>
+          <!-- Lista, não digitação: são 82 alunos, e código digitado errado é
+               erro garantido. Os códigos ficam escritos aqui mesmo para a tela
+               de entrar não depender de nada carregar antes. O professor e a
+               direção entram pelo campo de texto, que o botão abaixo revela,
+               para o acesso deles não ficar anunciado na lista da turma. -->
+          <select id="codigo" required>
+            <option value="">escolha o seu grupo</option>
+            <optgroup label="1ª série A">
+              <option value="A1">A1 · Sala 01, Sala 02 e sanitários do lado sul</option>
+              <option value="A2">A2 · Sala 03, Sala 04 e as circulações do meio</option>
+              <option value="A3">A3 · Sala 05, circulação central e área técnica</option>
+            </optgroup>
+            <optgroup label="1ª série B">
+              <option value="A4">A4 · Sala 06, Sala 07 e as circulações do lado norte</option>
+              <option value="A5">A5 · Sala 08, Sala 09, Sala 10 e sanitários do lado norte</option>
+              <option value="B1">B1 · Secretaria, cozinha, pátio e área externa</option>
+              <option value="B2">B2 · Laboratórios, biblioteca e sala multiuso</option>
+              <option value="B3">B3 · Quadra, vestiários, auditório e campo</option>
+            </optgroup>
+            <optgroup label="Comuns às duas turmas">
+              <option value="MAPA">MAPA · a planta da escola e os horários</option>
+              <option value="APRESENTA">APRESENTA · os 5 minutos da feira</option>
+              <option value="PRECO">PREÇO · pesquisa de preço do LED</option>
+            </optgroup>
+          </select>
+          <input type="text" id="codigoOutro" hidden autocomplete="off"
+                 autocapitalize="characters" placeholder="digite o código">
         </div>
         <div class="campo">
           <label for="senha">Senha</label>
@@ -645,6 +719,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         </div>
         <button class="btn" id="btEntrar" type="submit">Entrar</button>
       </form>
+      <button type="button" class="elo" id="btOutroCodigo">Sou o professor ou a direção</button>
     </div>
     <p class="ajuda">O caderno de papel continua valendo: anote lá durante a coleta e
     lance aqui depois, com calma.</p>
@@ -771,10 +846,10 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 
     <div class="cx" id="dadosConta" style="margin-bottom:14px"></div>
 
-    <div id="passosConta"></div>
-
-    <div class="cx" style="margin-top:14px">
-      <h4 style="margin:0 0 7px;font-size:.95rem">Como se faz</h4>
+    <!-- As instruções vêm ANTES dos campos. Embaixo, o aluno tinha de descer até o
+         fim, ler e voltar para o passo 1 a cada tentativa. -->
+    <details class="dobra" id="comoSeFaz" open>
+      <summary>Como se faz, passo a passo</summary>
       <p class="ajuda" style="margin:0">
       <b>1.</b> Diferença entre a lâmpada antiga e a LED, dividida por 1000, vezes as
       horas, vezes os dias do mês. Isso dá o <b>kWh evitado no mês</b>.<br>
@@ -782,7 +857,10 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <b>3.</b> Vezes 12 dá a <b>economia em um ano</b>.<br>
       <b>4.</b> Vezes o número de meses desde a troca dá a <b>economia desde a troca</b>.<br>
       Pode arredondar. O sistema aceita pequena diferença de arredondamento.</p>
-    </div>
+    </details>
+
+    <div id="passosConta"></div>
+
     <p class="ajuda" style="margin-top:12px">O sistema guarda todas as suas tentativas,
     inclusive as erradas, e o professor vê. Não chute: refaça a conta.</p>
   </section>
@@ -846,12 +924,19 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   <!-- PREÇOS -->
   <section id="tela-precos" hidden>
     <h2 style="font-size:1.15rem">Pesquisa de preço do LED</h2>
-    <p class="ajuda" id="subPreco">Pesquise em pelo menos duas lojas da região e lance os dois preços.</p>
-    <div id="avisoPreco"></div>
-    <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn peq sec" id="btAvaliar2">Avaliar a equipe</button>
-      <button class="btn peq sec" id="btTrocarEu2">Não sou eu, trocar de pessoa</button>
+    <p class="ajuda" id="subPreco">Pesquise em pelo menos duas lojas da região e lance os
+    dois preços.</p>
+    <div class="cx" style="background:var(--azul-sup);border-color:var(--azul);
+      padding:15px 17px;margin-bottom:16px">
+      <h4 style="margin:0 0 7px;font-size:.92rem">Para que serve este preço</h4>
+      <p class="ajuda" style="margin:0">A escola <b>não vai comprar nada</b>: as lâmpadas
+      já foram trocadas na reforma. O preço serve para duas coisas. A primeira é
+      responder quem perguntar na feira se a economia é muita ou pouca: com ele dá para
+      dizer quantas vezes a economia já pagou todas as lâmpadas da escola. A segunda é
+      dizer à direção quanto custaria trocar as lâmpadas que a reforma não alcançou, e em
+      quanto tempo a própria economia cobre esse custo.</p>
     </div>
+    <div id="avisoPreco"></div>
     <div class="cx">
       <div class="campo"><label for="pLoja">Loja</label>
         <input type="text" id="pLoja" placeholder="nome da loja e bairro"></div>
@@ -859,9 +944,13 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         <input type="text" id="pProd" placeholder="ex: LED tubular 18 W 120 cm"></div>
       <div class="dupla">
         <div class="campo"><label for="pPot">Potência (W)</label>
-          <input type="number" id="pPot" step="0.1" inputmode="decimal" value="18"></div>
+          <input type="text" id="pPot" inputmode="decimal" autocomplete="off"
+                 value="18"></div>
         <div class="campo"><label for="pPreco">Preço por unidade (R$)</label>
-          <input type="number" id="pPreco" step="0.01" inputmode="decimal" placeholder="21,90"></div>
+          <!-- type=text, não number: no celular brasileiro o aluno digita 21,90 e o
+               campo numérico recusa a vírgula na hora da tecla -->
+          <input type="text" id="pPreco" inputmode="decimal" autocomplete="off"
+                 placeholder="21,90"></div>
       </div>
       <div class="campo"><label for="pFonte">Como você viu o preço</label>
         <input type="text" id="pFonte" placeholder="ex: fui na loja em 05/11"></div>
@@ -869,6 +958,10 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     </div>
     <h3 class="sec">Preços lançados</h3>
     <div id="listaPrecos"></div>
+    <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn peq sec" id="btAvaliar2">Avaliar a equipe</button>
+      <button class="btn peq sec" id="btTrocarEu2">Não sou eu, trocar de pessoa</button>
+    </div>
   </section>
 
   <!-- AVALIAÇÃO DA EQUIPE -->
@@ -1327,6 +1420,12 @@ function msg(onde, texto, tipo) {
   el(onde).innerHTML = texto ? '<div class="aviso ' + tipo + '">' + texto + '</div>' : '';
 }
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
+/* Número para o olho brasileiro: 2.5 vira 2,5. O inverso é o num() acima. */
+function vrg(v){
+  if (v === null || v === undefined || v === '') return '';
+  const n = +v;
+  return isNaN(n) ? String(v) : String(n).replace('.', ',');
+}
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
   ['entrar','eusou','ambientes','ambiente','precos','avaliar','conta','mapa','palco',
@@ -1341,12 +1440,36 @@ function opcoes(sel, vazio) {
 }
 
 /* ---------------- entrar e sair ---------------- */
+/* O aluno escolhe o grupo numa lista; quem tem outro código digita. A tela
+   guarda em qual dos dois está, e o botão troca de um para o outro. */
+let CODIGO_DIGITADO = false;
+function trocarEntrada(digitar) {
+  CODIGO_DIGITADO = digitar;
+  el('codigo').hidden = digitar;
+  el('codigo').required = !digitar;
+  el('codigoOutro').hidden = !digitar;
+  el('codigoOutro').required = digitar;
+  el('btOutroCodigo').textContent = digitar
+    ? 'Voltar para a lista de grupos' : 'Sou o professor ou a direção';
+  el('ajudaEntrar').textContent = digitar
+    ? 'Digite o código do seu acesso e a senha.'
+    : 'Escolha o seu grupo na lista e digite a senha que o professor entregou.';
+  msg('erroLogin', '');
+  (digitar ? el('codigoOutro') : el('codigo')).focus();
+}
+el('btOutroCodigo').addEventListener('click', () => trocarEntrada(!CODIGO_DIGITADO));
+// escolheu o grupo, já cai na senha: um toque a menos
+el('codigo').addEventListener('change', () => { if (el('codigo').value) el('senha').focus(); });
+
 el('formEntrar').addEventListener('submit', async e => {
   e.preventDefault();
+  const codigo = (CODIGO_DIGITADO ? el('codigoOutro').value : el('codigo').value).trim();
+  if (!codigo) return msg('erroLogin', CODIGO_DIGITADO
+    ? 'Digite o código.' : 'Escolha o seu grupo na lista.', 'erro');
   const b = el('btEntrar'); b.disabled = true; b.textContent = 'Entrando...';
   msg('erroLogin','');
   try {
-    const r = await rpc('entrar', { p_codigo: el('codigo').value, p_senha: el('senha').value });
+    const r = await rpc('entrar', { p_codigo: codigo, p_senha: el('senha').value });
     if (!r.ok) { msg('erroLogin', r.erro, 'erro'); }
     else { EU = r; guardar(); entrou(); }
   } catch (err) { msg('erroLogin', err.message, 'erro'); }
@@ -1393,11 +1516,17 @@ function escolherQuemSou() {
   el('tituloEuSou').textContent = 'Quem está usando agora? · Grupo ' + EU.codigo;
   msg('avisoEuSou','');
   el('blocoEntrar').hidden = true; el('btNaoEstou').hidden = false;
+  // no mapa e na apresentação ninguém tem função separada, todos fazem a mesma
+  // coisa, então ali a linha de baixo mostra a turma, que é o que distingue
+  const comum = EU.tipo && EU.tipo !== 'inventario';
   el('listaEuSou').innerHTML = ALUNOS.map(a =>
     '<button class="amb" data-id="' + a.id + '">' +
     '<span class="n">' + (a.numero || '') + '</span>' +
     '<span class="t">' + a.nome +
-    '<small>' + (PAPEL[a.equipe] || 'papel ainda não definido') + '</small></span>' +
+    '<small>' + (comum ? (a.turma ? '1ª série ' + String(a.turma).replace(/^1/, '')
+                                  : 'turma não informada')
+                       : (PAPEL[a.equipe] || 'papel ainda não definido'))
+    + '</small></span>' +
     '<span class="st">›</span></button>').join('');
   document.querySelectorAll('#listaEuSou .amb').forEach(b =>
     b.addEventListener('click', () => {
@@ -1464,7 +1593,8 @@ el('btSair').addEventListener('click', async () => {
   try { localStorage.removeItem('cene_sessao'); } catch(e){}
   EU = null; SOU = null; ALUNOS = []; clearInterval(timer);
   el('eu').hidden = true; el('btSair').hidden = true;
-  el('codigo').value = ''; telas('entrar');
+  el('codigo').value = ''; el('codigoOutro').value = '';
+  trocarEntrada(false); telas('entrar');
 });
 
 /* ---------------- lista de ambientes ---------------- */
@@ -1511,11 +1641,26 @@ const POTS  = { 'Lâmpada':[15,18,20,32,40], 'Ventilador':[60,100,130],
                 'Monitor':[25,40], 'Projetor':[250,300], 'TV':[100,150],
                 'Geladeira':[150,250], 'Bebedouro':[70,100], 'Impressora':[300,500],
                 'Exaustor':[100,150], 'Bomba':[370,750], 'Refletor':[100,200,400], 'Outro':[] };
+/* No pátio o aluno lança lâmpada quase sempre. Mostrar os catorze tipos de uma vez
+   empurra o formulário inteiro para fora da tela e obriga a rolar a cada lançamento.
+   Então ficam à vista os quatro mais usados, mais o que estiver escolhido, e o resto
+   abre num toque. */
+const TIPOS_PERTO = ['Lâmpada', 'Ventilador', 'Ar-condicionado', 'Computador'];
+let TIPOS_ABERTO = false;
 function montarTipos() {
-  el('tipos').innerHTML = TIPOS.map(t =>
-    '<button type="button" data-t="' + t + '" aria-pressed="' + (t===TIPO) + '">' + t + '</button>').join('');
-  document.querySelectorAll('#tipos button').forEach(b =>
+  const vis = TIPOS_ABERTO ? TIPOS
+    : TIPOS_PERTO.concat(TIPOS_PERTO.indexOf(TIPO) < 0 ? [TIPO] : []);
+  const quantos = TIPOS.length - vis.length;
+  el('tipos').innerHTML = vis.map(t =>
+    '<button type="button" data-t="' + t + '" aria-pressed="' + (t === TIPO) + '">'
+    + t + '</button>').join('')
+    + (TIPOS_ABERTO || quantos <= 0 ? ''
+      : '<button type="button" class="mais" id="btMaisTipos" aria-expanded="false">'
+        + '+ ' + quantos + ' tipos</button>');
+  document.querySelectorAll('#tipos button[data-t]').forEach(b =>
     b.addEventListener('click', () => { TIPO = b.dataset.t; montarTipos(); chipsPot(); }));
+  const mais = el('btMaisTipos');
+  if (mais) mais.addEventListener('click', () => { TIPOS_ABERTO = true; montarTipos(); });
 }
 function chipsPot() {
   const l = POTS[TIPO] || [];
@@ -1535,7 +1680,8 @@ async function abrirAmbiente(id, lista) {
   el('tituloAmb').textContent = AMB.nome;
   el('subAmb').textContent = 'Lance um equipamento de cada vez. Lâmpada por lâmpada, '
     + 'contando as queimadas também.';
-  TIPO = 'Lâmpada'; montarTipos(); chipsPot(); chipsHoras();
+  TIPO = 'Lâmpada'; TIPOS_ABERTO = false;
+  montarTipos(); chipsPot(); chipsHoras();
   el('qtd').value = 1; el('pot').value = ''; el('horas').value = ''; el('obs').value = '';
   msg('avisoAmb','');
   el('quemLanca').textContent = SOU ? 'Lançando como ' + SOU.nome + '.' : '';
@@ -1658,6 +1804,7 @@ async function carregarPrecos() {
 // A 1a serie A formou 3 grupos e a 1a serie B formou 5. Os codigos ficaram
 // como estavam nos cadernos ja impressos, por isso a turma B usa A4 e A5.
 const GRUPOS_A = ['A1','A2','A3'], GRUPOS_B = ['A4','A5','B1','B2','B3'];
+let ULTIMO_GRUPO = null;   // último grupo usado, para o botão de repetir
 document.querySelectorAll('#abas button').forEach(b =>
   b.addEventListener('click', () => abrirAba(b.dataset.ab)));
 function abrirAba(qual) {
@@ -1710,11 +1857,14 @@ async function carregarMontar() {
             '<span class="nm" title="' + a.nome + '">' + a.nome +
               (doisTurnos ? ' <i style="font-style:normal;font-family:var(--m);font-size:.72rem;'
                  + 'color:var(--tinta3)">' + a.turma + '</i>' : '') + '</span>' +
+            // no mapa e na apresentação todo mundo faz a mesma coisa: pedir uma
+            // função ali só dá trabalho e não quer dizer nada
+            (doisTurnos ? '' :
             '<select class="selPapel" data-id="' + a.id + '">' +
               ['campo','calculo','conferencia','preco'].map(p =>
                 '<option value="' + p + '"' + (a.equipe === p ? ' selected' : '') + '>' +
                 PAP[p] + '</option>').join('') +
-            '</select>' +
+            '</select>') +
             '<button class="x" data-tirar="' + a.id + '" title="tirar do grupo">✕</button>' +
           '</li>').join('') + '</ul>'
       : '<div class="nada">Ninguém neste grupo ainda.</div>';
@@ -1741,10 +1891,15 @@ async function carregarMontar() {
   const daqui = todos.filter(a => a.desta_turma !== false);
   const sem = daqui.filter(a => !a.grupo).sort((a,b) => (a.numero||0)-(b.numero||0));
   el('tituloSemGrupo').textContent = 'Sem grupo · ' + sem.length + ' de ' + daqui.length;
+  // Montar os grupos é encher um grupo de cada vez. Depois do primeiro aluno, o
+  // botão repete o mesmo código num toque só, em vez de abrir a lista toda vez.
+  const repetir = ULTIMO_GRUPO && opts.indexOf(ULTIMO_GRUPO) >= 0 ? ULTIMO_GRUPO : null;
   el('listaTurma').innerHTML = sem.length ? sem.map(a =>
     '<div class="item" data-id="' + a.id + '">' +
       '<span class="q" style="min-width:26px">' + (a.numero || '') + '</span>' +
       '<span class="d">' + a.nome + '</span>' +
+      (repetir ? '<button class="rep" data-rep="' + a.id + '" title="Põe no grupo '
+        + repetir + ', o último que você usou">+ ' + repetir + '</button>' : '') +
       '<select class="selGrupo" data-id="' + a.id + '" style="width:auto;padding:6px 8px">' +
         '<option value="">escolher</option>' +
         opts.map(g => '<option value="' + g + '">' + g + '</option>').join('') +
@@ -1753,6 +1908,8 @@ async function carregarMontar() {
 
   document.querySelectorAll('#listaTurma .selGrupo').forEach(s =>
     s.addEventListener('change', () => aloca(+s.dataset.id, s.value, 'campo')));
+  document.querySelectorAll('#listaTurma .rep').forEach(b =>
+    b.addEventListener('click', () => aloca(+b.dataset.rep, repetir, 'campo')));
   document.querySelectorAll('#cards .selPapel').forEach(s =>
     s.addEventListener('change', () => {
       const g = s.closest('.gcard').querySelector('.cod').textContent;
@@ -1765,6 +1922,7 @@ async function aloca(id, grupo, papel) {
   const r = await rpc('alocar', { p_token: EU.token, p_aluno: id,
     p_grupo: grupo || null, p_equipe: grupo ? papel : null });
   msg('avisoMontar', r.ok ? '' : r.erro, 'erro');
+  if (r.ok && grupo) ULTIMO_GRUPO = grupo;   // para o botão de repetir
   await carregarMontar();
   carregarProf();
 }
@@ -1832,10 +1990,13 @@ async function carregarProf() {
   if ((r.tipos||[]).length) {
     const maiorQ = Math.max.apply(null, r.tipos.map(t => +t.quantidade).concat([1]));
     const somaQ = r.tipos.reduce((x, t) => x + (+t.quantidade), 0) || 1;
+    // mesma ordem do gráfico logo acima: duas listas iguais em ordens diferentes,
+    // uma embaixo da outra, só confundem quem lê
+    const tiposOrd = r.tipos.slice().sort((a, b) => +b.quantidade - +a.quantidade);
     el('tabTipos').innerHTML =
       '<thead><tr><th class="cresce">Equipamento</th><th>Quantidade</th>' +
       '<th>Fatia</th><th>Potência somada</th></tr></thead><tbody>' +
-      r.tipos.map(t => '<tr><td class="cresce">' + esc(t.tipo) + '</td>' +
+      tiposOrd.map(t => '<tr><td class="cresce">' + esc(t.tipo) + '</td>' +
         '<td class="n" data-r="Quantidade" data-v="' + t.quantidade + '">' + t.quantidade +
           dbar(+t.quantidade / maiorQ * 100, 'az') + '</td>' +
         '<td class="n" data-r="Fatia" data-v="' + (+t.quantidade / somaQ) + '">' +
@@ -1929,7 +2090,8 @@ async function carregarParticipacao() {
           'title="Contador ' + a.contador + ' · Leitor ' + a.leitor +
           ' · Anotador ' + a.anotador + ' · Conferente ' + a.conferente + '">' +
           '<span class="pts">' + bolas + '</span></td>' +
-        '<td class="n" data-r="Lançou" data-v="' + a.lancamentos + '">' + a.lancamentos + '</td>' +
+        '<td class="n" data-r="Lançou" data-v="' + (+a.lancamentos || 0) + '">'
+          + (+a.lancamentos || 0) + '</td>' +
         '<td class="n" data-r="Preços" data-v="' + (a.precos || 0) + '">' + (a.precos || 0) +
         '</td></tr>';
     }).join('') + '</tbody>';
@@ -2217,10 +2379,12 @@ function pintarGrafSaldo(C, P, lamp) {
     + (+a.tarifa).toLocaleString('pt-BR', { minimumFractionDigits: 4 }) + '</text>').join('');
 
   el('grafSaldo').innerHTML = '<h4>Quanto a troca já poupou</h4>'
-    + '<p class="sub">Cada coluna é o total acumulado até o fim daquele ano. A parte '
-    + 'escura é o que entrou naquele ano. O consumo evitado é parecido todo ano, mas a '
-    + 'economia em reais sobe porque a tarifa subiu.</p>'
-    + '<div class="rol"><svg viewBox="0 0 ' + W + ' ' + H + '" class="svg" role="img" '
+    + '<p class="sub">Cada coluna é o total acumulado até o fim daquele ano. A faixa '
+    + 'de cima é o que entrou naquele ano; a de baixo é o que já vinha dos anteriores. '
+    + 'O consumo evitado é parecido todo ano, mas a economia em reais sobe porque a '
+    + 'tarifa subiu.</p>'
+    + '<p class="sub dica-rolar">Arraste o gráfico para o lado para ver todos os anos.</p>'
+    + '<div class="rol grafico"><svg viewBox="0 0 ' + W + ' ' + H + '" class="svg" role="img" '
     + 'aria-label="Economia acumulada ano a ano">' + grade + barras + rot + '</svg></div>'
     + '<p class="sub" style="margin-top:10px"><b>' + brl(+E.total) + '</b> no total, '
     + E.meses + ' meses, ' + Math.round(+E.kwh_total).toLocaleString('pt-BR')
@@ -2437,10 +2601,10 @@ async function carregarAvaliacao() {
             + (+a.colegas ? +a.enviadas / +a.colegas : 0) + '">' + a.enviadas + ' de '
             + a.colegas + '</td>'
           + '<td class="n" data-r="Média" data-v="' + (m === null ? -1 : m) + '"><b>'
-            + n1(a.media) + '</b>' + (m === null ? '' : dbar(m / 15 * 100,
+            + vrg(n1(a.media)) + '</b>' + (m === null ? '' : dbar(m / 15 * 100,
               m >= 11 ? '' : (m >= 7 ? 'am' : 'cz'))) + '</td>'
           + dims.map(d => '<td class="n" data-r="' + d[0] + '" data-v="'
-              + (d[1] === null || d[1] === undefined ? -1 : d[1]) + '">' + n1(d[1])
+              + (d[1] === null || d[1] === undefined ? -1 : d[1]) + '">' + vrg(n1(d[1]))
               + '</td>').join('')
           + '</tr>';
       }).join('') + '</tbody>';
@@ -3338,7 +3502,12 @@ async function carregarMapaProf() {
         const sit = x.existe === false ? '<span class="tag c">não construído</span>'
                   : x.existe === true  ? '<span class="tag v">sim</span>'
                   : '<span class="tag a">a conferir</span>';
-        return '<tr><td class="cresce">' + esc(x.nome) + '</td>'
+        // a observação do aluno é o que explica o caso estranho: sem ela,
+        // "não construído" fica sem justificativa na mesa do professor
+        return '<tr><td class="cresce">' + esc(x.nome)
+          + (x.obs ? '<small style="display:block;font-family:var(--m);font-size:.74rem;'
+              + 'color:var(--tinta2);margin-top:3px;white-space:normal">'
+              + esc(x.obs) + '</small>' : '') + '</td>'
           + '<td data-r="Grupo"><b>' + esc(x.grupo) + '</b></td>'
           + '<td data-r="Existe" data-v="' + (x.existe === true ? 2 : x.existe === false ? 0 : 1)
           + '">' + sit + '</td>'
@@ -3383,7 +3552,7 @@ function pintarConferencia(r) {
           + '<div style="display:flex;gap:10px;align-items:baseline">'
           + '<b style="font-family:var(--m);font-size:.9rem;flex:none">' + e.quantos + '×</b>'
           + '<span style="flex:1;min-width:0">' + esc(e.diagnostico) + '</span>'
-          + '<span class="pill p" style="flex:none">' + e.quantos_alunos + ' aluno'
+          + '<span class="pill p" style="flex:none">' + (+e.quantos_alunos || 0) + ' aluno'
           + (+e.quantos_alunos === 1 ? '' : 's') + '</span></div>'
           + dbar(pct, 'am') + '</div>';
       }).join('')
@@ -3511,7 +3680,7 @@ function pintarPesos() {
   el('pesos').innerHTML = CRITERIOS.map(c =>
     '<div class="campo" style="margin-bottom:0"><label for="peso_' + c[0] + '">' + c[1] + '</label>'
     + '<input type="text" id="peso_' + c[0] + '" inputmode="decimal" autocomplete="off" value="'
-    + PESOS[c[0]] + '"></div>').join('');
+    + vrg(PESOS[c[0]]) + '"></div>').join('');
   CRITERIOS.forEach(c => el('peso_' + c[0]).addEventListener('input', () => {
     PESOS[c[0]] = num(el('peso_' + c[0]).value) || 0;
     somarPesos();
@@ -3520,7 +3689,7 @@ function pintarPesos() {
 }
 function somarPesos() {
   const t = CRITERIOS.reduce((x, c) => x + (+PESOS[c[0]] || 0), 0);
-  el('somaPesos').innerHTML = 'Total possível: <b>' + (Math.round(t * 10) / 10)
+  el('somaPesos').innerHTML = 'Total possível: <b>' + vrg(Math.round(t * 10) / 10)
     + ' pontos</b> por aluno.';
 }
 
@@ -3551,10 +3720,10 @@ function pintarNotas() {
             + (a[c[0]] === null || a[c[0]] === undefined || a[c[0]] === '' ? -1 : a[c[0]])
             + '"><input class="nota" type="text" autocomplete="off" '
             + 'inputmode="decimal" data-id="' + a.id + '" data-c="' + c[0] + '" value="'
-            + n1(a[c[0]]) + '" style="width:5.2rem;padding:7px 8px;text-align:center" '
+            + vrg(n1(a[c[0]])) + '" style="width:5.2rem;padding:7px 8px;text-align:center" '
             + 'aria-label="' + c[1] + ' de ' + esc(a.nome) + '"></td>').join('')
         + '<td class="n" data-r="Total" data-v="' + (totalDe(a) === null ? -1 : totalDe(a))
-        + '"><b class="tot">' + (totalDe(a) === null ? '' : n1(totalDe(a))) + '</b></td></tr>'
+        + '"><b class="tot">' + (totalDe(a) === null ? '' : vrg(n1(totalDe(a)))) + '</b></td></tr>'
       ).join('') + '</tbody>';
   ordenavel('tabNotas');
   document.querySelectorAll('#tabNotas input.nota').forEach(i =>
@@ -3565,7 +3734,7 @@ function pintarNotas() {
       const linha = i.closest('tr');
       i.parentNode.dataset.v = (i.value === '' ? -1 : num(i.value));
       const t = totalDe(a);
-      linha.querySelector('.tot').textContent = t === null ? '' : n1(t);
+      linha.querySelector('.tot').textContent = t === null ? '' : vrg(n1(t));
       linha.querySelector('td:last-child').dataset.v = t === null ? -1 : t;
     }));
 }
@@ -3828,7 +3997,9 @@ const PROVIDENCIAS = [
    + 'isso, a estimativa dos estudantes passa a ter um valor real para comparar.'],
   ['Trocar o que ainda não é LED', 'Direção e Secretaria', false,
    'O painel mostra quantas lâmpadas antigas restam e quanto a troca delas acrescentaria '
-   + 'por mês. Normalmente sobram banheiros, depósitos, área externa e o prédio antigo.'],
+   + 'por mês. Com o preço que os estudantes pesquisaram nas lojas, o parecer traz '
+   + 'também quanto custaria e em quantos meses a própria economia cobre o custo. '
+   + 'Normalmente sobram banheiros, depósitos, área externa e o prédio antigo.'],
   ['Levar o resultado à Secretaria como caso demonstrado', 'Direção', false,
    'A reforma já provou que funciona nesta escola, com número apurado. Esse é um '
    + 'argumento melhor do que uma proposta: não é previsão, é resultado medido.'],
@@ -3939,6 +4110,19 @@ function montarParecer(r, P, lamp, precoMed, feitos, tot, qtdPrecos) {
     pt.push('Foram encontradas ' + n(E.lampadas_ainda_antigas) + ' lâmpadas que ainda não '
       + 'são LED. Trocá-las acrescentaria ' + brl(+E.economia_mes_a_ganhar) + ' por mês, '
       + 'ou ' + brl(+E.economia_mes_a_ganhar * 12) + ' por ano.');
+    // com o preço pesquisado pelos estudantes, a recomendação deixa de ser
+    // "trocar é bom" e passa a ter custo e prazo, que é o que a gestão decide
+    if (+E.preco_led_medio > 0) {
+      const custo = +E.preco_led_medio * +E.lampadas_ainda_antigas;
+      const meses = +E.economia_mes_a_ganhar > 0 ? custo / +E.economia_mes_a_ganhar : null;
+      pt.push('Ao preço médio de ' + brl(+E.preco_led_medio) + ' por lâmpada, pesquisado '
+        + 'pelos estudantes em ' + n(E.precos_quantos) + ' loja(s), essa troca custaria '
+        + brl(custo) + '.'
+        + (meses !== null && meses < 600
+            ? ' A economia que ela mesma gera cobre esse custo em '
+              + Math.ceil(meses) + ' mês(es).'
+            : ''));
+    }
   } else {
     pt.push('Não foi encontrada nenhuma lâmpada fora do padrão LED nos ambientes já '
       + 'percorridos. Enquanto o levantamento não fechar os ' + tot + ' ambientes, esta '
