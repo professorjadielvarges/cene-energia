@@ -3,7 +3,7 @@
    O que é conversa com o servidor (POST para o Supabase) nunca passa por aqui:
    quem cuida disso é a fila de envio dentro da página. */
 
-const VERSAO = 'cene-2026-11-04';
+const VERSAO = 'cene-2026-11-04b';
 const ESSENCIAIS = ['./', './index.html'];
 
 self.addEventListener('install', e => {
