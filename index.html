@@ -7,6 +7,14 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script>
+/* Lê a escolha de claro ou escuro antes de desenhar a página, senão ela
+   pisca branca por um instante em quem usa o aparelho no escuro. */
+try {
+  var t = JSON.parse(localStorage.getItem('cene_tema') || '""');
+  if (t === 'claro' || t === 'escuro') document.documentElement.dataset.tema = t;
+} catch (e) {}
+</script>
 <style>
 /* Inventário de Energia · CENE
    Identidade: painel de instrumentos de medição, com números em primeiro plano,
@@ -28,7 +36,7 @@
   --m:"IBM Plex Mono",ui-monospace,"SF Mono",monospace;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-tema="claro"]){
   --papel:#0D0F14; --sup:#161920; --sup2:#1D2029;
   --tinta:#ECEDF1; --tinta2:#9BA2B2; --tinta3:#6E7585;
   --linha:#262A34; --linha2:#363B47;
@@ -40,6 +48,19 @@
   --sombra2:0 2px 4px rgba(0,0,0,.5), 0 12px 30px rgba(0,0,0,.45);
   color-scheme:dark;
 }}
+:root[data-tema="escuro"]{
+  --papel:#0D0F14; --sup:#161920; --sup2:#1D2029;
+  --tinta:#ECEDF1; --tinta2:#9BA2B2; --tinta3:#6E7585;
+  --linha:#262A34; --linha2:#363B47;
+  --azul:#9DB2F5; --azul-sup:#17203A; --azul-forte:#C3D0FA;
+  --ambar:#E0A64E; --ambar-sup:#2C2110;
+  --verde:#7FC79B; --verde-sup:#122418;
+  --verm:#E89189; --verm-sup:#2C1512;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  --sombra2:0 2px 4px rgba(0,0,0,.5), 0 12px 30px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{background:var(--papel);color:var(--tinta);font-family:var(--c);
@@ -80,6 +101,12 @@ body.pendente .situacao{order:3}
   border-radius:var(--r2);padding:6px 13px;font-size:.8rem;font-weight:600;
   transition:border-color .15s,color .15s}
 .sai:hover{border-color:var(--verm);color:var(--verm)}
+.sai.tema{display:flex;align-items:center;gap:7px}
+.sai.tema:hover{border-color:var(--azul);color:var(--azul)}
+.sai.tema::before{content:"";width:13px;height:13px;border-radius:50%;flex:none;
+  background:linear-gradient(135deg,#FFFFFF 0 50%,#14161C 50% 100%);
+  border:1px solid var(--linha2)}
+@media(max-width:560px){.sai.tema{padding:6px 10px;font-size:.76rem}}
 main{padding-block:26px 90px}
 
 /* ---------- blocos ---------- */
@@ -500,6 +527,8 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   <h1>Inventário de Energia<i>CE de Nova Esperança · Feira de Ciências 2026</i></h1>
   <span class="situacao" id="situacao" role="status"></span>
   <span class="eu" id="eu" hidden></span>
+  <button class="sai tema" id="btTema" type="button"
+    title="Trocar entre claro e escuro"><span id="btTemaT">Automático</span></button>
   <button class="sai" id="btSair" hidden>Sair</button>
 </div></header>
 
@@ -2166,6 +2195,36 @@ async function carregarAvaliacao() {
   ordenavel('tabAval');
   encherBarras();
 }
+
+/* ==================== claro e escuro ====================
+   Três estados, no mesmo botão: Automático segue o aparelho, Claro e Escuro
+   mandam no site. A escolha fica guardada no próprio celular, então vale
+   também sem internet e continua valendo na próxima vez que abrir. */
+
+const TEMAS = [['auto','Automático'], ['claro','Claro'], ['escuro','Escuro']];
+let TEMA = Disco.ler('tema', 'auto');
+if (!TEMAS.some(t => t[0] === TEMA)) TEMA = 'auto';
+
+function aplicarTema() {
+  if (TEMA === 'auto') delete document.documentElement.dataset.tema;
+  else document.documentElement.dataset.tema = TEMA;
+  const nome = (TEMAS.find(t => t[0] === TEMA) || TEMAS[0])[1];
+  el('btTemaT').textContent = (TEMA === 'auto' && window.innerWidth < 560)
+    ? 'Auto' : nome;
+  el('btTema').setAttribute('aria-label', 'Aparência: ' + nome
+    + '. Clique para trocar entre automático, claro e escuro.');
+  el('btTema').title = TEMA === 'auto'
+    ? 'Automático: segue o que o seu aparelho está usando'
+    : 'Fixo no ' + nome.toLowerCase() + ', não importa o aparelho';
+}
+window.addEventListener('resize', () => { if (el('btTema')) aplicarTema(); });
+el('btTema').addEventListener('click', () => {
+  const i = TEMAS.findIndex(t => t[0] === TEMA);
+  TEMA = TEMAS[(i + 1) % TEMAS.length][0];
+  Disco.grava('tema', TEMA);
+  aplicarTema();
+});
+aplicarTema();
 
 /* ==================== notas do projeto ====================
    Os quatro critérios da ficha da escola: presença, engajamento, material e
