@@ -328,6 +328,8 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .gcard .x{background:none;border:0;color:var(--tinta3);font-size:.95rem;line-height:1;
   padding:4px 6px;flex:none;font-weight:700;border-radius:5px;transition:all .13s}
 .gcard .x:hover{color:var(--verm);background:var(--verm-sup)}
+.gcard.mapa{border-color:var(--ambar);box-shadow:inset 3px 0 0 var(--ambar)}
+.gcard.mapa .cod{color:var(--ambar)}
 .gcard .nada{padding:22px 16px;font-size:.84rem;color:var(--tinta3);flex:1;
   text-align:center}
 .gcard .pe{padding:11px 16px;display:flex;flex-wrap:wrap;gap:6px;
@@ -1566,8 +1568,10 @@ async function carregarMontar() {
   catch (e) { return msg('avisoMontar', e.message, 'erro'); }
   if (!r.ok) return msg('avisoMontar', r.erro, 'erro');
 
-  const opts = (TURMA === '1A' ? GRUPOS_A : GRUPOS_B);
-  const gs = (r.grupos || []).filter(g => opts.indexOf(g.codigo) >= 0);
+  const daTurma = (TURMA === '1A' ? GRUPOS_A : GRUPOS_B);
+  const gs = (r.grupos || []).filter(g =>
+    daTurma.indexOf(g.codigo) >= 0 || g.tipo === 'mapa');
+  const opts = gs.map(g => g.codigo);
   const todos = r.alunos || [];
   const PAP = { campo:'campo', calculo:'cálculo', conferencia:'conferência', preco:'preço' };
 
@@ -1575,11 +1579,15 @@ async function carregarMontar() {
   el('cards').innerHTML = '<div class="cards">' + gs.map(g => {
     const gente = todos.filter(a => a.grupo === g.codigo)
                        .sort((a,b) => (a.numero||0)-(b.numero||0));
-    const cls = gente.length === 0 ? ' vazio' : (+g.campo === 0 ? ' semcampo' : '');
+    const mapa = g.tipo === 'mapa';
+    const cls = (gente.length === 0 ? ' vazio' : (!mapa && +g.campo === 0 ? ' semcampo' : ''))
+              + (mapa ? ' mapa' : '');
     const corpo = gente.length
       ? '<ul class="gente">' + gente.map(a =>
           '<li data-id="' + a.id + '">' +
-            '<span class="nm" title="' + a.nome + '">' + a.nome + '</span>' +
+            '<span class="nm" title="' + a.nome + '">' + a.nome +
+              (mapa ? ' <i style="font-style:normal;font-family:var(--m);font-size:.72rem;'
+                 + 'color:var(--tinta3)">' + a.turma + '</i>' : '') + '</span>' +
             '<select class="selPapel" data-id="' + a.id + '">' +
               ['campo','calculo','conferencia','preco'].map(p =>
                 '<option value="' + p + '"' + (a.equipe === p ? ' selected' : '') + '>' +
@@ -1588,7 +1596,10 @@ async function carregarMontar() {
             '<button class="x" data-tirar="' + a.id + '" title="tirar do grupo">✕</button>' +
           '</li>').join('') + '</ul>'
       : '<div class="nada">Ninguém neste grupo ainda.</div>';
-    const pe = gente.length
+    const pe = mapa
+      ? (gente.length ? '<span class="pill k">' + gente.length + ' na planta</span>'
+                      : '<span class="pill erro">vazio</span>')
+      : gente.length
       ? (+g.campo ? '<span class="pill c">' + g.campo + ' campo</span>' : '<span class="pill erro">sem ninguém de campo</span>')
         + (+g.calculo ? '<span class="pill k">' + g.calculo + ' cálculo</span>' : '')
         + (+g.conferencia ? '<span class="pill f">' + g.conferencia + ' conferência</span>' : '')
@@ -1596,14 +1607,16 @@ async function carregarMontar() {
       : '<span class="pill erro">vazio</span>';
     return '<div class="gcard' + cls + '"><div class="top">' +
       '<div class="cab"><span class="cod">' + g.codigo + '</span>' +
-      '<span class="qtamb">' + g.ambientes + ' ambientes</span></div>' +
+      '<span class="qtamb">' + (g.tipo === 'mapa' ? 'a escola inteira'
+        : g.ambientes + ' ambientes') + '</span></div>' +
       '<div class="res">' + g.resumo + '</div></div>' +
       corpo + '<div class="pe">' + pe + '</div></div>';
   }).join('') + '</div>';
 
   // quem ainda não foi alocado
-  const sem = todos.filter(a => !a.grupo).sort((a,b) => (a.numero||0)-(b.numero||0));
-  el('tituloSemGrupo').textContent = 'Sem grupo · ' + sem.length + ' de ' + todos.length;
+  const daqui = todos.filter(a => a.desta_turma !== false);
+  const sem = daqui.filter(a => !a.grupo).sort((a,b) => (a.numero||0)-(b.numero||0));
+  el('tituloSemGrupo').textContent = 'Sem grupo · ' + sem.length + ' de ' + daqui.length;
   el('listaTurma').innerHTML = sem.length ? sem.map(a =>
     '<div class="item" data-id="' + a.id + '">' +
       '<span class="q" style="min-width:26px">' + (a.numero || '') + '</span>' +
