@@ -917,6 +917,8 @@ async function rpc(fn, args) {
   try {
     const r = await rede(fn, args);
     marcar(true);
+    // se havia coisa esperando e a internet está de volta, aproveita e manda
+    if (FILA.length && !ENVIANDO && EU && EU.token) { enviarFila(); }
     if (GUARDA.indexOf(fn) >= 0 && r && r.ok) {
       CACHE[chaveCache(fn, args)] = r;
       Disco.grava('cache', CACHE);
@@ -2261,7 +2263,10 @@ montarTipos(); chipsPot(); chipsHoras();
 try {
   const s = localStorage.getItem('cene_sessao');
   if (s) { const d = JSON.parse(s); EU = d.s || d; SOU = d.q || null;
-           if (EU && EU.token) entrou(); }
+           if (EU && EU.token) {
+             entrou();
+             if (FILA.length) enviarFila().then(ok => { if (ok) recarregarTela(); });
+           } }
 } catch (e) {}
 </script>
 </body>
