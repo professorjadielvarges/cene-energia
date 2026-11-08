@@ -679,8 +679,8 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   <section id="tela-entrar">
     <div class="cx">
       <h2 style="font-size:1.2rem;margin-bottom:4px">Entrar</h2>
-      <p class="ajuda" id="ajudaEntrar">Escolha o seu grupo na lista e digite a senha
-      que o professor entregou.</p>
+      <p class="ajuda">Escolha o seu grupo na lista e digite a senha que o professor
+      entregou.</p>
       <div id="erroLogin"></div>
       <form id="formEntrar">
         <div class="campo">
@@ -1026,6 +1026,17 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <p class="ajuda">Cada card é um grupo. Troque a função ao lado do nome; o ✕ tira do
       grupo. Quem ainda não entrou aparece embaixo.</p>
       <div id="avisoMontar"></div>
+
+      <!-- Vem fechado de propósito: este painel costuma estar na projeção, e a
+           turma inteira veria a senha de todos os grupos de uma vez. -->
+      <details class="dobra" id="caixaSenhas">
+        <summary>Senhas dos grupos</summary>
+        <p class="ajuda" style="margin:0 0 4px">Não abra com a projeção ligada: aqui
+        aparecem as senhas de todos os grupos juntas. A senha do professor e a da direção
+        não ficam nesta lista.</p>
+        <div id="listaSenhas"></div>
+      </details>
+
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn peq" id="btT1A">1ª série A</button>
         <button class="btn peq sec" id="btT1B">1ª série B</button>
@@ -1451,9 +1462,6 @@ function trocarEntrada(digitar) {
   el('codigoOutro').required = digitar;
   el('btOutroCodigo').textContent = digitar
     ? 'Voltar para a lista de grupos' : 'Sou o professor ou a direção';
-  el('ajudaEntrar').textContent = digitar
-    ? 'Digite o código do seu acesso e a senha.'
-    : 'Escolha o seu grupo na lista e digite a senha que o professor entregou.';
   msg('erroLogin', '');
   (digitar ? el('codigoOutro') : el('codigo')).focus();
 }
