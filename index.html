@@ -519,6 +519,13 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .gcard .gente li:last-child{border-bottom:0}
 .gcard .nm{flex:1;min-width:0;font-size:.87rem;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
+/* na ficha de cálculo o posto (faz a conta, 1º conferente) é a informação que
+   importa, e estava sendo cortado pelo nome. Aqui ele desce para a linha de
+   baixo em vez de sumir. */
+#listaFichas .gcard .nm{white-space:normal;overflow:visible;line-height:1.3}
+#listaFichas .gcard .nm i{display:block;margin-top:1px}
+#listaFichas .gcard .gente li{align-items:flex-start;gap:10px}
+#listaFichas .gcard .pill{flex:none;margin-top:1px}
 .gcard select{width:auto;padding:4px 7px;font-size:.75rem;border-radius:5px;flex:none;
   border-color:var(--linha)}
 .gcard .x{background:none;border:0;color:var(--tinta3);font-size:.95rem;line-height:1;
@@ -860,6 +867,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
               <option value="MAPA">MAPA · a planta da escola e os horários</option>
               <option value="APRESENTA">APRESENTA · os 5 minutos da feira</option>
               <option value="PRECO">PREÇO · pesquisa de preço do LED</option>
+              <option value="CALCULO">CÁLCULO · refaz e confere a conta de cada grupo</option>
             </optgroup>
           </select>
           <input type="text" id="codigoOutro" hidden autocomplete="off"
@@ -1003,6 +1011,114 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         <i aria-hidden="true">&rarr;</i>
       </button>
     </div>
+  </section>
+
+  <!-- EQUIPE DE CÁLCULO -->
+  <section id="tela-calculo" hidden>
+    <h2 style="font-size:1.15rem">A conta de cada grupo</h2>
+    <p class="ajuda">Cada grupo de campo tem uma ficha. Nela, uma pessoa faz a conta e
+    até duas conferem, cada uma por conta própria, sem ver o resultado da outra. O
+    sistema só diz em qual passo deu diferença. O valor certo só aparece quando todo
+    mundo da ficha já enviou e ninguém acertou.</p>
+    <div id="avisoCalc"></div>
+
+    <div class="barra" style="margin:16px 0 6px"><i id="barraCalc"></i></div>
+    <p class="ajuda" id="subCalc" style="margin-bottom:14px"></p>
+    <div id="listaFichas"></div>
+
+    <details class="dobra" id="dobraNovaFicha" style="margin-top:18px">
+      <summary>Abrir ou mudar a ficha de um grupo</summary>
+      <p class="ajuda" style="margin:0 0 12px">Enquanto ninguém tiver enviado, dá para
+      trocar as pessoas e as horas. Depois do primeiro envio a ficha trava.</p>
+      <div class="cx">
+        <div class="campo"><label for="fcGrupo">Grupo de campo</label>
+          <select id="fcGrupo"></select></div>
+        <div class="campo"><label for="fcHoras">Horas por dia que a luz fica acesa</label>
+          <input type="text" id="fcHoras" inputmode="decimal" autocomplete="off" value="6">
+          <p class="ajuda" style="margin:7px 0 0">Use a mesma linha que o grupo usou no
+          caderno. Vale para a conta inteira desta ficha.</p></div>
+        <div class="campo"><label for="fcCalc">Quem faz a conta</label>
+          <select id="fcCalc"></select></div>
+        <div class="campo"><label for="fcC1">Primeiro conferente (opcional)</label>
+          <select id="fcC1"></select></div>
+        <div class="campo"><label for="fcC2">Segundo conferente (opcional)</label>
+          <select id="fcC2"></select></div>
+        <button class="btn" id="btSalvarFicha">Salvar a ficha</button>
+      </div>
+    </details>
+
+    <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn peq sec" id="btAvaliar5">Avaliar a equipe</button>
+      <button class="btn peq sec" id="btTrocarEu5">Não sou eu, trocar de pessoa</button>
+    </div>
+    <div class="fecho-area">
+      <span class="rotulo">Quando o trabalho desta tela estiver feito</span>
+      <button type="button" class="fecho" id="btCompara5">
+        <span class="txt"><b>A nossa escola e as outras</b>
+        <small>Treine aqui a resposta da Feira: quanto a nossa escola já economizou com a
+        troca de 2023 e quanto outra escola economizaria se trocasse também.</small></span>
+        <i aria-hidden="true">&rarr;</i>
+      </button>
+    </div>
+  </section>
+
+  <!-- UMA FICHA DE CÁLCULO -->
+  <section id="tela-ficha" hidden>
+    <button class="volta" id="btVoltaFicha">&larr; voltar para as fichas</button>
+    <h2 style="font-size:1.15rem" id="tituloFicha"></h2>
+    <p class="ajuda" id="subFicha"></p>
+    <div id="avisoFicha"></div>
+
+    <div id="passo1Ficha">
+      <div class="cx" id="dadosFicha" style="margin-bottom:14px"></div>
+      <details class="dobra" open>
+        <summary>Como se faz, passo a passo</summary>
+        <p class="ajuda" style="margin:0">
+        <b>1.</b> Diferença entre a lâmpada antiga e a LED, dividida por 1000, vezes as
+        horas, vezes os dias do mês. Isso dá o <b>kWh evitado no mês</b>.<br>
+        <b>2.</b> Esse kWh vezes o preço do quilowatt-hora dá a <b>economia por mês</b>.<br>
+        <b>3.</b> Vezes 12 dá a <b>economia em um ano</b>.<br>
+        <b>4.</b> Vezes o número de meses desde a troca dá a <b>economia desde a troca</b>.<br>
+        Pode arredondar: de uma até quatro casas decimais, o sistema aceita.</p>
+      </details>
+      <div class="cx">
+        <div class="campo"><label for="vKwh">1. kWh evitados por mês, por lâmpada</label>
+          <input type="text" id="vKwh" inputmode="decimal" autocomplete="off"></div>
+        <div class="campo"><label for="vEco">2. Economia por mês, em reais</label>
+          <input type="text" id="vEco" inputmode="decimal" autocomplete="off"></div>
+        <div class="campo"><label for="vAno">3. Economia em um ano, em reais</label>
+          <input type="text" id="vAno" inputmode="decimal" autocomplete="off"></div>
+        <div class="campo"><label for="vTot">4. Economia desde a troca, em reais</label>
+          <input type="text" id="vTot" inputmode="decimal" autocomplete="off"></div>
+        <button class="btn" id="btConferirFicha">Conferir antes de salvar</button>
+      </div>
+    </div>
+
+    <div id="passo2Ficha" hidden>
+      <div class="cx">
+        <h3 style="margin:0 0 4px;font-family:var(--d);font-size:1rem">Confira o que você digitou</h3>
+        <p class="ajuda" style="margin:0 0 14px">Leia número por número. É isto que você
+        calculou no caderno?</p>
+        <div id="revisaoFicha"></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:16px">
+          <button class="btn ok peq" id="btSimEIsso">Sim, é isto</button>
+          <button class="btn sec peq" id="btCorrigirFicha">Voltar e corrigir</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="passo3Ficha" hidden>
+      <div class="aviso erro" style="align-items:center">
+        <span><b>Depois de salvar, trava.</b><br>Você não vai poder alterar nada, e o
+        professor vê o que você enviou. Só salve se tiver certeza.</span>
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn" id="btSalvarFichaEnvio">Salvar e travar</button>
+        <button class="btn sec peq" id="btDesistirFicha">Cancelar, quero rever</button>
+      </div>
+    </div>
+
+    <div id="resultadoFicha" hidden></div>
   </section>
 
   <!-- COMPARAÇÃO COM OUTRAS ESCOLAS -->
@@ -1332,7 +1448,11 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         <p class="sub">É isto que vale retomar no quadro antes da próxima aula.</p>
         <div id="errosConf"></div>
       </div>
-      <h4 style="margin-bottom:7px">Aluno por aluno</h4>
+      <h4 style="margin-bottom:7px">A ficha de cálculo de cada grupo</h4>
+      <p class="ajuda" id="ajudaFichasProf"></p>
+      <div class="rol"><table id="tabFichasProf"></table></div>
+
+      <h4 style="margin:22px 0 7px">Aluno por aluno, no treino da conta</h4>
       <p class="ajuda" id="ajudaConf"></p>
       <div class="rol"><table id="tabConf"></table></div>
       <div style="margin-top:14px">
@@ -1703,7 +1823,7 @@ function vrg(v){
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
   ['entrar','eusou','ambientes','ambiente','precos','avaliar','conta','mapa','palco',
-   'compara','prof'].forEach(t =>
+   'calculo','ficha','compara','prof'].forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
   document.body.classList.toggle('prof', qual === 'prof');
   window.scrollTo(0,0);
@@ -1851,6 +1971,7 @@ el('btMeIncluir').addEventListener('click', async () => {
 // cada papel abre a sua tela
 function irParaMinhaTela() {
   el('eu').textContent = EU.codigo + (SOU ? ' · ' + SOU.nome.split(' ')[0] : '');
+  if (EU.papel === 'calculo') { telas('calculo'); carregarCalculo(); return; }
   if (EU.tipo === 'mapa') { telas('mapa'); carregarMapa(); return; }
   if (EU.tipo === 'apresentacao') { telas('palco'); carregarPalco(); return; }
   // pelo acesso PRECO todo mundo é da pesquisa de preço, tenha função marcada
@@ -1956,6 +2077,305 @@ function chipsPot() {
       el('pot').value = b.dataset.p;
     }));
 }
+/* o professor vê as fichas por inteiro, inclusive o que cada um digitou */
+async function carregarFichasProf() {
+  if (!EU || (EU.papel !== 'professor' && EU.papel !== 'gestao')) return;
+  let r;
+  try { r = await rpc('calculo_fichas', { p_token: EU.token }); } catch (e) { return; }
+  if (!r || !r.ok) return;
+  const fs = r.fichas || [], campo = r.grupos_de_campo || [];
+  const fechadas = fs.filter(f => f.resolvida).length;
+  const travadas = fs.filter(f => !f.resolvida && +f.enviados >= +f.previstos
+                                  && +f.previstos > 0).length;
+  el('ajudaFichasProf').textContent = !fs.length
+    ? 'Nenhuma ficha de cálculo aberta ainda. A equipe CÁLCULO abre as fichas na tela dela.'
+    : fs.length + ' de ' + campo.length + ' grupo(s) com ficha. '
+      + fechadas + ' com a conta fechada'
+      + (travadas ? ', e ' + travadas + ' em que todos enviaram e ninguém acertou' : '')
+      + '. O valor do relatório não vem daqui: o servidor calcula das lâmpadas contadas.';
+  if (!fs.length) {
+    el('tabFichasProf').innerHTML =
+      '<tbody><tr><td class="nd">Sem ficha de cálculo.</td></tr></tbody>';
+    return;
+  }
+  const marca = b => b ? '<span class="pill c">bateu</span>'
+                       : '<span class="pill erro">não</span>';
+  el('tabFichasProf').innerHTML =
+    '<thead><tr><th>Grupo</th><th>Horas</th><th class="cresce">Quem</th><th>Posto</th>'
+    + '<th>kWh</th><th>Mês</th><th>Ano</th><th>Desde a troca</th><th>Situação</th>'
+    + '</tr></thead><tbody>'
+    + fs.map(f => {
+        const linhas = [['calculista', f.calculista, f.calculista_nome],
+                        ['conf1', f.conf1, f.conf1_nome],
+                        ['conf2', f.conf2, f.conf2_nome]].filter(x => x[1]);
+        if (!linhas.length) return '<tr class="alerta"><td><b>' + esc(f.grupo) + '</b></td>'
+          + '<td colspan="8">Ficha sem ninguém. Abra os postos.</td></tr>';
+        return linhas.map((x, i) => {
+          const e = (f.envios || []).find(y => y.aluno === x[1]);
+          const v = c => e && e[c] != null ? vrg(e[c]) : '-';
+          return '<tr' + (!e ? ' class="alerta"' : '') + '>'
+            + (i === 0 ? '<td data-r="Grupo"><b>' + esc(f.grupo) + '</b></td>'
+                       + '<td class="n" data-r="Horas">' + vrg(f.horas) + '</td>'
+                       : '<td></td><td></td>')
+            + '<td class="cresce">' + esc(x[2] || '') + '</td>'
+            + '<td data-r="Posto">' + NOME_POSTO[x[0]] + '</td>'
+            + (e ? '<td class="n" data-r="kWh">' + v('kwh') + ' ' + marca(e.ok_kwh) + '</td>'
+                 + '<td class="n" data-r="Mês">' + v('economia') + ' ' + marca(e.ok_economia) + '</td>'
+                 + '<td class="n" data-r="Ano">' + v('ano') + ' ' + marca(e.ok_ano) + '</td>'
+                 + '<td class="n" data-r="Desde a troca">' + v('total') + ' ' + marca(e.ok_total) + '</td>'
+                 : '<td colspan="4" class="nd">ainda não enviou</td>')
+            + '<td data-r="Situação">' + (i === 0
+                ? (f.resolvida ? '<span class="pill c">fechada</span>'
+                   : +f.enviados >= +f.previstos
+                     ? '<span class="pill erro">ninguém acertou</span>'
+                     : '<span class="pill am">falta ' + (+f.previstos - +f.enviados) + '</span>')
+                : '') + '</td></tr>';
+        }).join('');
+      }).join('') + '</tbody>';
+}
+
+/* =================== A EQUIPE DE CÁLCULO ===================
+   Uma ficha por grupo de campo. Quem calcula é um; os conferentes são até
+   dois e são opcionais. Cada um envia uma vez e não muda mais, e enquanto
+   houver alguém da ficha que ainda não enviou o sistema não mostra o valor
+   certo a ninguém: diz só em que passo deu diferença. Se o último enviar e a
+   ficha terminar errada, aí sim o valor certo aparece.
+   Nada disto entra no relatório: a economia que vai para a direção o servidor
+   calcula das lâmpadas contadas, não do que o aluno digitou aqui. */
+let FICHAS = [], FICHA = null, EQUIPE_CALC = [], GRUPOS_CAMPO = [], RASCUNHO = null;
+
+let NUM_CALC = {};
+async function carregarCalculo() {
+  msg('avisoCalc','');
+  let r, ra, ne;
+  try {
+    r = await rpc('calculo_fichas', { p_token: EU.token });
+    ra = await rpc('listar_alunos', { p_token: EU.token, p_grupo: null });
+    ne = await rpc('economia', { p_token: EU.token });
+  } catch (e) { return msg('avisoCalc', e.message, 'erro'); }
+  if (!r.ok) return msg('avisoCalc', r.erro, 'erro');
+  FICHAS = r.fichas || [];
+  GRUPOS_CAMPO = r.grupos_de_campo || [];
+  EQUIPE_CALC = (ra && ra.ok ? ra.alunos : []) || [];
+  if (ne && ne.ok) NUM_CALC = { pot_antes: ne.pot_antes, pot_led: ne.pot_led,
+    dias_mes: ne.dias_mes, tarifa: ne.tarifa_hoje, meses: ne.meses };
+  pintarFichas();
+  pintarFormFicha();
+}
+
+function pintarFichas() {
+  const prontas = FICHAS.filter(f => +f.enviados >= +f.previstos && +f.previstos > 0).length;
+  const total = GRUPOS_CAMPO.length;
+  el('barraCalc').style.width = total ? (prontas / total * 100) + '%' : '0';
+  el('subCalc').textContent = prontas + ' de ' + total + ' grupo'
+    + (total === 1 ? '' : 's') + ' com a conta fechada.'
+    + (FICHAS.length < total ? ' ' + (total - FICHAS.length)
+        + ' ainda sem ficha aberta.' : '');
+
+  const semFicha = GRUPOS_CAMPO.filter(g => !FICHAS.some(f => f.grupo === g.codigo));
+  el('listaFichas').innerHTML = (FICHAS.length
+    ? FICHAS.map(f => cartaoFicha(f)).join('')
+    : '<p class="ajuda">Nenhuma ficha aberta ainda. Abra a primeira na caixa abaixo.</p>')
+    + (semFicha.length
+        ? '<p class="ajuda" style="margin-top:12px">Sem ficha: '
+          + semFicha.map(g => esc(g.codigo)).join(', ') + '.</p>' : '');
+  document.querySelectorAll('#listaFichas .abrirFicha').forEach(b =>
+    b.addEventListener('click', () => abrirFichaCalculo(+b.dataset.f)));
+}
+
+function postoDe(f, id) {
+  return f.calculista === id ? 'calculista'
+       : f.conf1 === id ? 'conf1' : f.conf2 === id ? 'conf2' : null;
+}
+const NOME_POSTO = { calculista:'faz a conta', conf1:'1º conferente', conf2:'2º conferente' };
+
+function cartaoFicha(f) {
+  const envios = f.envios || [];
+  const jaEnviei = SOU && envios.some(e => e.aluno === SOU.id);
+  const meuPosto = SOU ? postoDe(f, SOU.id) : null;
+  const falta = +f.previstos - +f.enviados;
+  const linhas = [['calculista', f.calculista, f.calculista_nome],
+                  ['conf1', f.conf1, f.conf1_nome],
+                  ['conf2', f.conf2, f.conf2_nome]]
+    .filter(x => x[1])
+    .map(x => {
+      const e = envios.find(y => y.aluno === x[1]);
+      const marca = !e ? '<span class="pill erro">ainda não enviou</span>'
+        : e.tudo_certo ? '<span class="pill c">bateu tudo</span>'
+        : '<span class="pill am">' + [['kWh', e.ok_kwh], ['mês', e.ok_economia],
+             ['ano', e.ok_ano], ['desde a troca', e.ok_total]]
+             .filter(p => !p[1]).map(p => p[0]).join(', ') + ' não bateu</span>';
+      return '<li><span class="nm">' + esc(x[2] || '')
+        + ' <i style="font-style:normal;font-family:var(--m);font-size:.72rem;'
+        + 'color:var(--tinta3)">' + NOME_POSTO[x[0]] + '</i></span>' + marca + '</li>';
+    }).join('');
+  const estado = +f.previstos === 0 ? '<span class="pill erro">sem ninguém na ficha</span>'
+    : f.resolvida ? '<span class="pill c">conta fechada</span>'
+    : falta > 0 ? '<span class="pill am">falta ' + falta + ' enviar</span>'
+    : '<span class="pill erro">todos enviaram e ninguém acertou</span>';
+  return '<div class="gcard' + (f.resolvida ? '' : ' semcampo') + '"><div class="top">'
+    + '<div class="cab"><span class="cod">' + esc(f.grupo) + '</span>'
+    + '<span class="qtamb">' + vrg(f.horas) + ' h por dia</span></div>'
+    + '<div class="res">' + esc(f.grupo_resumo || '') + '</div></div>'
+    + '<ul class="gente">' + linhas + '</ul>'
+    + '<div class="pe">' + estado
+    + (meuPosto && !jaEnviei
+        ? '<button class="btn peq abrirFicha" data-f="' + f.id
+          + '" style="margin-left:auto">Fazer a minha conta</button>' : '')
+    + (jaEnviei ? '<span class="pill k">você já enviou</span>' : '')
+    + '</div></div>';
+}
+
+function pintarFormFicha() {
+  const pessoas = EQUIPE_CALC;
+  el('fcGrupo').innerHTML = GRUPOS_CAMPO.map(g =>
+    '<option value="' + esc(g.codigo) + '">' + esc(g.codigo) + ' · '
+    + esc(g.resumo || '') + '</option>').join('');
+  const lista = (vazio) => '<option value="">' + vazio + '</option>' + pessoas.map(a =>
+    '<option value="' + a.id + '">' + esc(a.nome) + '</option>').join('');
+  el('fcCalc').innerHTML = lista('escolha quem faz a conta');
+  el('fcC1').innerHTML = lista('ninguém confere');
+  el('fcC2').innerHTML = lista('ninguém confere');
+  encaixarFicha();
+}
+function encaixarFicha() {
+  const f = FICHAS.find(x => x.grupo === el('fcGrupo').value);
+  el('fcHoras').value = f ? vrg(f.horas) : '6';
+  el('fcCalc').value = f && f.calculista ? f.calculista : '';
+  el('fcC1').value = f && f.conf1 ? f.conf1 : '';
+  el('fcC2').value = f && f.conf2 ? f.conf2 : '';
+  const travada = f && +f.enviados > 0;
+  ['fcHoras','fcCalc','fcC1','fcC2','btSalvarFicha'].forEach(i => el(i).disabled = !!travada);
+  el('btSalvarFicha').textContent = f ? 'Salvar as mudanças' : 'Abrir a ficha';
+}
+el('fcGrupo').addEventListener('change', encaixarFicha);
+el('btSalvarFicha').addEventListener('click', async () => {
+  const n = v => el(v).value ? parseInt(el(v).value, 10) : null;
+  const r = await rpc('criar_ficha', { p_token: EU.token, p_grupo: el('fcGrupo').value,
+    p_horas: num(el('fcHoras').value), p_calculista: n('fcCalc'),
+    p_conf1: n('fcC1'), p_conf2: n('fcC2'), p_quem: SOU ? SOU.id : null });
+  if (!r.ok) return msg('avisoCalc', r.erro, 'erro');
+  msg('avisoCalc', 'Ficha salva.', 'bom');
+  await carregarCalculo();
+  setTimeout(() => msg('avisoCalc',''), 2500);
+});
+
+/* ---------- fazer a conta ----------
+   abrirFichaCalculo, e não abrirFicha: esse nome já era da ficha do colega na
+   avaliação, e uma função sobrescrevia a outra em silêncio. */
+function abrirFichaCalculo(id) {
+  FICHA = FICHAS.find(f => f.id === id);
+  if (!FICHA) return;
+  RASCUNHO = null;
+  el('tituloFicha').textContent = 'A conta do grupo ' + FICHA.grupo;
+  el('subFicha').textContent = 'Você é ' + NOME_POSTO[postoDe(FICHA, SOU.id)]
+    + '. Faça a conta no caderno primeiro e traga só os quatro resultados.';
+  el('dadosFicha').innerHTML =
+    '<p class="ajuda" style="margin:0">Use estes números, que são os mesmos para todo '
+    + 'mundo desta ficha:</p><ul style="margin:9px 0 0;padding-left:20px;font-size:.9rem">'
+    + '<li>Horas por dia que a luz fica acesa: <b>' + vrg(FICHA.horas) + '</b></li>'
+    + '<li>Lâmpada antiga: <b>' + vrg(NUM_CALC.pot_antes) + ' W</b> · LED: <b>'
+      + vrg(NUM_CALC.pot_led) + ' W</b></li>'
+    + '<li>Dias letivos no mês: <b>' + vrg(NUM_CALC.dias_mes) + '</b></li>'
+    // a tarifa NÃO pode sair arredondada aqui: brl() daria R$ 0,88 e o aluno
+    // faria a conta com 0,88, que não bate com a do sistema
+    + '<li>Preço do quilowatt-hora: <b>R$ ' + vrg(NUM_CALC.tarifa) + '</b></li>'
+    + '<li>Meses desde a troca: <b>' + vrg(NUM_CALC.meses) + '</b></li></ul>';
+  ['vKwh','vEco','vAno','vTot'].forEach(i => el(i).value = '');
+  el('passo1Ficha').hidden = false;
+  el('passo2Ficha').hidden = true;
+  el('passo3Ficha').hidden = true;
+  el('resultadoFicha').hidden = true;
+  msg('avisoFicha','');
+  telas('ficha');
+}
+el('btVoltaFicha').addEventListener('click', () => { telas('calculo'); carregarCalculo(); });
+
+el('btConferirFicha').addEventListener('click', () => {
+  const v = { kwh: num(el('vKwh').value), eco: num(el('vEco').value),
+              ano: num(el('vAno').value), tot: num(el('vTot').value) };
+  if (v.kwh === null || v.eco === null || v.ano === null || v.tot === null)
+    return msg('avisoFicha', 'Preencha os quatro resultados antes de conferir.', 'erro');
+  RASCUNHO = v;
+  el('revisaoFicha').innerHTML = [
+    ['kWh evitados por mês', vrg(v.kwh)],
+    ['Economia por mês', 'R$ ' + vrg(v.eco)],
+    ['Economia em um ano', 'R$ ' + vrg(v.ano)],
+    ['Economia desde a troca', 'R$ ' + vrg(v.tot)]
+  ].map(x => '<div class="item"><span class="d">' + x[0]
+      + '</span><span class="q" style="font-size:1.05rem">' + x[1] + '</span></div>').join('');
+  el('passo1Ficha').hidden = true;
+  el('passo2Ficha').hidden = false;
+  msg('avisoFicha','');
+  window.scrollTo(0,0);
+});
+el('btCorrigirFicha').addEventListener('click', () => {
+  el('passo2Ficha').hidden = true; el('passo1Ficha').hidden = false; window.scrollTo(0,0);
+});
+el('btSimEIsso').addEventListener('click', () => {
+  el('passo2Ficha').hidden = true; el('passo3Ficha').hidden = false; window.scrollTo(0,0);
+});
+el('btDesistirFicha').addEventListener('click', () => {
+  el('passo3Ficha').hidden = true; el('passo1Ficha').hidden = false; window.scrollTo(0,0);
+});
+
+el('btSalvarFichaEnvio').addEventListener('click', async () => {
+  if (!RASCUNHO || !FICHA || !SOU) return;
+  const b = el('btSalvarFichaEnvio'); b.disabled = true; b.textContent = 'Salvando...';
+  let r;
+  try {
+    r = await rpc('enviar_calculo', { p_token: EU.token, p_ficha: FICHA.id,
+      p_aluno: SOU.id, p_kwh: RASCUNHO.kwh, p_economia: RASCUNHO.eco,
+      p_ano: RASCUNHO.ano, p_total: RASCUNHO.tot });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  b.disabled = false; b.textContent = 'Salvar e travar';
+  if (!r.ok) { msg('avisoFicha', r.erro, 'erro'); window.scrollTo(0,0); return; }
+  el('passo3Ficha').hidden = true;
+  pintarResultadoFicha(r);
+});
+
+function pintarResultadoFicha(r) {
+  const passos = [['kWh por mês', r.ok_kwh], ['Economia por mês', r.ok_economia],
+                  ['Economia em um ano', r.ok_ano], ['Desde a troca', r.ok_total]];
+  let h = '<div class="aviso ' + (r.tudo_certo ? 'bom' : 'info') + '"><span><b>'
+    + (r.tudo_certo ? 'Bateu tudo.' : 'Salvo. Alguma coisa não bateu.')
+    + '</b><br>' + (r.tudo_certo
+        ? 'Os quatro passos conferem com a conta do sistema.'
+        : 'Veja abaixo em qual passo deu diferença.') + '</span></div>'
+    + '<div class="cx"><h3 style="margin:0 0 10px;font-family:var(--d);font-size:1rem">'
+    + 'Passo a passo</h3>'
+    + passos.map(p => '<div class="item"><span class="d">' + p[0] + '</span>'
+        + '<span class="pill ' + (p[1] ? 'c">bateu' : 'erro">não bateu') + '</span></div>').join('')
+    + '</div>';
+
+  if (r.resposta) {
+    const v = r.resposta;
+    h += '<div class="cx" style="margin-top:14px;border-color:var(--ambar)">'
+      + '<h3 style="margin:0 0 6px;font-family:var(--d);font-size:1rem">'
+      + 'Todo mundo da ficha já enviou e a conta não fechou</h3>'
+      + '<p class="ajuda" style="margin:0 0 12px">Por isso os valores certos aparecem '
+      + 'agora. Refaça no caderno comparando com os seus, para achar onde escapou.</p>'
+      + [['kWh evitados por mês', vrg(v.kwh)],
+         ['Economia por mês', 'R$ ' + vrg(v.economia)],
+         ['Economia em um ano', 'R$ ' + vrg(v.ano)],
+         ['Economia desde a troca', 'R$ ' + vrg(v.total)]]
+        .map(x => '<div class="item"><span class="d">' + x[0]
+          + '</span><span class="q" style="font-size:1.05rem">' + x[1] + '</span></div>').join('')
+      + '</div>';
+  } else if (!r.tudo_certo) {
+    h += '<p class="ajuda" style="margin-top:12px">O valor certo não aparece agora: '
+      + (r.alguem_certo
+          ? 'alguém da ficha já acertou, então a conta do grupo está fechada.'
+          : 'ainda falta ' + r.faltam + ' pessoa(s) desta ficha enviar.') + '</p>';
+  }
+  h += '<div style="margin-top:16px"><button class="btn sec peq" id="btFimFicha">'
+    + 'Voltar para as fichas</button></div>';
+  el('resultadoFicha').innerHTML = h;
+  el('resultadoFicha').hidden = false;
+  el('btFimFicha').addEventListener('click', () => { telas('calculo'); carregarCalculo(); });
+  window.scrollTo(0,0);
+}
+
 /* quanto das fotos já foi usado: o banco tem 500 MB e o professor precisa
    enxergar isso antes de encher, não depois */
 async function carregarEspacoFotos() {
@@ -2321,7 +2741,8 @@ async function carregarMontar() {
   const daTurma = (TURMA === '1A' ? GRUPOS_A : GRUPOS_B);
   // os grupos da turma primeiro; os que valem para as duas vão para o fim
   // grupo que vale para as duas turmas: mapa, apresentação e a equipe de preço
-  const comum = g => g.papel === 'preco' || !!(g.tipo && g.tipo !== 'inventario');
+  const comum = g => g.papel === 'preco' || g.papel === 'calculo'
+                 || !!(g.tipo && g.tipo !== 'inventario');
   // grupo onde todo mundo faz a mesma coisa, então não se escolhe função
   const semFuncao = g => comum(g);
   const gs = (r.grupos || [])
@@ -2360,6 +2781,7 @@ async function carregarMontar() {
     const pe = doisTurnos
       ? (gente.length ? '<span class="pill k">' + gente.length
             + (g.papel === 'preco' ? ' na pesquisa de preço'
+               : g.papel === 'calculo' ? ' na equipe de cálculo'
                : g.tipo === 'mapa' ? ' na planta' : ' na apresentação') + '</span>'
                       : '<span class="pill erro">vazio</span>')
       : gente.length
@@ -2371,7 +2793,7 @@ async function carregarMontar() {
     return '<div class="gcard' + cls + '"><div class="top">' +
       '<div class="cab"><span class="cod">' + g.codigo + '</span>' +
       '<span class="qtamb">' + (g.tipo === 'mapa' ? 'a escola inteira'
-        : g.papel === 'preco' ? 'as duas turmas'
+        : g.papel === 'preco' || g.papel === 'calculo' ? 'as duas turmas'
         : g.tipo === 'apresentacao' ? 'as duas turmas'
         : g.ambientes + ' ambientes') + '</span></div>' +
       '<div class="res">' + g.resumo + '</div></div>' +
@@ -2554,6 +2976,7 @@ async function carregarProf() {
   montarPassos();
   encherBarras();
   if (EU.papel === 'professor') { carregarParticipacao(); carregarAvaliacao(); carregarNotas(); carregarConferencia(); }
+  carregarFichasProf();
   carregarEspacoFotos();
   carregarMapaProf(); carregarPalcoProf();
 }
@@ -3038,6 +3461,19 @@ const QUESTOES_POR_TAREFA = {
       o:['Sempre','Quase sempre','Precisou ser avisado','Lançou sem conferir'] }
   ],
 
+  calculo: [
+    { k:'presenca', t:'Apareceu nos dias combinados de fazer a conta?',
+      o:['Sempre','Quase sempre','Poucas vezes','Não apareceu'] },
+    { k:'tarefa', t:'Fez a conta das fichas dele sem precisar ser cobrado?',
+      o:['Sempre','Quase sempre','Só quando cobrado','Não fez'] },
+    { k:'cuidado', t:'Refez a conta antes de salvar, em vez de chutar?',
+      o:['Refez sempre','Quase sempre','Salvou no chute às vezes','Salvou no chute'] },
+    { k:'ajuda', t:'Ajudou quem travou na conta, sem entregar a resposta?',
+      o:['Sempre','Às vezes','Raramente','Nunca'] },
+    { k:'regras', t:'Fez a conta sozinho, sem copiar a do colega da mesma ficha?',
+      o:['Sempre','Quase sempre','Precisou ser avisado','Copiou'] }
+  ],
+
   apresentacao: [
     { k:'presenca', t:'Apareceu nos ensaios combinados?',
       o:['Sempre','Quase sempre','Poucas vezes','Não apareceu'] },
@@ -3061,6 +3497,7 @@ let COLEGAS = [], ALVO = null, RESP = {};
 
 function tarefaDoGrupo() {
   if (!EU) return 'inventario';
+  if (EU.papel === 'calculo') return 'calculo';
   if (EU.papel === 'preco') return 'preco';
   if (EU.tipo === 'mapa') return 'mapa';
   if (EU.tipo === 'apresentacao') return 'apresentacao';
@@ -3158,7 +3595,7 @@ function abrirFicha(id) {
   window.scrollTo(0, 0);
 }
 
-['btAvaliar','btAvaliar2','btAvaliar3','btAvaliar4'].forEach(id =>
+['btAvaliar','btAvaliar2','btAvaliar3','btAvaliar4','btAvaliar5'].forEach(id =>
   el(id).addEventListener('click', abrirAvaliacao));
 el('btVoltaAval').addEventListener('click', () => {
   if (!el('fichaColega').hidden) { el('fichaColega').hidden = true; el('listaColegas').hidden = false; }
@@ -3198,6 +3635,7 @@ el('btSalvarAval').addEventListener('click', async () => {
 const NOME_TAREFA = {
   inventario: 'Grupos de contagem (A1 a B3)',
   mapa: 'Grupo MAPA, a planta da escola',
+  calculo: 'Equipe de CÁLCULO, que refaz e confere a conta',
   preco: 'Equipe de pesquisa de preço',
   apresentacao: 'Grupo APRESENTA, os 5 minutos da feira'
 };
@@ -3706,6 +4144,7 @@ async function guardarExiste(a, cx, existe) {
 }
 
 el('btTrocarEu3').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
+el('btTrocarEu5').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
 
 /* ==================== conferir a conta do aluno ====================
    O aluno faz a conta no caderno e digita só o resultado. Quem compara é o
@@ -4123,8 +4562,8 @@ function blocoHonestidade(E) {
     + '</div></div>';
 }
 
-[['btCompara1','ambientes'], ['btCompara2','palco'],
- ['btCompara3','mapa'], ['btCompara4','precos']].forEach(([id, volta]) =>
+[['btCompara1','ambientes'], ['btCompara2','palco'], ['btCompara3','mapa'],
+ ['btCompara4','precos'], ['btCompara5','calculo']].forEach(([id, volta]) =>
   el(id).addEventListener('click', () => {
     VOLTA_COMPARA = volta; telas('compara'); abrirCompara('caixaCompara2');
     window.scrollTo(0, 0);
@@ -4134,6 +4573,7 @@ el('btVoltaCompara').addEventListener('click', () => {
   if (VOLTA_COMPARA === 'ambientes') carregarAmbientes();
   else if (VOLTA_COMPARA === 'mapa') carregarMapa();
   else if (VOLTA_COMPARA === 'precos') carregarPrecos();
+  else if (VOLTA_COMPARA === 'calculo') carregarCalculo();
   else carregarPalco();
 });
 
