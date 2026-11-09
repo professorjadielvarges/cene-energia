@@ -4205,6 +4205,13 @@ async function carregarSenhas() {
         + '<td><button class="btn peq sec cp" data-cod="' + esc(g.codigo)
         + '" data-sn="' + esc(g.senha) + '">copiar</button></td></tr>').join('')
     + '</tbody></table></div>';
+  onde.insertAdjacentHTML('beforeend',
+    '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    + '<button class="btn peq" id="btBaixarSenhas">Baixar as senhas</button>'
+    + '<span class="ajuda" style="margin:0">Salva um arquivo de texto no seu aparelho. '
+    + 'Guarde fora do computador da escola.</span></div>');
+  el('btBaixarSenhas').addEventListener('click', () => baixarSenhas(r.grupos));
+
   onde.querySelectorAll('.cp').forEach(b => b.addEventListener('click', async () => {
     const t = 'Grupo ' + b.dataset.cod + ' · senha ' + b.dataset.sn
       + '\nEntre em ' + location.href.split('#')[0]
@@ -4217,6 +4224,59 @@ async function carregarSenhas() {
 el('caixaSenhas').addEventListener('toggle', () => {
   if (el('caixaSenhas').open) carregarSenhas();
 });
+
+/* As senhas não ficam escritas dentro do index.html: o site abre sem login, e
+   qualquer aluno baixaria o arquivo e leria a senha dos outros grupos. Elas
+   saem daqui, em arquivo de texto, para o aparelho do professor. */
+function baixarSenhas(grupos) {
+  const hoje = new Date();
+  const dd = String(hoje.getDate()).padStart(2, '0');
+  const mm = String(hoje.getMonth() + 1).padStart(2, '0');
+  const endereco = location.href.split('#')[0].split('?')[0];
+  const larg = Math.max.apply(null, grupos.map(g => g.codigo.length).concat([6]));
+  const linhas = [
+    'SENHAS DOS GRUPOS',
+    'Inventário de Energia · Feira de Ciências 2026',
+    'Colégio Estadual de Nova Esperança',
+    '',
+    'Gerado em ' + dd + '/' + mm + '/' + hoje.getFullYear(),
+    '',
+    'Para entrar: ' + endereco,
+    'Escolha o grupo na lista e digite a senha.',
+    '', '='.repeat(64), ''
+  ];
+  grupos.forEach(g => {
+    linhas.push(g.codigo.padEnd(larg + 3) + g.senha);
+    if (g.turma) linhas.push(' '.repeat(larg + 3) + g.turma);
+    if (g.resumo) linhas.push(' '.repeat(larg + 3) + g.resumo);
+    linhas.push('');
+  });
+  linhas.push('='.repeat(64), '',
+    'A senha do professor e a da direção não estão neste arquivo, de',
+    'propósito: elas entram pelo link "Sou o professor ou a direção",',
+    'embaixo do botão Entrar, e não devem circular com a turma.',
+    '',
+    'Este arquivo é a cópia de segurança. As senhas não ficam escritas',
+    'dentro do site, porque o site abre sem login e qualquer pessoa',
+    'poderia ler o arquivo da página.');
+  const texto = linhas.join('\r\n');
+  const nome = 'senhas-cene-' + hoje.getFullYear() + '-' + mm + '-' + dd + '.txt';
+  try {
+    const url = URL.createObjectURL(new Blob([texto], { type: 'text/plain;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    el('btBaixarSenhas').textContent = 'Baixado';
+  } catch (e) {
+    // se o aparelho não deixar baixar, mostra o texto para copiar na mão
+    el('listaSenhas').insertAdjacentHTML('beforeend',
+      '<textarea readonly style="width:100%;height:220px;margin-top:12px;'
+      + 'font-family:var(--m);font-size:.8rem">' + esc(texto) + '</textarea>');
+    el('btBaixarSenhas').textContent = 'Copie o texto abaixo';
+  }
+  setTimeout(() => el('btBaixarSenhas').textContent = 'Baixar as senhas', 3000);
+}
 
 el('btCopiar').addEventListener('click', async () => {
   const t = el('parecer').innerText;
