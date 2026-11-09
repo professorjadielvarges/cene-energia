@@ -177,6 +177,32 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
   font-size:.78rem}
 .tipos button.mais:hover{border-style:solid}
 
+/* ---------- planta: linha de conferir se o ambiente existe ----------
+   São 43 e a resposta é um toque, então a linha é compacta e salva sozinha. */
+.lin-amb{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r2);
+  padding:13px 15px;margin-bottom:9px}
+.lin-amb.pronto{border-color:var(--verde);background:var(--verde-sup)}
+.lin-amb.nao{border-color:var(--verm);background:var(--verm-sup)}
+.lin-amb .cab{display:flex;gap:10px;align-items:baseline;justify-content:space-between;
+  margin-bottom:9px;flex-wrap:wrap}
+.lin-amb .cab b{font-family:var(--d);font-size:.95rem;font-weight:700;
+  letter-spacing:-.015em}
+.lin-amb .cab span{font-family:var(--m);font-size:.7rem;color:var(--tinta3);
+  text-align:right}
+.lin-amb .sim-nao button{padding:9px 10px;font-size:.84rem}
+.lin-amb .motivo{margin-top:9px}
+.lin-amb .trocar{margin-top:8px}
+.lin-amb .trocar summary,.amb-mapa .quais summary{font-size:.76rem;color:var(--tinta3);
+  cursor:pointer;list-style:none;text-decoration:underline;text-underline-offset:3px}
+.lin-amb .trocar summary::-webkit-details-marker,
+.amb-mapa .quais summary::-webkit-details-marker{display:none}
+.lin-amb .trocar summary:hover,.amb-mapa .quais summary:hover{color:var(--azul)}
+.lin-amb .trocar select{margin-top:7px}
+.amb-mapa .quais{margin-bottom:12px}
+.amb-mapa .quais p{margin:7px 0 0;font-size:.79rem;line-height:1.5;color:var(--tinta2)}
+.lin-amb .res:empty{display:none}
+.lin-amb .res{margin-top:8px}
+
 /* botão de repetir o último grupo, na lista de quem está sem grupo */
 .item .rep{flex:none;padding:6px 11px;border:1px solid var(--azul);border-radius:999px;
   background:var(--azul-sup);color:var(--azul);font-family:var(--m);font-size:.78rem;
@@ -796,8 +822,10 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   <!-- EQUIPE DO MAPA -->
   <section id="tela-mapa" hidden>
     <h2 style="font-size:1.15rem">A planta da escola</h2>
-    <p class="ajuda">Confirme, ambiente por ambiente, se ele existe de verdade e a que
-    horas a luz dele acende e apaga. Quem sabe disso é o funcionário, não a planta.</p>
+    <p class="ajuda">São duas tarefas, e as duas são rápidas. A luz da escola não é
+    ligada sala por sala: é ligada por circuito. Todas as salas de aula acendem juntas,
+    todos os corredores acendem juntos. Então o horário se pergunta uma vez por bloco e
+    vale para todos os ambientes dele.</p>
     <div id="avisoMapa"></div>
 
     <a class="planta" id="linkPlanta" href="planta.png" target="_blank" rel="noopener">
@@ -805,7 +833,17 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <span>Toque na planta para abrir grande e dar zoom</span>
     </a>
 
-    <div class="barra" style="margin:16px 0 6px"><i id="barraMapa"></i></div>
+    <h3 class="sec" style="margin-top:22px">1. O horário de cada bloco</h3>
+    <p class="ajuda">Dez perguntas no total. Quem sabe a resposta é o funcionário que
+    acende e apaga, não a planta.</p>
+    <div class="barra" style="margin:14px 0 6px"><i id="barraBlocos"></i></div>
+    <p class="ajuda" id="subBlocos" style="margin-bottom:12px"></p>
+    <div id="listaBlocos"></div>
+
+    <h3 class="sec" style="margin-top:26px">2. O que existe mesmo na planta</h3>
+    <p class="ajuda">Alguns ambientes estão desenhados mas não foram construídos. Aqui é
+    só tocar: a resposta salva na hora, sem botão.</p>
+    <div class="barra" style="margin:14px 0 6px"><i id="barraMapa"></i></div>
     <p class="ajuda" id="subMapa" style="margin-bottom:12px"></p>
 
     <div class="chips" id="filtroMapa" style="margin-bottom:14px"></div>
@@ -1071,6 +1109,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div id="resumoMapaProf" class="minis"></div>
       <p class="ajuda" id="ajudaMapaProf"></p>
       <div class="rol"><table id="tabMapaProf"></table></div>
+      <div id="foraMapaProf" style="margin-top:18px"></div>
       <div style="margin-top:14px">
         <button class="btn peq sec" id="btAtualizarMapa">Atualizar agora</button>
       </div>
@@ -2801,103 +2840,30 @@ el('btTrocarEu4').addEventListener('click', () => { SOU = null; guardar(); escol
    de perguntar a quem opera, nunca de medição, por isso o nome e a função de
    quem informou ficam registrados junto. */
 
-let MAPA = [], VENDO_MAPA = 'falta', PODE_MAPA = false;
+let BLOCOS = [], VENDO_MAPA = 'falta', PODE_MAPA = false;
 
 async function carregarMapa() {
-  el('listaMapa').innerHTML = '<p class="ajuda">Carregando a lista de ambientes...</p>';
+  el('listaBlocos').innerHTML = '<p class="ajuda">Carregando...</p>';
+  el('listaMapa').innerHTML = '';
   let r;
   try { r = await rpc('mapa_ambientes', { p_token: EU.token }); }
   catch (e) { msg('avisoMapa', e.message, 'erro');
-    el('listaMapa').innerHTML = ''; return; }
-  if (!r.ok) { msg('avisoMapa', r.erro, 'erro'); el('listaMapa').innerHTML = ''; return; }
-  MAPA = r.ambientes || [];
+    el('listaBlocos').innerHTML = ''; return; }
+  if (!r.ok) { msg('avisoMapa', r.erro, 'erro'); el('listaBlocos').innerHTML = ''; return; }
+  BLOCOS = r.blocos || [];
   PODE_MAPA = !!r.pode_escrever;
+  pintarBlocos();
   pintarFiltroMapa();
   pintarMapa();
 }
 
-function prontoNoMapa(a) {
-  if (a.existe === false) return true;                 // não construído já é resposta
-  return a.existe === true && a.horas !== null && a.horas !== undefined;
+/* todos os ambientes, achatados, para a segunda parte da tela */
+function ambientesTodos() {
+  const fora = [];
+  BLOCOS.forEach(b => (b.ambientes || []).forEach(a =>
+    fora.push(Object.assign({}, a, { bloco_id: b.id, bloco: b.nome }))));
+  return fora;
 }
-
-function pintarFiltroMapa() {
-  const falta = MAPA.filter(a => !prontoNoMapa(a)).length;
-  el('filtroMapa').innerHTML = [
-    ['falta', 'Falta preencher (' + falta + ')'],
-    ['todos', 'Todos (' + MAPA.length + ')'],
-    ['prontos', 'Prontos (' + (MAPA.length - falta) + ')']
-  ].map(x => '<button type="button" data-f="' + x[0] + '"'
-    + (x[0] === VENDO_MAPA ? ' class="on"' : '') + '>' + x[1] + '</button>').join('');
-  el('filtroMapa').querySelectorAll('button').forEach(b =>
-    b.addEventListener('click', () => {
-      VENDO_MAPA = b.dataset.f; pintarFiltroMapa(); pintarMapa();
-    }));
-}
-
-function pintarMapa() {
-  const feitos = MAPA.filter(prontoNoMapa).length;
-  const pct = MAPA.length ? feitos / MAPA.length * 100 : 0;
-  animar(() => { el('barraMapa').style.width = pct.toFixed(1) + '%'; });
-  el('subMapa').textContent = feitos + ' de ' + MAPA.length
-    + ' ambientes conferidos' + (PODE_MAPA ? '' : ' · esta tela é só de leitura para você');
-
-  const vista = VENDO_MAPA === 'todos' ? MAPA
-              : VENDO_MAPA === 'prontos' ? MAPA.filter(prontoNoMapa)
-              : MAPA.filter(a => !prontoNoMapa(a));
-  if (!vista.length) {
-    el('listaMapa').innerHTML = '<div class="cx"><p class="ajuda" style="margin:0">'
-      + (VENDO_MAPA === 'falta' ? 'Tudo conferido. Bom trabalho.' : 'Nada aqui ainda.')
-      + '</p></div>';
-    return;
-  }
-  el('listaMapa').innerHTML = vista.map(cartaoMapa).join('');
-  vista.forEach(ligarCartaoMapa);
-}
-
-function cartaoMapa(a) {
-  const nao = a.existe === false, pronto = prontoNoMapa(a);
-  const d = (x) => x === null || x === undefined ? '' : x;
-  return '<div class="amb-mapa' + (nao ? ' nao' : (pronto ? ' pronto' : '')) + '" id="m-' + a.id + '">'
-    + '<div class="ond">' + esc(a.grupo) + ' · ambiente ' + a.ordem + '</div>'
-    + '<h4>' + esc(a.nome) + '</h4>'
-    + '<div class="sim-nao" role="group" aria-label="Este ambiente existe?">'
-    +   '<button type="button" data-e="sim" aria-pressed="' + (a.existe === true) + '">'
-    +     'Existe na escola</button>'
-    +   '<button type="button" class="perigo" data-e="nao" aria-pressed="' + nao + '">'
-    +     'Não foi construído</button>'
-    + '</div>'
-    + '<div class="corpo-mapa"' + (nao ? ' hidden' : '') + '>'
-    +   '<label class="vinte4"><input type="checkbox" class="v24"'
-    +     (a.sempre ? ' checked' : '') + '> Fica aceso 24 horas, sem desligar</label>'
-    +   '<div class="linha horas"' + (a.sempre ? ' hidden' : '') + '>'
-    +     '<div class="campo"><label>Acende às</label>'
-    +       '<input type="time" class="liga" value="' + d(a.liga) + '"></div>'
-    +     '<div class="campo"><label>Apaga às</label>'
-    +       '<input type="time" class="desliga" value="' + d(a.desliga) + '"></div>'
-    +   '</div>'
-    + '</div>'
-    + '<div class="linha">'
-    +   '<div class="campo"><label>Quem informou</label>'
-    +     '<input type="text" class="fnome" placeholder="nome" value="'
-    +     esc(d(a.fonte_nome)) + '"></div>'
-    +   '<div class="campo"><label>Função</label>'
-    +     '<input type="text" class="ffun" placeholder="porteiro, auxiliar..." value="'
-    +     esc(d(a.fonte_funcao)) + '"></div>'
-    + '</div>'
-    + '<div class="campo" style="margin-top:9px"><label>Observação</label>'
-    +   '<input type="text" class="obs" placeholder="opcional" value="'
-    +   esc(d(a.obs)) + '"></div>'
-    + (PODE_MAPA ? '<div style="margin-top:12px"><button class="btn peq ok grava"'
-        + ' style="width:auto">Salvar este ambiente</button></div>' : '')
-    + '<div class="res"></div>'
-    + (a.horas != null ? '<div class="horas-ok">Fica aceso ' + horasTexto(a.horas)
-        + ' por dia</div>' : '')
-    + (a.quem_registrou ? '<p class="ajuda" style="margin:9px 0 0;font-size:.76rem">'
-        + 'Registrado por ' + esc(a.quem_registrou) + '</p>' : '')
-    + '</div>';
-}
-
 function horasTexto(h) {
   const n = +h;
   if (n === 24) return '24 horas';
@@ -2905,46 +2871,79 @@ function horasTexto(h) {
   return i + ' hora' + (i === 1 ? '' : 's') + (m ? ' e ' + m + ' minutos' : '');
 }
 
-function ligarCartaoMapa(a) {
-  const cx = el('m-' + a.id);
-  if (!cx) return;
-  const corpo = cx.querySelector('.corpo-mapa');
-  const horas = cx.querySelector('.horas');
-  const v24   = cx.querySelector('.v24');
-
-  cx.querySelectorAll('.sim-nao button').forEach(b =>
-    b.addEventListener('click', () => {
-      if (!PODE_MAPA) return;
-      const existe = b.dataset.e === 'sim';
-      cx.querySelectorAll('.sim-nao button').forEach(x =>
-        x.setAttribute('aria-pressed', (x.dataset.e === 'sim') === existe));
-      corpo.hidden = !existe;
-    }));
-
-  if (v24) v24.addEventListener('change', () => { horas.hidden = v24.checked; });
-
-  const bt = cx.querySelector('.grava');
-  if (bt) bt.addEventListener('click', () => salvarMapa(a.id, cx, bt));
+/* ---------- 1. o horário de cada bloco ---------- */
+function pintarBlocos() {
+  const feitos = BLOCOS.filter(b => b.horas != null).length;
+  const pct = BLOCOS.length ? feitos / BLOCOS.length * 100 : 0;
+  animar(() => { el('barraBlocos').style.width = pct.toFixed(1) + '%'; });
+  el('subBlocos').textContent = feitos + ' de ' + BLOCOS.length + ' blocos com horário'
+    + (PODE_MAPA ? '' : ' · esta tela é só de leitura para você');
+  el('listaBlocos').innerHTML = BLOCOS.map(cartaoBloco).join('');
+  BLOCOS.forEach(ligarCartaoBloco);
 }
 
-async function salvarMapa(id, cx, bt) {
+function cartaoBloco(b) {
+  const d = x => x === null || x === undefined ? '' : x;
+  const quantos = (b.ambientes || []).length;
+  const pronto = b.horas != null;
+  return '<div class="amb-mapa' + (pronto ? ' pronto' : '') + '" id="b-' + b.id + '">'
+    + '<div class="ond">' + quantos + (quantos === 1 ? ' ambiente' : ' ambientes')
+    + ' neste bloco</div>'
+    + '<h4>' + esc(b.nome) + '</h4>'
+    + (b.explica ? '<p class="ajuda" style="margin:2px 0 10px">' + esc(b.explica)
+        + '</p>' : '')
+    + '<details class="quais"><summary>Ver quais ambientes</summary><p>'
+    + (b.ambientes || []).map(a => esc(a.nome)).join(' · ') + '</p></details>'
+    + '<label class="vinte4"><input type="checkbox" class="v24"'
+    + (b.sempre ? ' checked' : '') + '> Fica aceso 24 horas, sem desligar</label>'
+    + '<div class="linha horas"' + (b.sempre ? ' hidden' : '') + '>'
+    +   '<div class="campo"><label>Acende às</label>'
+    +     '<input type="time" class="liga" value="' + d(b.liga) + '"></div>'
+    +   '<div class="campo"><label>Apaga às</label>'
+    +     '<input type="time" class="desliga" value="' + d(b.desliga) + '"></div>'
+    + '</div>'
+    + '<div class="linha">'
+    +   '<div class="campo"><label>Quem informou</label>'
+    +     '<input type="text" class="fnome" placeholder="nome" value="'
+    +     esc(d(b.fonte_nome)) + '"></div>'
+    +   '<div class="campo"><label>Função</label>'
+    +     '<input type="text" class="ffun" placeholder="porteiro, auxiliar..." value="'
+    +     esc(d(b.fonte_funcao)) + '"></div>'
+    + '</div>'
+    + '<div class="campo" style="margin-top:9px"><label>Observação</label>'
+    +   '<input type="text" class="obs" placeholder="opcional" value="'
+    +   esc(d(b.obs)) + '"></div>'
+    + (PODE_MAPA ? '<div style="margin-top:12px"><button class="btn peq ok grava"'
+        + ' style="width:auto">Salvar o horário deste bloco</button></div>' : '')
+    + '<div class="res"></div>'
+    + (pronto ? '<div class="horas-ok">A luz deste bloco fica acesa '
+        + horasTexto(b.horas) + ' por dia</div>' : '')
+    + (b.quem_registrou ? '<p class="ajuda" style="margin:9px 0 0;font-size:.76rem">'
+        + 'Registrado por ' + esc(b.quem_registrou) + '</p>' : '')
+    + '</div>';
+}
+
+function ligarCartaoBloco(b) {
+  const cx = el('b-' + b.id);
+  if (!cx) return;
+  const v24 = cx.querySelector('.v24'), horas = cx.querySelector('.horas');
+  if (v24) v24.addEventListener('change', () => { horas.hidden = v24.checked; });
+  const bt = cx.querySelector('.grava');
+  if (bt) bt.addEventListener('click', () => salvarBloco(b.id, cx, bt));
+}
+
+async function salvarBloco(id, cx, bt) {
   const onde = cx.querySelector('.res');
-  const pressed = cx.querySelector('.sim-nao button[aria-pressed="true"]');
-  if (!pressed) {
-    onde.innerHTML = '<div class="aviso erro">Diga primeiro se este ambiente existe.</div>';
-    return;
-  }
-  const existe = pressed.dataset.e === 'sim';
   const v24 = cx.querySelector('.v24').checked;
   const liga = cx.querySelector('.liga').value;
   const desliga = cx.querySelector('.desliga').value;
-  if (existe && !v24 && (!liga || !desliga)) {
+  if (!v24 && (!liga || !desliga)) {
     onde.innerHTML = '<div class="aviso erro">Informe a hora que acende e a que apaga, '
       + 'ou marque que fica aceso 24 horas.</div>';
     return;
   }
   const fnome = cx.querySelector('.fnome').value.trim();
-  if (existe && !fnome) {
+  if (!fnome) {
     onde.innerHTML = '<div class="aviso erro">Escreva o nome de quem informou o horário. '
       + 'Sem isso o dado não vale como fonte.</div>';
     return;
@@ -2957,26 +2956,145 @@ async function salvarMapa(id, cx, bt) {
   bt.disabled = true; bt.textContent = 'Salvando...';
   let r;
   try {
-    r = await rpc('salvar_mapa', { p_token: EU.token, p_ambiente: id, p_existe: existe,
+    r = await rpc('salvar_bloco', { p_token: EU.token, p_bloco: id,
       p_liga: v24 ? null : liga, p_desliga: v24 ? null : desliga, p_sempre: v24,
       p_fonte_nome: fnome, p_fonte_funcao: cx.querySelector('.ffun').value.trim(),
       p_obs: cx.querySelector('.obs').value.trim(), p_aluno: SOU ? SOU.id : null });
   } catch (e) {
     onde.innerHTML = '<div class="aviso erro">' + esc(e.message) + '</div>';
-    bt.disabled = false; bt.textContent = 'Salvar este ambiente'; return;
+    bt.disabled = false; bt.textContent = 'Salvar o horário deste bloco'; return;
   }
-  bt.disabled = false; bt.textContent = 'Salvar este ambiente';
+  bt.disabled = false; bt.textContent = 'Salvar o horário deste bloco';
   if (!r.ok) { onde.innerHTML = '<div class="aviso erro">' + esc(r.erro) + '</div>'; return; }
-  onde.innerHTML = '<div class="aviso bom">Guardado'
-    + (r.horas != null ? ': fica aceso ' + horasTexto(r.horas) + ' por dia' : '') + '.</div>';
-  const i = MAPA.findIndex(x => x.id === id);
+  onde.innerHTML = '<div class="aviso bom">Guardado para os ' + r.ambientes
+    + ' ambientes do bloco: fica aceso ' + horasTexto(r.horas) + ' por dia.</div>';
+  const i = BLOCOS.findIndex(x => x.id === id);
   if (i >= 0) {
-    MAPA[i].existe = existe; MAPA[i].sempre = v24;
-    MAPA[i].liga = v24 ? null : liga; MAPA[i].desliga = v24 ? null : desliga;
-    MAPA[i].horas = r.horas; MAPA[i].fonte_nome = fnome;
+    BLOCOS[i].sempre = v24;
+    BLOCOS[i].liga = v24 ? null : liga; BLOCOS[i].desliga = v24 ? null : desliga;
+    BLOCOS[i].horas = r.horas; BLOCOS[i].fonte_nome = fnome;
+    BLOCOS[i].quem_registrou = SOU ? SOU.nome : BLOCOS[i].quem_registrou;
   }
+  setTimeout(pintarBlocos, 1600);
+}
+
+/* ---------- 2. o que existe na planta ---------- */
+function prontoNoMapa(a) { return a.existe === true || a.existe === false; }
+
+function pintarFiltroMapa() {
+  const todos = ambientesTodos();
+  const falta = todos.filter(a => !prontoNoMapa(a)).length;
+  el('filtroMapa').innerHTML = [
+    ['falta', 'Falta conferir (' + falta + ')'],
+    ['todos', 'Todos (' + todos.length + ')'],
+    ['prontos', 'Conferidos (' + (todos.length - falta) + ')']
+  ].map(x => '<button type="button" data-f="' + x[0] + '"'
+    + (x[0] === VENDO_MAPA ? ' class="on"' : '') + '>' + x[1] + '</button>').join('');
+  el('filtroMapa').querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => {
+      VENDO_MAPA = b.dataset.f; pintarFiltroMapa(); pintarMapa();
+    }));
+}
+
+function pintarMapa() {
+  const todos = ambientesTodos();
+  const feitos = todos.filter(prontoNoMapa).length;
+  const pct = todos.length ? feitos / todos.length * 100 : 0;
+  animar(() => { el('barraMapa').style.width = pct.toFixed(1) + '%'; });
+  el('subMapa').textContent = feitos + ' de ' + todos.length + ' ambientes conferidos';
+
+  const vista = VENDO_MAPA === 'todos' ? todos
+              : VENDO_MAPA === 'prontos' ? todos.filter(prontoNoMapa)
+              : todos.filter(a => !prontoNoMapa(a));
+  if (!vista.length) {
+    el('listaMapa').innerHTML = '<div class="cx"><p class="ajuda" style="margin:0">'
+      + (VENDO_MAPA === 'falta' ? 'Tudo conferido. Bom trabalho.' : 'Nada aqui ainda.')
+      + '</p></div>';
+    return;
+  }
+  el('listaMapa').innerHTML = vista.map(linhaAmbiente).join('');
+  vista.forEach(ligarLinhaAmbiente);
+}
+
+function linhaAmbiente(a) {
+  const nao = a.existe === false;
+  return '<div class="lin-amb' + (nao ? ' nao' : (a.existe === true ? ' pronto' : ''))
+    + '" id="a-' + a.id + '">'
+    + '<div class="cab"><b>' + esc(a.nome) + '</b>'
+    +   '<span>' + esc(a.bloco) + '</span></div>'
+    + '<div class="sim-nao" role="group" aria-label="Este ambiente existe?">'
+    +   '<button type="button" data-e="sim" aria-pressed="' + (a.existe === true) + '">'
+    +     'Existe</button>'
+    +   '<button type="button" class="perigo" data-e="nao" aria-pressed="' + nao + '">'
+    +     'Não foi construído</button>'
+    + '</div>'
+    + '<div class="campo motivo"' + (nao ? '' : ' hidden') + '>'
+    +   '<input type="text" class="obs" placeholder="o que há no lugar? (opcional)"'
+    +   ' value="' + esc(a.obs || '') + '"></div>'
+    + '<details class="trocar"><summary>Está no bloco errado?</summary>'
+    +   '<select class="selBloco">'
+    +   BLOCOS.map(b => '<option value="' + b.id + '"'
+        + (b.id === a.bloco_id ? ' selected' : '') + '>' + esc(b.nome) + '</option>').join('')
+    +   '</select></details>'
+    + '<div class="res"></div></div>';
+}
+
+function ligarLinhaAmbiente(a) {
+  const cx = el('a-' + a.id);
+  if (!cx || !PODE_MAPA) return;
+  const motivo = cx.querySelector('.motivo');
+  cx.querySelectorAll('.sim-nao button').forEach(b =>
+    b.addEventListener('click', () => {
+      const existe = b.dataset.e === 'sim';
+      cx.querySelectorAll('.sim-nao button').forEach(x =>
+        x.setAttribute('aria-pressed', (x.dataset.e === 'sim') === existe));
+      motivo.hidden = existe;
+      cx.classList.toggle('nao', !existe);
+      cx.classList.toggle('pronto', existe);
+      guardarExiste(a, cx, existe);
+    }));
+  const obs = cx.querySelector('.obs');
+  if (obs) obs.addEventListener('change', () => {
+    if (cx.querySelector('.sim-nao button[aria-pressed="true"]')) guardarExiste(a, cx, false);
+  });
+  const sel = cx.querySelector('.selBloco');
+  if (sel) sel.addEventListener('change', async () => {
+    const r = await rpc('mudar_bloco', { p_token: EU.token, p_ambiente: a.id,
+      p_bloco: +sel.value }).catch(e => ({ ok: false, erro: e.message }));
+    cx.querySelector('.res').innerHTML = r.ok
+      ? '<div class="aviso bom">Movido de bloco.</div>'
+      : '<div class="aviso erro">' + esc(r.erro) + '</div>';
+    if (r.ok) carregarMapa();
+  });
+}
+
+/* salva na hora, sem botão: são 43 ambientes e a resposta é um toque */
+async function guardarExiste(a, cx, existe) {
+  const onde = cx.querySelector('.res');
+  if (!ONLINE) {
+    onde.innerHTML = '<div class="aviso erro">Sem internet. Anote no papel.</div>';
+    return;
+  }
+  onde.innerHTML = '<div class="aviso info">Salvando...</div>';
+  let r;
+  try {
+    r = await rpc('salvar_existe', { p_token: EU.token, p_ambiente: a.id,
+      p_existe: existe, p_obs: cx.querySelector('.obs').value.trim(),
+      p_aluno: SOU ? SOU.id : null });
+  } catch (e) { onde.innerHTML = '<div class="aviso erro">' + esc(e.message) + '</div>';
+    return; }
+  if (!r.ok) { onde.innerHTML = '<div class="aviso erro">' + esc(r.erro) + '</div>'; return; }
+  onde.innerHTML = '<div class="aviso bom">Guardado.</div>';
+  BLOCOS.forEach(b => (b.ambientes || []).forEach(x => {
+    if (x.id === a.id) { x.existe = existe; x.obs = cx.querySelector('.obs').value.trim(); }
+  }));
   pintarFiltroMapa();
-  setTimeout(() => { pintarMapa(); }, 1400);
+  const barra = ambientesTodos();
+  const feitos = barra.filter(prontoNoMapa).length;
+  el('subMapa').textContent = feitos + ' de ' + barra.length + ' ambientes conferidos';
+  animar(() => { el('barraMapa').style.width =
+    (barra.length ? feitos / barra.length * 100 : 0).toFixed(1) + '%'; });
+  setTimeout(() => { onde.innerHTML = ''; }, 2200);
 }
 
 el('btTrocarEu3').addEventListener('click', () => { SOU = null; guardar(); escolherQuemSou(); });
@@ -3488,46 +3606,59 @@ async function carregarMapaProf() {
   catch (e) { el('ajudaMapaProf').textContent = e.message; return; }
   if (!r.ok) { el('ajudaMapaProf').textContent = r.erro; return; }
 
-  const z = r.resumo || {};
+  const z = r.resumo || {}, b = r.blocos || [], fora = r.fora || [];
   el('resumoMapaProf').innerHTML = [
-    [(+z.verificados || 0) + '<i>de ' + (+z.total || 0) + '</i>', 'ambientes conferidos'],
+    [(+z.blocos_com_horario || 0) + '<i>de ' + (+z.blocos || 0) + '</i>',
+     'blocos com horário'],
+    [(+z.conferidos || 0) + '<i>de ' + (+z.ambientes || 0) + '</i>',
+     'ambientes conferidos'],
     [+z.nao_construidos || 0, 'não construídos'],
-    [+z.com_horario || 0,     'com horário levantado'],
-    [+z.vinte_e_quatro || 0,  'acesos 24 horas']
+    [+z.sem_horario || 0,     'ambientes sem horário do bloco']
   ].map(x => '<div class="mini"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
 
-  const a = r.ambientes || [];
-  const semFonte = a.filter(x => x.existe === true && x.horas != null && !x.fonte_nome).length;
+  const semFonte = b.filter(x => x.horas != null && !x.fonte_nome).length;
   el('ajudaMapaProf').textContent = semFonte
-    ? semFonte + ' ambiente(s) com horário mas sem o nome de quem informou.'
-    : 'Toda hora levantada tem fonte registrada.';
+    ? semFonte + ' bloco(s) com horário mas sem o nome de quem informou.'
+    : (+z.blocos_com_horario
+        ? 'Todo horário levantado tem fonte registrada.'
+        : 'Nenhum bloco teve o horário levantado ainda.');
 
   el('tabMapaProf').innerHTML =
-    '<thead><tr><th class="cresce">Ambiente</th><th>Grupo</th><th>Existe</th>'
-    + '<th>Acende</th><th>Apaga</th><th>Horas por dia</th>'
+    '<thead><tr><th class="cresce">Bloco</th><th>Ambientes</th><th>Acende</th>'
+    + '<th>Apaga</th><th>Horas por dia</th>'
     + '<th class="cresce">Quem informou</th></tr></thead><tbody>'
-    + a.map(x => {
-        const sit = x.existe === false ? '<span class="tag c">não construído</span>'
-                  : x.existe === true  ? '<span class="tag v">sim</span>'
-                  : '<span class="tag a">a conferir</span>';
-        // a observação do aluno é o que explica o caso estranho: sem ela,
-        // "não construído" fica sem justificativa na mesa do professor
+    + b.map(x => {
+        const falta = +x.sem_conferir || 0, nao = +x.nao_construidos || 0;
         return '<tr><td class="cresce">' + esc(x.nome)
           + (x.obs ? '<small style="display:block;font-family:var(--m);font-size:.74rem;'
               + 'color:var(--tinta2);margin-top:3px;white-space:normal">'
               + esc(x.obs) + '</small>' : '') + '</td>'
-          + '<td data-r="Grupo"><b>' + esc(x.grupo) + '</b></td>'
-          + '<td data-r="Existe" data-v="' + (x.existe === true ? 2 : x.existe === false ? 0 : 1)
-          + '">' + sit + '</td>'
+          + '<td data-r="Ambientes" data-v="' + x.ambientes + '">' + x.ambientes
+          + (nao ? ' <span class="tag c">' + nao + ' fora</span>' : '')
+          + (falta ? ' <span class="tag a">' + falta + ' a conferir</span>' : '')
+          + '</td>'
           + '<td data-r="Acende">' + (x.sempre ? '24h' : esc(x.liga || '')) + '</td>'
           + '<td data-r="Apaga">' + (x.sempre ? '24h' : esc(x.desliga || '')) + '</td>'
           + '<td data-r="Horas por dia" data-v="' + (x.horas == null ? -1 : x.horas) + '"><b>'
           + (x.horas == null ? '' : (+x.horas).toLocaleString('pt-BR')) + '</b></td>'
           + '<td class="cresce" data-r="Quem informou">'
           + (x.fonte_nome ? esc(x.fonte_nome)
-              + (x.fonte_funcao ? ', ' + esc(x.fonte_funcao) : '') : '') + '</td></tr>';
+              + (x.fonte_funcao ? ', ' + esc(x.fonte_funcao) : '')
+              : '<span class="tag a">falta</span>') + '</td></tr>';
       }).join('') + '</tbody>';
   ordenavel('tabMapaProf');
+
+  // os ambientes que a planta tem mas a escola não: é o que muda a conta
+  el('foraMapaProf').innerHTML = fora.length
+    ? '<h3 class="sec">Desenhados na planta mas não construídos</h3>'
+      + '<p class="ajuda">Estes ficam fora da conta da economia.</p>'
+      + '<ul class="eq" style="margin-top:10px">'
+      + fora.map(x => '<li><span class="mk">' + esc(x.grupo) + '</span><span><em>'
+          + esc(x.nome) + '</em>' + (x.obs ? '. ' + esc(x.obs) : '')
+          + (x.quem_registrou ? ' <small style="color:var(--tinta3)">conferido por '
+              + esc(x.quem_registrou) + '</small>' : '') + '</span></li>').join('')
+      + '</ul>'
+    : '';
 }
 el('btAtualizarMapa').addEventListener('click', carregarMapaProf);
 
