@@ -2320,7 +2320,10 @@ async function carregarMontar() {
 
   const daTurma = (TURMA === '1A' ? GRUPOS_A : GRUPOS_B);
   // os grupos da turma primeiro; os que valem para as duas vão para o fim
-  const comum = g => !!(g.tipo && g.tipo !== 'inventario');
+  // grupo que vale para as duas turmas: mapa, apresentação e a equipe de preço
+  const comum = g => g.papel === 'preco' || !!(g.tipo && g.tipo !== 'inventario');
+  // grupo onde todo mundo faz a mesma coisa, então não se escolhe função
+  const semFuncao = g => comum(g);
   const gs = (r.grupos || [])
     .filter(g => daTurma.indexOf(g.codigo) >= 0 || comum(g))
     .sort((x, y) => (comum(x) - comum(y))
@@ -2356,7 +2359,8 @@ async function carregarMontar() {
       : '<div class="nada">Ninguém neste grupo ainda.</div>';
     const pe = doisTurnos
       ? (gente.length ? '<span class="pill k">' + gente.length
-            + (g.tipo === 'mapa' ? ' na planta' : ' na apresentação') + '</span>'
+            + (g.papel === 'preco' ? ' na pesquisa de preço'
+               : g.tipo === 'mapa' ? ' na planta' : ' na apresentação') + '</span>'
                       : '<span class="pill erro">vazio</span>')
       : gente.length
       ? (+g.campo ? '<span class="pill c">' + g.campo + ' campo</span>' : '<span class="pill erro">sem ninguém de campo</span>')
@@ -2367,6 +2371,7 @@ async function carregarMontar() {
     return '<div class="gcard' + cls + '"><div class="top">' +
       '<div class="cab"><span class="cod">' + g.codigo + '</span>' +
       '<span class="qtamb">' + (g.tipo === 'mapa' ? 'a escola inteira'
+        : g.papel === 'preco' ? 'as duas turmas'
         : g.tipo === 'apresentacao' ? 'as duas turmas'
         : g.ambientes + ' ambientes') + '</span></div>' +
       '<div class="res">' + g.resumo + '</div></div>' +
@@ -2380,22 +2385,54 @@ async function carregarMontar() {
   // Montar os grupos é encher um grupo de cada vez. Depois do primeiro aluno, o
   // botão repete o mesmo código num toque só, em vez de abrir a lista toda vez.
   const repetir = ULTIMO_GRUPO && opts.indexOf(ULTIMO_GRUPO) >= 0 ? ULTIMO_GRUPO : null;
+  // nos grupos que valem para as duas turmas ninguém escolhe função
+  const SEM_FUNCAO = gs.filter(semFuncao).map(g => g.codigo);
+  const selF = id =>
+    '<select class="selFuncao" data-id="' + id + '" title="Função dentro do grupo" ' +
+    'style="width:auto;padding:6px 8px">' +
+      ['campo','calculo','conferencia','preco'].map(f =>
+        '<option value="' + f + '"' + (f === 'campo' ? ' selected' : '') + '>' +
+        PAP[f] + '</option>').join('') +
+    '</select>';
   el('listaTurma').innerHTML = sem.length ? sem.map(a =>
     '<div class="item" data-id="' + a.id + '">' +
       '<span class="q" style="min-width:26px">' + (a.numero || '') + '</span>' +
-      '<span class="d">' + a.nome + '</span>' +
+      '<span class="d">' + esc(a.nome) + '</span>' +
       (repetir ? '<button class="rep" data-rep="' + a.id + '" title="Põe no grupo '
         + repetir + ', o último que você usou">+ ' + repetir + '</button>' : '') +
+      selF(a.id) +
       '<select class="selGrupo" data-id="' + a.id + '" style="width:auto;padding:6px 8px">' +
         '<option value="">escolher</option>' +
         opts.map(g => '<option value="' + g + '">' + g + '</option>').join('') +
       '</select></div>').join('')
     : '<p class="ajuda">Todos os alunos desta turma já estão em algum grupo.</p>';
 
-  document.querySelectorAll('#listaTurma .selGrupo').forEach(s =>
-    s.addEventListener('change', () => aloca(+s.dataset.id, s.value, 'campo')));
+  const funcaoDe = id => {
+    const f = document.querySelector('#listaTurma .selFuncao[data-id="' + id + '"]');
+    return f ? f.value : 'campo';
+  };
+  // quando o grupo escolhido é do tipo que não tem função, o seletor de função
+  // sai do caminho em vez de ficar ali pedindo uma resposta que não vale nada
+  document.querySelectorAll('#listaTurma .selGrupo').forEach(sg => {
+    const f = document.querySelector('#listaTurma .selFuncao[data-id="' + sg.dataset.id + '"]');
+    // a função fica escolhível ANTES do grupo: é assim que se pensa ("fulano
+    // é do cálculo"), e escolher o grupo é que dispara a alocação
+    const ajustar = () => {
+      const fora = SEM_FUNCAO.indexOf(sg.value) >= 0;
+      if (f) { f.disabled = fora; f.style.opacity = fora ? '.4' : ''; }
+    };
+    ajustar();
+    sg.addEventListener('change', () => {
+      ajustar();
+      if (sg.value) aloca(+sg.dataset.id, sg.value, funcaoDe(+sg.dataset.id));
+    });
+    // trocar a função depois de já ter escolhido o grupo também vale
+    if (f) f.addEventListener('change', () => {
+      if (sg.value) aloca(+sg.dataset.id, sg.value, f.value);
+    });
+  });
   document.querySelectorAll('#listaTurma .rep').forEach(b =>
-    b.addEventListener('click', () => aloca(+b.dataset.rep, repetir, 'campo')));
+    b.addEventListener('click', () => aloca(+b.dataset.rep, repetir, funcaoDe(+b.dataset.rep))));
   document.querySelectorAll('#cards .selPapel').forEach(s =>
     s.addEventListener('change', () => {
       const g = s.closest('.gcard').querySelector('.cod').textContent;
