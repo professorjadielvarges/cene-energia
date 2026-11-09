@@ -4180,6 +4180,44 @@ function montarParecer(r, P, lamp, precoMed, feitos, tot, qtdPrecos) {
     : 'Inventário completo: os ' + tot + ' ambientes foram percorridos.';
 }
 
+/* ---------------- senhas dos grupos ----------------
+   O banco guarda a senha em hash, que não volta para texto. Então a senha dos
+   grupos de aluno fica legível numa coluna à parte e sai só pela função senhas(),
+   que exige sessão de professor. PROF e GESTAO não entram nessa lista. */
+let SENHAS_CARREGADAS = false;
+async function carregarSenhas() {
+  if (SENHAS_CARREGADAS) return;
+  const onde = el('listaSenhas');
+  onde.innerHTML = '<p class="ajuda">Buscando...</p>';
+  const r = await rpc('senhas', { p_token: EU.token });
+  if (!r.ok) { onde.innerHTML = '<div class="aviso erro">' + esc(r.erro) + '</div>'; return; }
+  SENHAS_CARREGADAS = true;
+  onde.innerHTML = '<div class="rol"><table id="tabSenhas">'
+    + '<thead><tr><th class="cresce">Grupo</th><th>Senha</th><th>Turma</th>'
+    + '<th></th></tr></thead><tbody>'
+    + r.grupos.map(g =>
+        '<tr><td class="cresce"><b>' + esc(g.codigo) + '</b>'
+        + '<small style="display:block;font-family:var(--c);font-size:.76rem;'
+        + 'color:var(--tinta2);white-space:normal;margin-top:2px">'
+        + esc(g.resumo || '') + '</small></td>'
+        + '<td data-r="Senha"><b class="sn">' + esc(g.senha) + '</b></td>'
+        + '<td data-r="Turma">' + esc(g.turma || '') + '</td>'
+        + '<td><button class="btn peq sec cp" data-cod="' + esc(g.codigo)
+        + '" data-sn="' + esc(g.senha) + '">copiar</button></td></tr>').join('')
+    + '</tbody></table></div>';
+  onde.querySelectorAll('.cp').forEach(b => b.addEventListener('click', async () => {
+    const t = 'Grupo ' + b.dataset.cod + ' · senha ' + b.dataset.sn
+      + '\nEntre em ' + location.href.split('#')[0]
+      + '\nEscolha o grupo na lista e digite a senha.';
+    try { await navigator.clipboard.writeText(t); b.textContent = 'copiado'; }
+    catch (e) { b.textContent = 'não deu'; }
+    setTimeout(() => b.textContent = 'copiar', 2200);
+  }));
+}
+el('caixaSenhas').addEventListener('toggle', () => {
+  if (el('caixaSenhas').open) carregarSenhas();
+});
+
 el('btCopiar').addEventListener('click', async () => {
   const t = el('parecer').innerText;
   try { await navigator.clipboard.writeText(t); el('btCopiar').textContent = 'Copiado'; }
