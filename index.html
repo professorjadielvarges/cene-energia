@@ -270,6 +270,95 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
   .lupa-topo strong{width:100%;margin:0 0 2px}
   .lupa-topo button{padding:9px 13px;font-size:.86rem}
 }
+/* O FECHO DO PROJETO
+   A comparação não é mais um botão igual aos outros no meio da fileira. Ela é
+   para onde se vai DEPOIS que o trabalho da tela está feito: fica embaixo de
+   tudo, separada por uma linha, sozinha, e é a única coisa azul sólida da
+   tela, para ninguém confundir com as ações do dia a dia. */
+/* FOTO DO APARELHO
+   Todo aparelho contado entra com foto. A foto é a prova de que aquele
+   aparelho existe e de que a potência lida é a que está escrita nele. Quando
+   o aparelho não traz potência escrita, isso vira uma afirmação marcada, e a
+   foto continua obrigatória: mostra o aparelho sem etiqueta. */
+.marca{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
+  border:1.5px solid var(--linha2);border-radius:var(--r2);padding:12px 14px;
+  margin:0 0 15px;background:var(--papel);transition:border-color .15s,background .15s}
+.marca:hover{border-color:var(--azul)}
+.marca input{width:22px;height:22px;flex:none;margin:1px 0 0;accent-color:var(--azul)}
+.marca span{flex:1;min-width:0;font-size:.89rem;font-weight:600;line-height:1.35}
+.marca small{display:block;margin-top:4px;font-size:.78rem;font-weight:400;
+  color:var(--tinta2);line-height:1.4}
+.marca.on{border-color:var(--ambar);background:var(--ambar-sup)}
+
+.fotos{border:1.5px dashed var(--linha2);border-radius:var(--r2);padding:14px;
+  background:var(--papel);transition:border-color .15s,background .15s}
+.fotos.tem{border-style:solid;border-color:var(--verde);background:var(--verde-sup)}
+.fotos.falta{border-color:var(--verm);background:var(--verm-sup)}
+.tiras{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px}
+.tiras:empty{display:none}
+.tira{position:relative;width:84px;height:84px;border-radius:var(--r2);
+  overflow:hidden;border:1px solid var(--linha2);background:var(--sup2);flex:none}
+.tira img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.tira .x{position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;
+  border:0;background:rgba(10,12,18,.72);color:#fff;font-size:.9rem;font-weight:700;
+  line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tira .x:hover{background:var(--verm)}
+.fotos .btn{margin-bottom:0}
+.item .vistas{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.item .vistas img{width:52px;height:52px;object-fit:cover;border-radius:6px;
+  border:1px solid var(--linha2);cursor:zoom-in;display:block}
+
+/* Há ambientes em que o aluno não pode entrar sozinho: secretaria, cozinha,
+   área técnica, vestiário. Quando um funcionário abre a sala e acompanha, o
+   nome dele fica registrado. É o que explica depois por que aquela contagem
+   foi feita de outro jeito, e é crédito de quem ajudou. */
+.acomp{margin:4px 0 16px;padding:14px 15px;border:1px dashed var(--linha2);
+  border-radius:var(--r2);background:var(--papel)}
+.acomp b{display:block;font-family:var(--d);font-size:.92rem;font-weight:700;
+  margin-bottom:4px}
+.acomp p{margin:0 0 12px;font-size:.82rem;line-height:1.45;color:var(--tinta2)}
+.acomp .campo{margin-bottom:0}
+.acomp.tem{border-style:solid;border-color:var(--verde);background:var(--verde-sup)}
+
+/* O horário NÃO se digita aqui: ele vem do bloco, que quem preenche é a
+   equipe do MAPA. A luz da escola é ligada por circuito, então todas as salas
+   do pavilhão acendem na mesma hora. Perguntar de novo aqui dava duas
+   respostas diferentes para a mesma lâmpada, e a conta usa a do bloco. */
+.domapa{display:flex;gap:13px;align-items:flex-start;
+  border-left:3px solid var(--azul);background:var(--azul-sup);
+  border-radius:0 var(--r2) var(--r2) 0;padding:12px 15px;
+  font-size:.86rem;line-height:1.45;color:var(--tinta)}
+.domapa.falta{border-left-color:var(--ambar);background:var(--ambar-sup)}
+.domapa .h{flex:none;min-width:58px;font-family:var(--m);font-weight:700;
+  font-size:1.12rem;letter-spacing:-.03em;color:var(--azul);line-height:1.25}
+.domapa.falta .h{color:var(--ambar);font-size:.82rem;font-weight:700;line-height:1.5}
+.domapa .d{flex:1;min-width:0}
+.domapa b{display:block;font-family:var(--d);font-size:.69rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.09em;color:var(--tinta2);margin-bottom:3px}
+.domapa small{display:block;margin-top:5px;font-size:.79rem;color:var(--tinta2);
+  line-height:1.45}
+.fecho-area{margin-top:24px;padding-top:20px;border-top:1px solid var(--linha)}
+.fecho-area>.rotulo{font-family:var(--d);font-size:.67rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--tinta3);
+  display:block;margin-bottom:10px}
+.fecho{display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  padding:18px 20px;border:2px solid var(--azul);border-radius:var(--r);
+  background:var(--azul);color:var(--sobre);box-shadow:var(--sombra2);
+  transition:transform .12s,background .15s,border-color .15s}
+.fecho:hover{background:var(--azul-forte);border-color:var(--azul-forte);
+  transform:translateY(-2px)}
+.fecho:active{transform:translateY(0)}
+.fecho .txt{flex:1;min-width:0}
+.fecho b{display:block;font-family:var(--d);font-size:1.1rem;font-weight:800;
+  letter-spacing:-.022em;line-height:1.2}
+.fecho small{display:block;margin-top:6px;font-size:.85rem;line-height:1.45;
+  font-weight:400;opacity:.92}
+.fecho i{flex:none;font-style:normal;font-size:1.6rem;line-height:1;opacity:.9}
+@media(max-width:430px){
+  .fecho{padding:16px;gap:12px}
+  .fecho b{font-size:1.02rem}
+  .fecho small{font-size:.81rem}
+}
 .amb-mapa{background:var(--sup);border:1px solid var(--linha);border-left:3px solid var(--linha2);
   border-radius:var(--r);padding:14px 16px;margin-bottom:11px}
 .amb-mapa.pronto{border-left-color:var(--verde);background:var(--verde-sup)}
@@ -825,9 +914,16 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div id="listaAmbientes"></div>
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn peq sec" id="btConta">Conferir a minha conta</button>
-      <button class="btn peq sec" id="btCompara1">A nossa escola e as outras</button>
       <button class="btn peq sec" id="btAvaliar">Avaliar a equipe</button>
       <button class="btn peq sec" id="btTrocarEu">Não sou eu, trocar de pessoa</button>
+    </div>
+    <div class="fecho-area">
+      <span class="rotulo">Quando o trabalho desta tela estiver feito</span>
+      <button type="button" class="fecho" id="btCompara1">
+        <span class="txt"><b>A nossa escola e as outras</b>
+        <small>Treine aqui a resposta da Feira: quanto a nossa escola já economizou com a troca de 2023 e quanto outra escola economizaria se trocasse também.</small></span>
+        <i aria-hidden="true">&rarr;</i>
+      </button>
     </div>
   </section>
 
@@ -851,9 +947,16 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div id="listaEstande"></div>
 
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn peq sec" id="btCompara2">A nossa escola e as outras</button>
       <button class="btn peq sec" id="btAvaliar4">Avaliar a equipe</button>
       <button class="btn peq sec" id="btTrocarEu4">Não sou eu, trocar de pessoa</button>
+    </div>
+    <div class="fecho-area">
+      <span class="rotulo">Quando o trabalho desta tela estiver feito</span>
+      <button type="button" class="fecho" id="btCompara2">
+        <span class="txt"><b>A nossa escola e as outras</b>
+        <small>Treine aqui a resposta da Feira: quanto a nossa escola já economizou com a troca de 2023 e quanto outra escola economizaria se trocasse também.</small></span>
+        <i aria-hidden="true">&rarr;</i>
+      </button>
     </div>
   </section>
 
@@ -889,9 +992,16 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div id="listaMapa"></div>
 
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn peq sec" id="btCompara3">A nossa escola e as outras</button>
       <button class="btn peq sec" id="btAvaliar3">Avaliar a equipe</button>
       <button class="btn peq sec" id="btTrocarEu3">Não sou eu, trocar de pessoa</button>
+    </div>
+    <div class="fecho-area">
+      <span class="rotulo">Quando o trabalho desta tela estiver feito</span>
+      <button type="button" class="fecho" id="btCompara3">
+        <span class="txt"><b>A nossa escola e as outras</b>
+        <small>Treine aqui a resposta da Feira: quanto a nossa escola já economizou com a troca de 2023 e quanto outra escola economizaria se trocasse também.</small></span>
+        <i aria-hidden="true">&rarr;</i>
+      </button>
     </div>
   </section>
 
@@ -962,15 +1072,29 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         <div class="campo">
           <label for="pot">Potência em watts</label>
           <input type="text" id="pot" inputmode="decimal" autocomplete="off"
-                 placeholder="deixe vazio se não achou">
+                 placeholder="o que está escrito no aparelho">
           <div class="chips" id="chipsPot"></div>
         </div>
       </div>
+      <label class="marca" id="marcaSemPot" for="semPot">
+        <input type="checkbox" id="semPot">
+        <span>O aparelho não traz a potência escrita
+        <small>Marque só depois de procurar na etiqueta, no vidro e na base. A foto
+        continua obrigatória: ela mostra o aparelho sem a informação.</small></span>
+      </label>
       <div class="campo">
-        <label for="horas">Horas por dia que fica ligado</label>
-        <input type="text" id="horas" inputmode="decimal" autocomplete="off"
-               placeholder="pergunte a quem usa o ambiente">
-        <div class="chips" id="chipsH"></div>
+        <label>Foto do aparelho</label>
+        <div class="fotos" id="caixaFotos">
+          <div class="tiras" id="tiras"></div>
+          <input type="file" id="arqFoto" accept="image/*" capture="environment"
+                 multiple hidden>
+          <button type="button" class="btn sec peq" id="btFoto">Tirar foto do aparelho</button>
+          <p class="ajuda" id="ajudaFoto" style="margin:10px 0 0"></p>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Horas por dia que fica ligado</label>
+        <div id="horasBloco"></div>
       </div>
       <div class="campo">
         <label for="obs">Observação (opcional)</label>
@@ -993,6 +1117,22 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         <select id="fAnotador"></select></div>
       <div class="campo"><label for="fConferente">Conferente: fotografou e reconferiu</label>
         <select id="fConferente"></select></div>
+
+      <div class="acomp">
+        <b>Teve funcionário acompanhando?</b>
+        <p>Em alguns ambientes o aluno não pode entrar sozinho. Se alguém da escola
+        abriu a sala ou ficou junto durante a contagem, escreva aqui. Se foi só o
+        grupo, deixe em branco.</p>
+        <div class="dupla">
+          <div class="campo"><label for="acompNome">Nome de quem acompanhou</label>
+            <input type="text" id="acompNome" autocomplete="off"
+                   placeholder="deixe vazio se não houve"></div>
+          <div class="campo"><label for="acompFuncao">Função dele na escola</label>
+            <input type="text" id="acompFuncao" autocomplete="off"
+                   placeholder="ex: porteiro, secretária"></div>
+        </div>
+      </div>
+
       <button class="btn sec" id="btFuncoes">Salvar quem fez o quê</button>
     </div>
 
@@ -1039,6 +1179,14 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn peq sec" id="btAvaliar2">Avaliar a equipe</button>
       <button class="btn peq sec" id="btTrocarEu2">Não sou eu, trocar de pessoa</button>
+    </div>
+    <div class="fecho-area">
+      <span class="rotulo">Quando o trabalho desta tela estiver feito</span>
+      <button type="button" class="fecho" id="btCompara4">
+        <span class="txt"><b>A nossa escola e as outras</b>
+        <small>Treine aqui a resposta da Feira: quanto a nossa escola já economizou com a troca de 2023 e quanto outra escola economizaria se trocasse também.</small></span>
+        <i aria-hidden="true">&rarr;</i>
+      </button>
     </div>
   </section>
 
@@ -1130,11 +1278,13 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div class="rol"><table id="tabTipos"></table></div>
       <h3 class="sec">Preços pesquisados</h3>
       <div class="rol"><table id="tabPrecos"></table></div>
+      <p class="ajuda" id="espacoFotos" style="margin-top:16px"></p>
     </div>
 
     <div class="pag" id="ab-part" hidden>
       <p class="ajuda" id="ajudaPart"></p>
       <div class="rol"><table id="tabPart"></table></div>
+      <div id="acompPart"></div>
     </div>
 
     <div class="pag" id="ab-aval" hidden>
@@ -1251,7 +1401,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
      script que liga os botoes dela -->
 <div class="lupa" id="lupa" hidden role="dialog" aria-modal="true" aria-label="Planta da escola">
   <div class="lupa-topo">
-    <strong>Planta da escola</strong>
+    <strong id="lupaTitulo">Planta da escola</strong>
     <button type="button" id="lupaMenos" aria-label="Diminuir o zoom">&minus;</button>
     <i id="lupaNivel">100%</i>
     <button type="button" id="lupaMais" aria-label="Aumentar o zoom">+</button>
@@ -1325,6 +1475,13 @@ function marcar(online) {
 
 /* guarda um lançamento no celular e devolve a resposta que a tela espera */
 function enfileirar(fn, args) {
+  /* lançamento de aparelho não entra na fila: ele carrega foto, e foto não
+     cabe na memória que o navegador dá para guardar coisa no celular */
+  if (fn === 'add_item') {
+    return { ok: false, erro: 'Sem internet agora. O lançamento sobe junto com a foto '
+      + 'do aparelho, e foto não cabe na fila do celular. Procure um ponto com sinal '
+      + 'e toque em lançar de novo: nada do que você preencheu se perde.' };
+  }
   const op = { id: sorteio(), fn: fn, args: semToken(args), em: Date.now() };
   if (fn === 'add_item' || fn === 'add_preco') op.args.p_chave = op.id;
   FILA.push(op);
@@ -1426,7 +1583,14 @@ async function rpc(fn, args) {
     // se havia coisa esperando e a internet está de volta, aproveita e manda
     if (FILA.length && !ENVIANDO && EU && EU.token) { enviarFila(); }
     if (GUARDA.indexOf(fn) >= 0 && r && r.ok) {
-      CACHE[chaveCache(fn, args)] = r;
+      // as miniaturas das fotos NÃO vão para o cache do celular: encheriam
+      // a memória que o navegador reserva e derrubariam a fila de envio
+      let guardar = r;
+      if (fn === 'itens_do_ambiente' && Array.isArray(r.itens)) {
+        guardar = Object.assign({}, r, { itens: r.itens.map(i =>
+          Object.assign({}, i, { fotos: (i.fotos || []).map(f => ({ id: f.id })) })) });
+      }
+      CACHE[chaveCache(fn, args)] = guardar;
       Disco.grava('cache', CACHE);
     }
     return aplicarFila(fn, args, JSON.parse(JSON.stringify(r)));
@@ -1717,6 +1881,7 @@ async function carregarAmbientes() {
     const r = await rpc('meus_ambientes', { p_token: EU.token });
     if (!r.ok) return expirou(r.erro);
     const lista = r.ambientes || [];
+    if (r.horas_padrao != null) HORAS_PADRAO = +r.horas_padrao;
     const feitos = lista.filter(a => a.concluido).length;
     el('tituloLista').textContent = 'Grupo ' + EU.codigo;
     el('subLista').textContent = EU.resumo + ' · ' + feitos + ' de ' + lista.length +
@@ -1777,17 +1942,169 @@ function montarTipos() {
   if (mais) mais.addEventListener('click', () => { TIPOS_ABERTO = true; montarTipos(); });
 }
 function chipsPot() {
+  /* saiu o atalho "não achei": agora quem não acha a potência marca a caixa
+     logo abaixo, que é uma afirmação registrada, não um campo em branco */
   const l = POTS[TIPO] || [];
-  el('chipsPot').innerHTML = l.map(p => '<button type="button" data-p="' + p + '">' + p + ' W</button>').join('')
-    + '<button type="button" data-p="">não achei</button>';
+  el('chipsPot').innerHTML = l.map(p =>
+    '<button type="button" data-p="' + p + '">' + p + ' W</button>').join('');
   document.querySelectorAll('#chipsPot button').forEach(b =>
-    b.addEventListener('click', () => { el('pot').value = b.dataset.p; }));
+    b.addEventListener('click', () => {
+      if (el('semPot').checked) {
+        el('semPot').checked = false;
+        el('semPot').dispatchEvent(new Event('change'));
+      }
+      el('pot').value = b.dataset.p;
+    }));
 }
-function chipsHoras() {
-  el('chipsH').innerHTML = [1,2,4,5,6,8,24].map(h =>
-    '<button type="button" data-h="' + h + '">' + h + ' h</button>').join('');
-  document.querySelectorAll('#chipsH button').forEach(b =>
-    b.addEventListener('click', () => { el('horas').value = b.dataset.h; }));
+/* quanto das fotos já foi usado: o banco tem 500 MB e o professor precisa
+   enxergar isso antes de encher, não depois */
+async function carregarEspacoFotos() {
+  const n = el('espacoFotos');
+  if (!n || !EU || (EU.papel !== 'professor' && EU.papel !== 'gestao')) return;
+  let r;
+  try { r = await rpc('resumo_fotos', { p_token: EU.token }); } catch (e) { return; }
+  if (!r || !r.ok) return;
+  const semFoto = Math.max(0, (+r.itens || 0) - (+r.itens_com_foto || 0));
+  n.textContent = (+r.fotos || 0) + ' foto(s) guardadas, de ' + (+r.itens_com_foto || 0)
+    + ' aparelho(s), ocupando ' + vrg(r.megas) + ' MB dos 500 MB do banco.'
+    + (semFoto ? ' ' + semFoto + ' aparelho(s) ficaram sem foto, lançados antes da '
+        + 'foto passar a ser obrigatória.' : '');
+}
+
+/* ---------- FOTO DO APARELHO ----------
+   A foto sai do celular com 3 ou 4 MB. Isso não sobe numa rede de escola e não
+   caberia no banco. Antes de enviar, a página reduz para 1100 px no lado maior
+   e comprime até caber em 300 KB, que é mais que suficiente para ler a
+   etiqueta de uma lâmpada. Junto vai uma miniatura de 240 px, que é o que a
+   lista mostra depois, para não baixar a foto inteira sem necessidade. */
+const MAX_FOTOS = 4, LIMITE_FOTO = 300000;
+let FOTOS = [], OCUPADO_FOTO = false;
+
+function telaParaBlob(bm, maxLado, q) {
+  const e = Math.min(1, maxLado / Math.max(bm.width, bm.height));
+  const w = Math.max(1, Math.round(bm.width * e)), h = Math.max(1, Math.round(bm.height * e));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ct = c.getContext('2d');
+  ct.fillStyle = '#fff'; ct.fillRect(0, 0, w, h);
+  ct.drawImage(bm, 0, 0, w, h);
+  return new Promise(res => c.toBlob(res, 'image/jpeg', q));
+}
+function blobParaBase64(blob) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1]);
+    fr.onerror = () => rej(new Error('Não consegui ler a foto.'));
+    fr.readAsDataURL(blob);
+  });
+}
+async function prepararFoto(arquivo) {
+  const bm = await createImageBitmap(arquivo);
+  let q = 0.72, cheia = await telaParaBlob(bm, 1100, q);
+  while (cheia.size > LIMITE_FOTO && q > 0.34) {
+    q -= 0.12; cheia = await telaParaBlob(bm, 1100, q);
+  }
+  if (cheia.size > LIMITE_FOTO) cheia = await telaParaBlob(bm, 820, 0.5);
+  const mini = await telaParaBlob(bm, 240, 0.6);
+  if (bm.close) bm.close();
+  return { cheia: await blobParaBase64(cheia), mini: await blobParaBase64(mini),
+           bytes: cheia.size };
+}
+function pintarFotos() {
+  el('tiras').innerHTML = FOTOS.map((f, i) =>
+    '<span class="tira"><img src="data:image/jpeg;base64,' + f.mini
+    + '" alt="Foto ' + (i+1) + ' do aparelho" data-v="' + i + '">'
+    + '<button type="button" class="x" data-x="' + i
+    + '" aria-label="Tirar esta foto da lista">&times;</button></span>').join('');
+  el('tiras').querySelectorAll('.x').forEach(b =>
+    b.addEventListener('click', () => { FOTOS.splice(+b.dataset.x, 1); pintarFotos(); }));
+  el('tiras').querySelectorAll('img').forEach(im =>
+    im.addEventListener('click', () => abrirLupaFoto(
+      'data:image/jpeg;base64,' + FOTOS[+im.dataset.v].cheia, 'Foto do aparelho')));
+  const cx = el('caixaFotos');
+  cx.classList.toggle('tem', FOTOS.length > 0);
+  cx.classList.remove('falta');
+  el('btFoto').textContent = FOTOS.length
+    ? (FOTOS.length >= MAX_FOTOS ? 'Já são ' + MAX_FOTOS + ' fotos' : 'Tirar mais uma foto')
+    : 'Tirar foto do aparelho';
+  el('btFoto').disabled = FOTOS.length >= MAX_FOTOS || OCUPADO_FOTO;
+  el('ajudaFoto').textContent = OCUPADO_FOTO ? 'Preparando a foto...'
+    : (FOTOS.length
+        ? FOTOS.length + ' foto' + (FOTOS.length === 1 ? '' : 's')
+          + ' pronta' + (FOTOS.length === 1 ? '' : 's') + '. Toque numa delas para ver grande.'
+        : 'Obrigatória. Fotografe o aparelho mostrando a etiqueta da potência. '
+          + 'Se não houver etiqueta, fotografe o aparelho assim mesmo.');
+}
+el('btFoto').addEventListener('click', () => el('arqFoto').click());
+el('arqFoto').addEventListener('change', async ev => {
+  const arquivos = Array.from(ev.target.files || []);
+  ev.target.value = '';
+  if (!arquivos.length) return;
+  OCUPADO_FOTO = true; pintarFotos();
+  for (const a of arquivos) {
+    if (FOTOS.length >= MAX_FOTOS) break;
+    try {
+      FOTOS.push(await prepararFoto(a));
+    } catch (e) {
+      msg('avisoAmb', 'Não consegui usar essa foto: ' + e.message, 'erro');
+    }
+  }
+  OCUPADO_FOTO = false; pintarFotos();
+});
+el('semPot').addEventListener('change', () => {
+  const marcado = el('semPot').checked;
+  el('marcaSemPot').classList.toggle('on', marcado);
+  el('pot').disabled = marcado;
+  if (marcado) el('pot').value = '';
+});
+function limparFotos() {
+  FOTOS = []; OCUPADO_FOTO = false;
+  el('semPot').checked = false; el('pot').disabled = false;
+  el('marcaSemPot').classList.remove('on');
+  pintarFotos();
+}
+
+/* o horário do ambiente é só de leitura: quem responde é a equipe do MAPA */
+let HORAS_PADRAO = null;
+function pintarHorasBloco() {
+  const n = el('horasBloco');
+  if (!n) return;
+  if (!AMB || !AMB.bloco) {
+    n.className = 'domapa falta';
+    n.innerHTML = '<span class="h">sem bloco</span><span class="d">'
+      + '<b>Ainda não agrupado</b>Este ambiente ainda não está em nenhum circuito de luz. '
+      + 'Avise o professor.</span>';
+    return;
+  }
+  const temHora = AMB.bloco_horas !== null && AMB.bloco_horas !== undefined;
+  if (!temHora) {
+    n.className = 'domapa falta';
+    n.innerHTML = '<span class="h">ainda<br>não</span><span class="d">'
+      + '<b>Bloco: ' + esc(AMB.bloco) + '</b>'
+      + 'A equipe do MAPA ainda não registrou o horário deste circuito. Enquanto não '
+      + 'registrar, a conta usa ' + vrg(HORAS_PADRAO == null ? 6 : HORAS_PADRAO)
+      + ' h por dia como referência.'
+      + '<small>Você não precisa perguntar a hora aqui: conte os equipamentos e siga.</small>'
+      + '</span>';
+    return;
+  }
+  const h = +AMB.bloco_horas;
+  const quando = AMB.bloco_sempre
+    ? 'fica aceso o tempo todo, sem desligar'
+    : (AMB.bloco_liga && AMB.bloco_desliga
+        ? 'acende às ' + AMB.bloco_liga + ' e apaga às ' + AMB.bloco_desliga
+        : 'horário registrado pela equipe do MAPA');
+  const quem = AMB.bloco_fonte
+    ? 'Quem informou: ' + AMB.bloco_fonte
+      + (AMB.bloco_funcao ? ' (' + AMB.bloco_funcao + ')' : '') + '.'
+    : '';
+  n.className = 'domapa';
+  n.innerHTML = '<span class="h">' + vrg(Math.round(h * 100) / 100) + ' h</span>'
+    + '<span class="d"><b>Bloco: ' + esc(AMB.bloco) + '</b>'
+    + 'A luz deste circuito ' + esc(quando) + '.'
+    + '<small>' + (quem ? esc(quem) + ' ' : '')
+    + 'Vem da equipe do MAPA e vale para todos os ambientes do bloco, por isso não '
+    + 'se digita aqui.</small></span>';
 }
 async function abrirAmbiente(id, lista) {
   AMB = (lista || []).find(a => a.id === id) || { id: id, nome: '' };
@@ -1795,11 +2112,12 @@ async function abrirAmbiente(id, lista) {
   el('subAmb').textContent = 'Lance um equipamento de cada vez. Lâmpada por lâmpada, '
     + 'contando as queimadas também.';
   TIPO = 'Lâmpada'; TIPOS_ABERTO = false;
-  montarTipos(); chipsPot(); chipsHoras();
-  el('qtd').value = 1; el('pot').value = ''; el('horas').value = ''; el('obs').value = '';
+  montarTipos(); chipsPot(); pintarHorasBloco(); limparFotos();
+  el('qtd').value = 1; el('pot').value = ''; el('obs').value = '';
   msg('avisoAmb','');
   el('quemLanca').textContent = SOU ? 'Lançando como ' + SOU.nome + '.' : '';
   ['fContador','fLeitor','fAnotador','fConferente'].forEach(s => opcoes(s, 'escolha'));
+  el('acompNome').value = ''; el('acompFuncao').value = ''; marcarAcomp();
   el('ajudaFuncoes').textContent = (AMB.pessoas && AMB.pessoas < 4)
     ? 'Neste ambiente entram ' + AMB.pessoas + ' alunos, então as funções foram em dupla: '
       + 'a mesma pessoa pode aparecer em duas.'
@@ -1816,13 +2134,22 @@ async function carregarFuncoes() {
     el('fLeitor').value     = f.leitor     || '';
     el('fAnotador').value   = f.anotador   || '';
     el('fConferente').value = f.conferente || '';
+    el('acompNome').value   = r.acomp_nome   || '';
+    el('acompFuncao').value = r.acomp_funcao || '';
+    marcarAcomp();
   } catch (e) {}
 }
+function marcarAcomp() {
+  const cx = document.querySelector('.acomp');
+  if (cx) cx.classList.toggle('tem', !!el('acompNome').value.trim());
+}
+el('acompNome').addEventListener('input', marcarAcomp);
 el('btFuncoes').addEventListener('click', async () => {
   const v = s => { const x = el(s).value; return x ? parseInt(x,10) : null; };
   const r = await rpc('salvar_participacao', { p_token: EU.token, p_ambiente: AMB.id,
     p_contador: v('fContador'), p_leitor: v('fLeitor'),
-    p_anotador: v('fAnotador'), p_conferente: v('fConferente') });
+    p_anotador: v('fAnotador'), p_conferente: v('fConferente'),
+    p_acomp_nome: el('acompNome').value, p_acomp_funcao: el('acompFuncao').value });
   if (!r.ok) return msg('avisoAmb', r.erro, 'erro');
   msg('avisoAmb', 'Funções salvas.', 'bom');
   setTimeout(() => msg('avisoAmb',''), 2500);
@@ -1837,14 +2164,30 @@ async function carregarItens() {
         + 'aparelho. O que já estava no servidor volta assim que a internet voltar, '
         + 'então não conte de novo o que já foi contado.', 'info');
     }
-    el('listaItens').innerHTML = its.length ? its.map(i =>
-      '<div class="item"><span class="q">' + i.quantidade + '×</span>' +
-      '<span class="d">' + i.tipo +
-      '<small>' + (i.potencia_w != null ? i.potencia_w + ' W' : 'potência não identificada') +
-      (i.horas_dia != null ? ' · ' + i.horas_dia + ' h/dia' : '') +
-      (i.obs ? ' · ' + i.obs : '') + '</small></span>' +
-      '<button class="lixo" data-i="' + i.id + '">apagar</button></div>').join('')
-      : '<p class="ajuda">Nada lançado ainda.</p>';
+    el('listaItens').innerHTML = its.length ? its.map(i => {
+      const fs = i.fotos || [];
+      return '<div class="item"><span class="q">' + i.quantidade + '×</span>' +
+      '<span class="d">' + esc(i.tipo) +
+      '<small>' + (i.potencia_w != null ? vrg(i.potencia_w) + ' W'
+                   : (i.sem_potencia ? 'o aparelho não traz a potência escrita'
+                                     : 'potência não identificada')) +
+      (i.obs ? ' · ' + esc(i.obs) : '') + '</small>' +
+      (fs.length ? '<span class="vistas">' + fs.map(f =>
+          '<img src="data:image/jpeg;base64,' + f.mini + '" alt="Foto do aparelho" '
+          + 'data-f="' + f.id + '">').join('') + '</span>' : '') +
+      '</span>' +
+      '<button class="lixo" data-i="' + i.id + '">apagar</button></div>';
+    }).join('') : '<p class="ajuda">Nada lançado ainda.</p>';
+    document.querySelectorAll('#listaItens .vistas img').forEach(im =>
+      im.addEventListener('click', async () => {
+        im.style.opacity = '.5';
+        try {
+          const rf = await rpc('foto', { p_token: EU.token, p_foto: +im.dataset.f });
+          if (rf.ok) abrirLupaFoto('data:image/jpeg;base64,' + rf.cheia, 'Foto do aparelho');
+          else msg('avisoAmb', rf.erro, 'erro');
+        } catch (e) { msg('avisoAmb', e.message, 'erro'); }
+        im.style.opacity = '';
+      }));
     document.querySelectorAll('#listaItens .lixo').forEach(b =>
       b.addEventListener('click', async () => {
         const rr = await rpc('del_item', { p_token: EU.token, p_item: +b.dataset.i });
@@ -1856,22 +2199,51 @@ async function carregarItens() {
   } catch (err) { msg('avisoAmb', err.message, 'erro'); }
 }
 el('btAdd').addEventListener('click', async () => {
+  const semPot = el('semPot').checked;
+  const pot = num(el('pot').value);
+
+  if (OCUPADO_FOTO)
+    return msg('avisoAmb', 'Espere a foto terminar de ser preparada.', 'erro');
+  if (!FOTOS.length) {
+    el('caixaFotos').classList.add('falta');
+    el('caixaFotos').scrollIntoView({ block:'center', behavior:'smooth' });
+    return msg('avisoAmb', 'Falta a foto. Todo aparelho contado entra com pelo menos '
+      + 'uma foto, inclusive quando não tem a potência escrita.', 'erro');
+  }
+  if (!semPot && pot === null)
+    return msg('avisoAmb', 'Escreva a potência em watts. Se o aparelho não traz essa '
+      + 'informação, marque a caixa abaixo da potência.', 'erro');
+  if (semPot && pot !== null)
+    return msg('avisoAmb', 'Ou a potência está escrita, ou o aparelho não traz. '
+      + 'Desmarque uma das duas.', 'erro');
+  if (!ONLINE)
+    return msg('avisoAmb', 'Sem internet agora. O lançamento sobe junto com a foto, e '
+      + 'foto não cabe na fila do celular. Procure um ponto com sinal: o que você já '
+      + 'digitou e fotografou continua aqui nesta tela.', 'erro');
+
   const b = el('btAdd'); b.disabled = true;
+  const rotulo = b.textContent;
+  b.textContent = 'Enviando a foto...';
   try {
     const r = await rpc('add_item', {
       p_token: EU.token, p_ambiente: AMB.id, p_tipo: TIPO,
       p_quantidade: parseInt(el('qtd').value, 10),
-      p_potencia: num(el('pot').value), p_horas: num(el('horas').value),
+      p_potencia: semPot ? null : pot, p_horas: null,   /* a hora vem do bloco */
+      p_sem_potencia: semPot,
+      p_fotos: FOTOS.map(f => ({ cheia: f.cheia, mini: f.mini })),
       p_obs: el('obs').value,
       p_aluno: SOU ? SOU.id : null });
     if (!r.ok) msg('avisoAmb', r.erro, 'erro');
     else {
-      msg('avisoAmb', 'Lançado.', 'bom');
+      msg('avisoAmb', 'Lançado com ' + FOTOS.length + ' foto'
+        + (FOTOS.length === 1 ? '' : 's') + '.', 'bom');
       el('qtd').value = 1; el('pot').value = ''; el('obs').value = '';
+      limparFotos();
       await carregarItens();
-      setTimeout(() => msg('avisoAmb',''), 2500);
+      setTimeout(() => msg('avisoAmb',''), 2800);
     }
   } catch (err) { msg('avisoAmb', err.message, 'erro'); }
+  b.textContent = rotulo;
   b.disabled = false;
 });
 el('btConcluir').addEventListener('click', async () => {
@@ -2145,7 +2517,40 @@ async function carregarProf() {
   montarPassos();
   encherBarras();
   if (EU.papel === 'professor') { carregarParticipacao(); carregarAvaliacao(); carregarNotas(); carregarConferencia(); }
+  carregarEspacoFotos();
   carregarMapaProf(); carregarPalcoProf();
+}
+
+/* Quem da escola abriu a sala e ficou junto. Serve para o professor saber por
+   que aquele ambiente foi contado de outro jeito, e para agradecer na feira. */
+function pintarAcompanhantes(lista) {
+  const n = el('acompPart');
+  if (!n) return;
+  if (!lista.length) {
+    n.innerHTML = '<p class="ajuda" style="margin-top:14px">Nenhum ambiente foi '
+      + 'registrado com acompanhamento de funcionário até agora. Quando um grupo '
+      + 'anotar isso na tela do ambiente, aparece aqui.</p>';
+    return;
+  }
+  const porPessoa = {};
+  lista.forEach(x => {
+    const chave = x.nome + (x.funcao ? ' · ' + x.funcao : '');
+    (porPessoa[chave] = porPessoa[chave] || []).push(x);
+  });
+  n.innerHTML = '<h3 class="sec" style="margin-top:26px">Funcionários que acompanharam '
+    + 'a contagem</h3>'
+    + '<p class="ajuda">Ambientes em que o aluno não podia entrar sozinho. '
+    + Object.keys(porPessoa).length + ' pessoa(s) da escola em '
+    + lista.length + ' ambiente(s).</p>'
+    + Object.keys(porPessoa).sort().map(k => {
+        const ls = porPessoa[k];
+        const partes = k.split(' · ');
+        return '<div class="item"><span class="q">' + ls.length + '</span>'
+          + '<span class="d">' + esc(partes[0])
+          + '<small>' + (partes[1] ? esc(partes[1]) + ' · ' : '')
+          + ls.map(x => esc(x.ambiente) + ' (' + esc(x.grupo) + ')').join(', ')
+          + '</small></span></div>';
+      }).join('');
 }
 
 async function carregarParticipacao() {
@@ -2178,6 +2583,7 @@ async function carregarParticipacao() {
                         preco:'preço', '-':'-' };
   const FUNC = [['contador','Contador'], ['leitor','Leitor'],
                 ['anotador','Anotador'], ['conferente','Conferente']];
+  pintarAcompanhantes(r.acompanhados || []);
   const maiorA = Math.max.apply(null, al.map(a => +a.ambientes).concat([1]));
   el('tabPart').innerHTML =
     '<thead><tr><th class="cresce">Aluno</th><th>Turma</th><th>Grupo</th><th>Papel</th>' +
@@ -3680,19 +4086,17 @@ function blocoHonestidade(E) {
     + '</div></div>';
 }
 
-el('btCompara1').addEventListener('click', () => {
-  VOLTA_COMPARA = 'ambientes'; telas('compara'); abrirCompara('caixaCompara2');
-});
-el('btCompara2').addEventListener('click', () => {
-  VOLTA_COMPARA = 'palco'; telas('compara'); abrirCompara('caixaCompara2');
-});
-el('btCompara3').addEventListener('click', () => {
-  VOLTA_COMPARA = 'mapa'; telas('compara'); abrirCompara('caixaCompara2');
-});
+[['btCompara1','ambientes'], ['btCompara2','palco'],
+ ['btCompara3','mapa'], ['btCompara4','precos']].forEach(([id, volta]) =>
+  el(id).addEventListener('click', () => {
+    VOLTA_COMPARA = volta; telas('compara'); abrirCompara('caixaCompara2');
+    window.scrollTo(0, 0);
+  }));
 el('btVoltaCompara').addEventListener('click', () => {
   telas(VOLTA_COMPARA);
   if (VOLTA_COMPARA === 'ambientes') carregarAmbientes();
   else if (VOLTA_COMPARA === 'mapa') carregarMapa();
+  else if (VOLTA_COMPARA === 'precos') carregarPrecos();
   else carregarPalco();
 });
 
@@ -4508,6 +4912,29 @@ async function carregarSenhas() {
     + 'Guarde fora do computador da escola.</span></div>');
   el('btBaixarSenhas').addEventListener('click', () => baixarSenhas(r.grupos));
 
+  /* A sua senha e a da direção ficam numa dobra separada e NÃO entram no
+     arquivo que você baixa para entregar aos grupos. O arquivo circula; se a
+     sua senha estiver nele, um aluno que pegue o papel entra como professor. */
+  const proprias = r.proprias || [];
+  if (proprias.length) {
+    onde.insertAdjacentHTML('beforeend',
+      '<details class="dobra" id="caixaMinhas" style="margin-top:4px">'
+      + '<summary>A sua senha e a da direção</summary>'
+      + '<p class="ajuda" style="margin:0 0 10px">Estas duas não entram no arquivo '
+      + 'que você baixa, de propósito: aquele arquivo é para circular. Não abra '
+      + 'esta dobra com a projeção ligada.</p>'
+      + '<div class="rol"><table id="tabMinhas"><tbody>'
+      + proprias.map(g =>
+          '<tr><td class="cresce"><b>' + esc(g.codigo) + '</b>'
+          + '<small style="display:block;font-family:var(--c);font-size:.76rem;'
+          + 'color:var(--tinta2);white-space:normal;margin-top:2px">'
+          + esc(g.resumo || '') + '</small></td>'
+          + '<td data-r="Senha"><b class="sn">' + esc(g.senha) + '</b></td>'
+          + '<td><button class="btn peq sec cp" data-cod="' + esc(g.codigo)
+          + '" data-sn="' + esc(g.senha) + '">copiar</button></td></tr>').join('')
+      + '</tbody></table></div></details>');
+  }
+
   onde.querySelectorAll('.cp').forEach(b => b.addEventListener('click', async () => {
     const t = 'Grupo ' + b.dataset.cod + ' · senha ' + b.dataset.sn
       + '\nEntre em ' + location.href.split('#')[0]
@@ -4593,7 +5020,8 @@ const LUPA_NIVEIS = [1, 1.6, 2.4, 3.6, 5.2];
 let LUPA_I = 0;
 
 function lupaAplicar(manterCentro) {
-  const rol = el('lupaRol'), img = el('imgPlanta');
+  const rol = el('lupaRol'), img = LUPA_TEMP ? el('lupaFoto') : el('imgPlanta');
+  if (!img) return;
   const antes = rol.clientWidth ? (rol.scrollLeft + rol.clientWidth / 2) : 0;
   const antesY = rol.clientHeight ? (rol.scrollTop + rol.clientHeight / 2) : 0;
   const larguraAntes = img.offsetWidth || rol.clientWidth;
@@ -4609,9 +5037,28 @@ function lupaAplicar(manterCentro) {
   el('lupaMais').disabled = LUPA_I === LUPA_NIVEIS.length - 1;
 }
 
+let LUPA_TEMP = false;
+function abrirLupaFoto(src, titulo) {
+  const img = document.createElement('img');
+  img.id = 'lupaFoto'; img.alt = titulo || 'Foto do aparelho';
+  img.src = src;
+  el('lupaRol').innerHTML = '';
+  el('lupaRol').appendChild(img);
+  LUPA_TEMP = true;
+  el('lupaTitulo').textContent = titulo || 'Foto do aparelho';
+  el('lupa').hidden = false;
+  document.body.style.overflow = 'hidden';
+  LUPA_I = 0;
+  img.complete ? lupaAplicar(false) : img.addEventListener('load', () => lupaAplicar(false));
+  el('lupaRol').scrollTop = 0; el('lupaRol').scrollLeft = 0;
+  el('lupaFechar').focus();
+}
+
 function abrirLupa() {
   // a MESMA imagem muda de lugar. Copiar o src duplicaria a planta inteira
   // na memória do celular, e ela não é pequena.
+  LUPA_TEMP = false;
+  el('lupaTitulo').textContent = 'Planta da escola';
   el('lupaRol').appendChild(el('imgPlanta'));
   el('lupa').hidden = false;
   document.body.style.overflow = 'hidden';
@@ -4623,11 +5070,19 @@ function abrirLupa() {
 
 function fecharLupa() {
   el('lupa').hidden = true;
-  const img = el('imgPlanta');
-  img.style.width = '';
-  el('btPlanta').insertBefore(img, el('btPlanta').firstElementChild);
+  if (LUPA_TEMP) {
+    el('lupaRol').innerHTML = '';
+    LUPA_TEMP = false;
+  } else {
+    const img = el('imgPlanta');
+    if (img) {
+      img.style.width = '';
+      el('btPlanta').insertBefore(img, el('btPlanta').firstElementChild);
+    }
+  }
   document.body.style.overflow = '';
-  el('btPlanta').focus();
+  const volta = el('btPlanta');
+  if (volta && !volta.closest('section').hidden) volta.focus();
 }
 
 el('btPlanta').addEventListener('click', abrirLupa);
@@ -4646,7 +5101,7 @@ window.addEventListener('resize', () => {
 });
 
 /* ---------------- início ---------------- */
-montarTipos(); chipsPot(); chipsHoras();
+montarTipos(); chipsPot();
 try {
   const s = localStorage.getItem('cene_sessao');
   if (s) { const d = JSON.parse(s); EU = d.s || d; SOU = d.q || null;
