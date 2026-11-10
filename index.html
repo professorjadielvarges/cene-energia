@@ -304,6 +304,8 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
   line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .tira .x:hover{background:var(--verm)}
 .fotos .btn{margin-bottom:0}
+.doisBotoes{display:flex;gap:9px;flex-wrap:wrap}
+@media(max-width:430px){ .doisBotoes .btn{flex:1 1 100%} }
 .item .vistas{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
 .item .vistas img{width:52px;height:52px;object-fit:cover;border-radius:6px;
   border:1px solid var(--linha2);cursor:zoom-in;display:block}
@@ -575,7 +577,9 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
   text-transform:uppercase;letter-spacing:.1em}
 .heroi .titulo{font-family:var(--d);font-weight:800;font-size:clamp(1.15rem,2.4vw,1.5rem);
   letter-spacing:-.025em;line-height:1.15;margin-bottom:5px}
-.heroi .frase{font-size:.93rem;color:var(--tinta2);margin:0 0 14px;max-width:52ch}
+/* sem max-width: o texto usa a largura toda da coluna ao lado do anel, em vez
+   de quebrar cedo e deixar um vazio à direita */
+.heroi .frase{font-size:.93rem;color:var(--tinta2);margin:0 0 14px}
 .acao{display:flex;gap:11px;align-items:flex-start;border-left:3px solid var(--ambar);
   background:var(--ambar-sup);border-radius:0 var(--r2) var(--r2) 0;padding:11px 14px;
   font-size:.89rem;line-height:1.45;color:var(--tinta)}
@@ -1202,9 +1206,15 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         <label>Foto do aparelho</label>
         <div class="fotos" id="caixaFotos">
           <div class="tiras" id="tiras"></div>
+          <!-- dois caminhos: o de cima abre a câmera na hora (capture), o de baixo
+               abre a galeria, para quem já fotografou antes de abrir o sistema -->
           <input type="file" id="arqFoto" accept="image/*" capture="environment"
                  multiple hidden>
-          <button type="button" class="btn sec peq" id="btFoto">Tirar foto do aparelho</button>
+          <input type="file" id="arqGaleria" accept="image/*" multiple hidden>
+          <div class="doisBotoes">
+            <button type="button" class="btn sec peq" id="btFoto">Tirar foto do aparelho</button>
+            <button type="button" class="btn sec peq" id="btGaleria">Anexar foto da galeria</button>
+          </div>
           <p class="ajuda" id="ajudaFoto" style="margin:10px 0 0"></p>
         </div>
       </div>
@@ -1451,6 +1461,32 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <h4 style="margin-bottom:7px">A ficha de cálculo de cada grupo</h4>
       <p class="ajuda" id="ajudaFichasProf"></p>
       <div class="rol"><table id="tabFichasProf"></table></div>
+      <details class="dobra" id="dobraFichaProf">
+        <summary>Montar a ficha de um grupo</summary>
+        <p class="ajuda" style="margin:0 0 12px">Escolha o grupo de campo e diga quem
+        faz a conta e quem confere. Os três saem da equipe CÁLCULO. Conferente é
+        opcional: um grupo pode ter só quem calcula. Depois do primeiro envio a ficha
+        trava e nem você muda por aqui.</p>
+        <div id="avisoFichaProf"></div>
+        <div class="cx">
+          <div class="dupla">
+            <div class="campo"><label for="pfGrupo">Grupo de campo</label>
+              <select id="pfGrupo"></select></div>
+            <div class="campo"><label for="pfHoras">Horas por dia</label>
+              <input type="text" id="pfHoras" inputmode="decimal" autocomplete="off" value="6">
+            </div>
+          </div>
+          <div class="campo"><label for="pfCalc">Quem faz a conta</label>
+            <select id="pfCalc"></select></div>
+          <div class="dupla">
+            <div class="campo"><label for="pfC1">Primeiro conferente</label>
+              <select id="pfC1"></select></div>
+            <div class="campo"><label for="pfC2">Segundo conferente</label>
+              <select id="pfC2"></select></div>
+          </div>
+          <button class="btn" id="btSalvarFichaProf">Salvar a ficha</button>
+        </div>
+      </details>
 
       <h4 style="margin:22px 0 7px">Aluno por aluno, no treino da conta</h4>
       <p class="ajuda" id="ajudaConf"></p>
@@ -2077,6 +2113,46 @@ function chipsPot() {
       el('pot').value = b.dataset.p;
     }));
 }
+/* o professor monta a ficha de cada grupo daqui, sem depender de a equipe
+   abrir a tela dela. É a mesma função do banco que a equipe usa. */
+let FICHAS_PROF = [], EQUIPE_PROF = [], CAMPO_PROF = [];
+function pintarFormFichaProf() {
+  el('pfGrupo').innerHTML = CAMPO_PROF.map(g =>
+    '<option value="' + esc(g.codigo) + '">' + esc(g.codigo) + ' · '
+    + esc(g.resumo || '') + '</option>').join('');
+  const lista = v => '<option value="">' + v + '</option>' + EQUIPE_PROF.map(a =>
+    '<option value="' + a.id + '">' + esc(a.nome) + '</option>').join('');
+  el('pfCalc').innerHTML = lista('escolha quem faz a conta');
+  el('pfC1').innerHTML = lista('ninguém confere');
+  el('pfC2').innerHTML = lista('ninguém confere');
+  encaixarFichaProf();
+}
+function encaixarFichaProf() {
+  const f = FICHAS_PROF.find(x => x.grupo === el('pfGrupo').value);
+  el('pfHoras').value = f && f.horas != null ? vrg(f.horas) : '6';
+  el('pfCalc').value = f && f.calculista ? f.calculista : '';
+  el('pfC1').value = f && f.conf1 ? f.conf1 : '';
+  el('pfC2').value = f && f.conf2 ? f.conf2 : '';
+  const travada = f && +f.enviados > 0;
+  ['pfHoras','pfCalc','pfC1','pfC2','btSalvarFichaProf']
+    .forEach(i => el(i).disabled = !!travada);
+  el('btSalvarFichaProf').textContent = f ? 'Salvar as mudanças' : 'Abrir a ficha';
+  msg('avisoFichaProf', travada
+    ? 'Esta ficha já teve envio. Para mexer nela, os envios teriam de ser apagados.'
+    : '', 'info');
+}
+el('pfGrupo').addEventListener('change', encaixarFichaProf);
+el('btSalvarFichaProf').addEventListener('click', async () => {
+  const n = v => el(v).value ? parseInt(el(v).value, 10) : null;
+  const r = await rpc('criar_ficha', { p_token: EU.token, p_grupo: el('pfGrupo').value,
+    p_horas: num(el('pfHoras').value), p_calculista: n('pfCalc'),
+    p_conf1: n('pfC1'), p_conf2: n('pfC2'), p_quem: null });
+  if (!r.ok) return msg('avisoFichaProf', r.erro, 'erro');
+  msg('avisoFichaProf', 'Ficha salva.', 'bom');
+  await carregarFichasProf();
+  setTimeout(() => msg('avisoFichaProf',''), 2500);
+});
+
 /* o professor vê as fichas por inteiro, inclusive o que cada um digitou */
 async function carregarFichasProf() {
   if (!EU || (EU.papel !== 'professor' && EU.papel !== 'gestao')) return;
@@ -2084,6 +2160,12 @@ async function carregarFichasProf() {
   try { r = await rpc('calculo_fichas', { p_token: EU.token }); } catch (e) { return; }
   if (!r || !r.ok) return;
   const fs = r.fichas || [], campo = r.grupos_de_campo || [];
+  FICHAS_PROF = fs; CAMPO_PROF = campo;
+  try {
+    const ra = await rpc('listar_alunos', { p_token: EU.token, p_grupo: 'CALCULO' });
+    if (ra && ra.ok) EQUIPE_PROF = ra.alunos || [];
+  } catch (e) {}
+  pintarFormFichaProf();
   const fechadas = fs.filter(f => f.resolvida).length;
   const travadas = fs.filter(f => !f.resolvida && +f.enviados >= +f.previstos
                                   && +f.previstos > 0).length;
@@ -2444,33 +2526,49 @@ function pintarFotos() {
   const cx = el('caixaFotos');
   cx.classList.toggle('tem', FOTOS.length > 0);
   cx.classList.remove('falta');
-  el('btFoto').textContent = FOTOS.length
-    ? (FOTOS.length >= MAX_FOTOS ? 'Já são ' + MAX_FOTOS + ' fotos' : 'Tirar mais uma foto')
-    : 'Tirar foto do aparelho';
-  el('btFoto').disabled = FOTOS.length >= MAX_FOTOS || OCUPADO_FOTO;
+  const cheio = FOTOS.length >= MAX_FOTOS;
+  el('btFoto').textContent = cheio ? 'Já são ' + MAX_FOTOS + ' fotos'
+    : (FOTOS.length ? 'Tirar mais uma foto' : 'Tirar foto do aparelho');
+  el('btGaleria').textContent = cheio ? 'Limite atingido'
+    : (FOTOS.length ? 'Anexar mais uma da galeria' : 'Anexar foto da galeria');
+  el('btFoto').disabled = cheio || OCUPADO_FOTO;
+  el('btGaleria').disabled = cheio || OCUPADO_FOTO;
   el('ajudaFoto').textContent = OCUPADO_FOTO ? 'Preparando a foto...'
     : (FOTOS.length
         ? FOTOS.length + ' foto' + (FOTOS.length === 1 ? '' : 's')
           + ' pronta' + (FOTOS.length === 1 ? '' : 's') + '. Toque numa delas para ver grande.'
-        : 'Obrigatória. Fotografe o aparelho mostrando a etiqueta da potência. '
-          + 'Se não houver etiqueta, fotografe o aparelho assim mesmo.');
+        : 'Obrigatória. Fotografe o aparelho mostrando a etiqueta da potência, ou anexe '
+          + 'uma foto que você já tirou antes. Se não houver etiqueta, fotografe o '
+          + 'aparelho assim mesmo.');
 }
-el('btFoto').addEventListener('click', () => el('arqFoto').click());
-el('arqFoto').addEventListener('change', async ev => {
+
+/* os dois botões entregam o arquivo pelo mesmo caminho: o da câmera e o da
+   galeria mudam só de onde a foto vem, não o que é feito com ela */
+async function receberFotos(ev) {
   const arquivos = Array.from(ev.target.files || []);
   ev.target.value = '';
   if (!arquivos.length) return;
+  const sobra = MAX_FOTOS - FOTOS.length;
   OCUPADO_FOTO = true; pintarFotos();
+  let entraram = 0;
   for (const a of arquivos) {
     if (FOTOS.length >= MAX_FOTOS) break;
-    try {
-      FOTOS.push(await prepararFoto(a));
-    } catch (e) {
-      msg('avisoAmb', 'Não consegui usar essa foto: ' + e.message, 'erro');
+    if (!/^image\//.test(a.type || '')) {
+      msg('avisoAmb', 'O arquivo "' + a.name + '" não é uma foto.', 'erro');
+      continue;
     }
+    try { FOTOS.push(await prepararFoto(a)); entraram++; }
+    catch (e) { msg('avisoAmb', 'Não consegui usar essa foto: ' + e.message, 'erro'); }
   }
   OCUPADO_FOTO = false; pintarFotos();
-});
+  if (arquivos.length > sobra)
+    msg('avisoAmb', 'São no máximo ' + MAX_FOTOS + ' fotos por aparelho. Entraram '
+      + entraram + '.', 'info');
+}
+el('btFoto').addEventListener('click', () => el('arqFoto').click());
+el('btGaleria').addEventListener('click', () => el('arqGaleria').click());
+el('arqFoto').addEventListener('change', receberFotos);
+el('arqGaleria').addEventListener('change', receberFotos);
 el('semPot').addEventListener('change', () => {
   const marcado = el('semPot').checked;
   el('marcaSemPot').classList.toggle('on', marcado);
