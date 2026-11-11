@@ -3269,9 +3269,13 @@ async function carregarMontar() {
                     : 'sem grupo ainda') + '</small>' : '') + '</span>' +
             // no mapa e na apresentação todo mundo faz a mesma coisa: pedir uma
             // função ali só dá trabalho e não quer dizer nada
+            // num grupo de campo a escolha vale: marcar cálculo ou conferência
+            // move a pessoa para a equipe CÁLCULO e abre o posto dela na ficha
+            // deste grupo. Preço saiu daqui: virou equipe com senha própria.
             (doisTurnos ? '' :
-            '<select class="selPapel" data-id="' + a.id + '">' +
-              ['campo','calculo','conferencia','preco'].map(p =>
+            '<select class="selPapel" data-id="' + a.id + '" data-grupo="'
+              + esc(g.codigo) + '">' +
+              ['campo','calculo','conferencia'].map(p =>
                 '<option value="' + p + '"' + (a.equipe === p ? ' selected' : '') + '>' +
                 PAP[p] + '</option>').join('') +
             '</select>') +
@@ -3372,10 +3376,24 @@ async function carregarMontar() {
     b.addEventListener('click', () => aloca(+b.dataset.tirar, null, null)));
 }
 async function aloca(id, grupo, papel) {
-  const r = await rpc('alocar', { p_token: EU.token, p_aluno: id,
-    p_grupo: grupo || null, p_equipe: grupo ? papel : null });
-  msg('avisoMontar', r.ok ? '' : r.erro, 'erro');
-  if (r.ok && grupo) ULTIMO_GRUPO = grupo;   // para o botão de repetir
+  let r;
+  try {
+    r = await rpc('alocar', { p_token: EU.token, p_aluno: id,
+      p_grupo: grupo || null, p_equipe: grupo ? papel : null });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  if (!r.ok) { msg('avisoMontar', r.erro, 'erro'); return aoAlcance('avisoMontar'); }
+  // marcar alguém como cálculo dentro de um grupo de campo não grava um rótulo
+  // no aluno: cria o posto dele na ficha daquele grupo. Dizer isso evita o
+  // professor achar que nada aconteceu.
+  if (r.serve) {
+    const POSTO = { calculista:'faz a conta', conf1:'1º conferente', conf2:'2º conferente' };
+    msg('avisoMontar', (POSTO[r.posto] || 'entrou na ficha') + ' do grupo ' + r.serve
+      + '. A pessoa passou para a equipe CÁLCULO e usa a senha dela para entrar.',
+      'bom');
+    aoAlcance('avisoMontar');
+    setTimeout(() => msg('avisoMontar',''), 6000);
+  } else msg('avisoMontar', '');
+  if (grupo) ULTIMO_GRUPO = grupo;   // para o botão de repetir
   await carregarMontar();
   carregarProf();
 }
