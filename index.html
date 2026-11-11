@@ -1262,7 +1262,8 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <button class="btn sec" id="btFuncoes">Salvar quem fez o quê</button>
     </div>
 
-    <div style="margin-top:18px"><button class="btn ok" id="btConcluir"></button></div>
+    <div id="faltaConcluir" style="margin-top:18px"></div>
+    <div><button class="btn ok" id="btConcluir"></button></div>
   </section>
 
   <!-- PREÇOS -->
@@ -2630,6 +2631,7 @@ async function abrirAmbiente(id, lista) {
   el('subAmb').textContent = 'Lance um equipamento de cada vez. Lâmpada por lâmpada, '
     + 'contando as queimadas também.';
   TIPO = 'Lâmpada'; TIPOS_ABERTO = false;
+  ITENS_AQUI = 0; FUNCOES_AQUI = 0;
   montarTipos(); chipsPot(); pintarHorasBloco(); limparFotos();
   el('qtd').value = 1; el('pot').value = ''; el('obs').value = '';
   msg('avisoAmb','');
@@ -2655,6 +2657,8 @@ async function carregarFuncoes() {
     el('acompNome').value   = r.acomp_nome   || '';
     el('acompFuncao').value = r.acomp_funcao || '';
     marcarAcomp();
+    FUNCOES_AQUI = Object.keys(f).length;
+    pintarFaltaConcluir();
   } catch (e) {}
 }
 function marcarAcomp() {
@@ -2662,16 +2666,52 @@ function marcarAcomp() {
   if (cx) cx.classList.toggle('tem', !!el('acompNome').value.trim());
 }
 el('acompNome').addEventListener('input', marcarAcomp);
+/* O que ainda impede este ambiente de ser concluído, dito ANTES de a pessoa
+   tentar. O aviso de erro aparecia no alto da tela e o botão fica lá embaixo:
+   quem lançava pelo celular tocava no botão, nada acontecia à vista, e não
+   havia como adivinhar o motivo. */
+let ITENS_AQUI = 0, FUNCOES_AQUI = 0;
+function pintarFaltaConcluir() {
+  const n = el('faltaConcluir');
+  if (!n) return;
+  if (!AMB || AMB.concluido) { n.innerHTML = ''; return; }
+  const faltas = [];
+  if (!ITENS_AQUI) faltas.push('lançar pelo menos um equipamento, com a foto dele');
+  if (FUNCOES_AQUI < 4) faltas.push('dizer quem fez cada uma das quatro funções aqui'
+    + (FUNCOES_AQUI ? ' (' + FUNCOES_AQUI + ' de 4 preenchidas)' : '')
+    + ' e tocar em "Salvar quem fez o quê"');
+  n.innerHTML = faltas.length
+    ? '<div class="aviso info"><span><b>Para marcar como concluído ainda falta:</b><br>'
+      + faltas.map(f => '&bull; ' + f).join('<br>') + '</span></div>'
+    : '';
+  el('btConcluir').disabled = faltas.length > 0;
+}
+
 el('btFuncoes').addEventListener('click', async () => {
   const v = s => { const x = el(s).value; return x ? parseInt(x,10) : null; };
   const r = await rpc('salvar_participacao', { p_token: EU.token, p_ambiente: AMB.id,
     p_contador: v('fContador'), p_leitor: v('fLeitor'),
     p_anotador: v('fAnotador'), p_conferente: v('fConferente'),
     p_acomp_nome: el('acompNome').value, p_acomp_funcao: el('acompFuncao').value });
-  if (!r.ok) return msg('avisoAmb', r.erro, 'erro');
-  msg('avisoAmb', 'Funções salvas.', 'bom');
-  setTimeout(() => msg('avisoAmb',''), 2500);
+  if (!r.ok) { msg('avisoAmb', r.erro, 'erro'); return aoAlcance('avisoAmb'); }
+  FUNCOES_AQUI = ['fContador','fLeitor','fAnotador','fConferente']
+    .filter(x => el(x).value).length;
+  pintarFaltaConcluir();
+  if (FUNCOES_AQUI < 4) {
+    msg('avisoAmb', 'Salvo, mas ainda faltam ' + (4 - FUNCOES_AQUI)
+      + ' função(ões). O ambiente só fecha com as quatro.', 'info');
+  } else {
+    msg('avisoAmb', 'Funções salvas.', 'bom');
+    setTimeout(() => msg('avisoAmb',''), 2500);
+  }
+  aoAlcance('avisoAmb');
 });
+
+/* leva o aviso para onde o olho está, senão ele aparece fora da tela */
+function aoAlcance(id) {
+  const n = el(id);
+  if (n && n.firstChild) n.scrollIntoView({ behavior:'smooth', block:'center' });
+}
 async function carregarItens() {
   try {
     const r = await rpc('itens_do_ambiente', { p_token: EU.token, p_ambiente: AMB.id });
@@ -2696,6 +2736,8 @@ async function carregarItens() {
       '</span>' +
       '<button class="lixo" data-i="' + i.id + '">apagar</button></div>';
     }).join('') : '<p class="ajuda">Nada lançado ainda.</p>';
+    ITENS_AQUI = its.length;
+    pintarFaltaConcluir();
     document.querySelectorAll('#listaItens .vistas img').forEach(im =>
       im.addEventListener('click', async () => {
         im.style.opacity = '.5';
@@ -2767,11 +2809,14 @@ el('btAdd').addEventListener('click', async () => {
 el('btConcluir').addEventListener('click', async () => {
   const novo = !AMB.concluido;
   const r = await rpc('concluir', { p_token: EU.token, p_ambiente: AMB.id, p_valor: novo });
-  if (!r.ok) return msg('avisoAmb', r.erro, 'erro');
+  if (!r.ok) { msg('avisoAmb', r.erro, 'erro'); return aoAlcance('avisoAmb'); }
   AMB.concluido = novo;
   el('btConcluir').textContent = novo ? 'Reabrir este ambiente' : 'Marcar este ambiente como concluído';
   el('btConcluir').className = novo ? 'btn sec' : 'btn ok';
+  el('btConcluir').disabled = false;
+  pintarFaltaConcluir();
   msg('avisoAmb', novo ? 'Ambiente concluído.' : 'Ambiente reaberto.', 'bom');
+  aoAlcance('avisoAmb');
 });
 el('btVolta').addEventListener('click', () => { telas('ambientes'); carregarAmbientes(); });
 
