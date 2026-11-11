@@ -449,15 +449,95 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 /* FOLHA DA EQUIPE DE CÁLCULO
    Era uma folha de papel. Na tela ela ganha a correção na hora, linha por
    linha, com a mesma tolerância da ficha: de uma a quatro casas decimais. */
-.passo-folha{display:flex;gap:13px;align-items:center;border:2px solid var(--azul);
-  border-radius:var(--r);padding:14px 16px;margin-bottom:18px;background:var(--azul-sup);
-  flex-wrap:wrap}
-.passo-folha .num{font-family:var(--d);font-size:1.5rem;font-weight:800;color:var(--azul);
-  line-height:1;flex:none}
-.passo-folha div{flex:1;min-width:190px}
-.passo-folha b{display:block;font-family:var(--d);font-size:1rem;color:var(--tinta)}
-.passo-folha small{display:block;font-size:.81rem;color:var(--tinta2);line-height:1.4;
-  margin-top:3px}
+/* A CAPA DA CONTA
+   A tela que a pessoa do cálculo abre todo dia. O anel mostra de relance
+   quantas faixas já foram enviadas, sem ela precisar rolar a página. */
+.capa-conta{display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+  background:linear-gradient(135deg, var(--azul) 0%, var(--azul-forte) 100%);
+  border-radius:var(--r);padding:22px 24px;margin-bottom:18px;
+  box-shadow:var(--sombra2)}
+.capa-txt{flex:1;min-width:210px}
+.capa-txt .et{display:block;font-family:var(--m);font-size:.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.14em;color:var(--sobre);opacity:.72;
+  margin-bottom:5px}
+.capa-txt h2{margin:0;font-family:var(--d);font-size:1.45rem;font-weight:800;
+  line-height:1.12;letter-spacing:-.02em;color:var(--sobre)}
+.capa-txt p{margin:7px 0 0;font-size:.86rem;line-height:1.45;color:var(--sobre);
+  opacity:.86}
+.capa-anel{position:relative;width:92px;height:92px;flex:none}
+.capa-anel svg{width:92px;height:92px;display:block}
+.capa-anel svg circle:first-child{stroke:rgba(255,255,255,.26)}
+.capa-anel svg circle:last-child{stroke:var(--sobre);
+  transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1)}
+.capa-anel b{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-family:var(--m);font-size:1.05rem;font-weight:700;
+  color:var(--sobre);margin-top:-7px}
+.capa-anel span{position:absolute;left:0;right:0;bottom:24px;text-align:center;
+  font-family:var(--m);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--sobre);opacity:.72}
+
+/* os números que a conta usa, em tira */
+.numeros-conta{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
+  gap:1px;background:var(--linha);border:1px solid var(--linha);
+  border-radius:var(--r2);overflow:hidden;margin-bottom:10px}
+.numeros-conta div{background:var(--sup);padding:12px 13px}
+.numeros-conta b{display:block;font-family:var(--m);font-size:1.02rem;font-weight:700;
+  color:var(--tinta);line-height:1.15}
+.numeros-conta span{display:block;font-size:.72rem;color:var(--tinta2);margin-top:3px;
+  line-height:1.3}
+
+/* UMA FAIXA
+   Metade esquerda: o que a escola tem, que não se digita. Metade direita: o
+   que a pessoa calcula. A divisão entre as duas é o que faz a tela ser lida
+   sem explicação. */
+.faixa{border:1px solid var(--linha);border-radius:var(--r);background:var(--sup);
+  box-shadow:var(--sombra);margin-bottom:13px;overflow:hidden;
+  border-left:4px solid var(--linha2);transition:border-color .2s,box-shadow .2s}
+.faixa:hover{box-shadow:var(--sombra2)}
+.faixa.enviada{border-left-color:var(--azul)}
+.faixa.certa{border-left-color:var(--verde)}
+.faixa.errada{border-left-color:var(--ambar)}
+.faixa .top{padding:15px 17px 13px;background:var(--sup2);
+  border-bottom:1px solid var(--linha)}
+.faixa .ttl{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.faixa .ttl b{font-family:var(--d);font-size:1.08rem;font-weight:800;color:var(--azul);
+  letter-spacing:-.01em}
+.faixa .ond{font-size:.79rem;color:var(--tinta2);line-height:1.45;margin-top:5px;
+  display:block}
+.faixa .dado{display:flex;gap:16px;flex-wrap:wrap;margin-top:11px}
+.faixa .dado span{font-family:var(--m);font-size:.78rem;color:var(--tinta2)}
+.faixa .dado span i{font-style:normal;font-weight:700;color:var(--tinta);
+  font-size:.92rem;display:block;margin-top:1px}
+.faixa .conta{padding:15px 17px}
+.faixa .formula{font-family:var(--m);font-size:.79rem;color:var(--tinta2);
+  background:var(--sup2);border-radius:var(--r2);padding:9px 11px;margin:0 0 13px;
+  line-height:1.5;overflow-wrap:anywhere}
+.faixa .duas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.faixa .duas{grid-template-columns:1fr}}
+.faixa .campo{margin-bottom:0}
+.faixa .marca{display:inline-block;font-family:var(--m);font-size:.71rem;font-weight:700;
+  padding:2px 8px;border-radius:20px;margin-left:7px;vertical-align:middle}
+.faixa .marca.c{background:var(--verde-sup);color:var(--verde)}
+.faixa .marca.x{background:var(--ambar-sup);color:var(--ambar)}
+.faixa .marca.e{background:var(--azul-sup);color:var(--azul)}
+.faixa .certo{display:block;font-family:var(--m);font-size:.77rem;color:var(--tinta2);
+  margin-top:5px}
+
+/* O BALANÇO GERAL, que vai se montando conforme as faixas entram */
+.balanco{border:2px solid var(--azul);border-radius:var(--r);background:var(--azul-sup);
+  padding:18px 20px;margin-top:6px}
+.balanco h3{margin:0 0 4px;font-family:var(--d);font-size:1.05rem;font-weight:800;
+  color:var(--tinta)}
+.balanco .ajuda{margin:0 0 14px}
+.balanco .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:13px}
+.balanco .cel{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r2);
+  padding:13px 15px}
+.balanco .cel b{display:block;font-family:var(--m);font-size:1.3rem;font-weight:700;
+  color:var(--tinta);line-height:1.1;letter-spacing:-.02em;overflow-wrap:anywhere}
+.balanco .cel span{display:block;font-size:.74rem;color:var(--tinta2);margin-top:4px;
+  line-height:1.35}
+.balanco .cel.falta b{color:var(--tinta3)}
 .passos-folha{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:9px}
 .passos-folha li{font-size:.92rem;line-height:1.5}
 .passos-folha code{font-family:var(--m);font-size:.88rem;background:var(--sup2);
@@ -467,6 +547,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .lf.exemplo{background:var(--verde-sup);border-color:var(--verde)}
 .lf.certa{border-left:4px solid var(--verde)}
 .lf.errada{border-left:4px solid var(--ambar)}
+.lf.pendente{border-left:4px solid var(--azul)}
 .lf .cab{display:flex;align-items:baseline;gap:9px;margin-bottom:10px;flex-wrap:wrap}
 .lf .hh{font-family:var(--d);font-size:1.1rem;font-weight:800;color:var(--azul)}
 .lf .hh i{font-style:normal;font-size:.72rem;font-weight:600;color:var(--tinta2);
@@ -479,6 +560,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
   padding:2px 7px;border-radius:20px;margin-left:6px}
 .lf .marca.c{background:var(--verde-sup);color:var(--verde)}
 .lf .marca.x{background:var(--ambar-sup);color:var(--ambar)}
+.lf .marca.e{background:var(--azul-sup);color:var(--azul)}
 .lf .certo{display:block;font-family:var(--m);font-size:.78rem;color:var(--tinta2);
   margin-top:4px}
 .fala-cx{display:flex;gap:12px;background:var(--sup);border:1px solid var(--linha);
@@ -1120,25 +1202,76 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 
   <!-- EQUIPE DE CÁLCULO -->
   <section id="tela-calculo" hidden>
-    <!-- Duas folhas, nesta ordem: primeiro a conta de UMA lâmpada, que é onde a
-         pessoa aprende o caminho; depois a conta da escola inteira, que é o
-         número que vai para o relatório. -->
-    <div class="passo-folha">
-      <span class="num">1</span>
-      <div><b>A conta de uma lâmpada</b>
-      <small>Oito linhas de horas por dia. É aqui que você treina o caminho da conta
-      antes de responder pelo seu grupo.</small></div>
-      <button type="button" class="btn peq sec" id="btAbrirFolha">Abrir a folha</button>
+    <!-- A CONTA DA ESCOLA, FAIXA POR FAIXA.
+         A luz da escola não acende toda no mesmo horário. Cada linha reúne
+         todos os ambientes que ficam acesos o mesmo tempo, com as lâmpadas
+         que foram contadas de verdade, e a soma das linhas é a resposta do
+         projeto. Quem preenche é a pessoa do CÁLCULO; o sistema confere. -->
+    <div class="capa-conta">
+      <div class="capa-txt">
+        <span class="et">Equipe de cálculo</span>
+        <h2>A conta da escola, faixa por faixa</h2>
+        <p id="capaSub"></p>
+      </div>
+      <div class="capa-anel">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--linha)" stroke-width="11"/>
+          <circle id="arcoConta" cx="60" cy="60" r="50" fill="none" stroke="var(--azul)"
+            stroke-width="11" stroke-linecap="round" transform="rotate(-90 60 60)"
+            stroke-dasharray="314.2" stroke-dashoffset="314.2"/>
+        </svg>
+        <b id="arcoContaVl">0/0</b><span>faixas</span>
+      </div>
     </div>
-    <h2 style="font-size:1.15rem">2. A conta de cada grupo</h2>
-    <p class="ajuda">Cada grupo de campo tem uma ficha. Nela, uma pessoa faz a conta e
-    até duas conferem, cada uma por conta própria, sem ver o resultado da outra. O
-    sistema só diz em qual passo deu diferença. O valor certo só aparece quando todo
-    mundo da ficha já enviou e ninguém acertou.</p>
     <div id="avisoCalc"></div>
 
-    <div class="barra" style="margin:16px 0 6px"><i id="barraCalc"></i></div>
-    <p class="ajuda" id="subCalc" style="margin-bottom:14px"></p>
+    <div class="numeros-conta" id="numerosConta"></div>
+    <p class="ajuda" id="fonteTarifa" style="margin:-4px 0 18px"></p>
+
+    <details class="dobra" id="dobraExemplo">
+      <summary>Como se faz uma linha</summary>
+      <ol class="passos-folha" id="exemploFaixa"></ol>
+    </details>
+
+    <div id="linhasConta"></div>
+    <div id="totalConta"></div>
+
+    <details class="dobra" id="dobraPerguntas" style="margin-top:20px">
+      <summary>Agora responda, com suas palavras</summary>
+      <p class="ajuda" style="margin:0 0 12px">Estas quatro são para o professor ler.
+      Não têm certo e errado automático.</p>
+      <div class="campo"><label for="fq1">1. A faixa de 24 horas tem menos ambientes que
+        a de 12 horas, mas economiza mais. Por quê?</label>
+        <textarea id="fq1" rows="2"></textarea></div>
+      <div class="campo"><label for="fq2">2. Se a escola dobrasse as horas de uma faixa,
+        o que aconteceria com a economia dela?</label>
+        <textarea id="fq2" rows="2"></textarea></div>
+      <div class="campo"><label for="fq3">3. Escreva uma regra que sirva para qualquer
+        faixa: economia no mês =</label><textarea id="fq3" rows="2"></textarea></div>
+      <div class="campo"><label for="fq4">4. Uma sala tem 6 lâmpadas. Outra tem 37. As
+        duas ficam acesas 10 horas por dia. O tempo para a troca se pagar é o mesmo nas
+        duas, ou é diferente? Por quê?</label><textarea id="fq4" rows="3"></textarea></div>
+      <div id="avisoRespFolha"></div>
+      <button class="btn sec" id="btSalvarResp">Salvar as respostas</button>
+    </details>
+
+    <details class="dobra" id="dobraOndeVem" style="margin-top:12px">
+      <summary>De onde vieram as horas de cada faixa</summary>
+      <p class="ajuda" style="margin:0 0 12px">Esse número ninguém mede: quem sabe é o
+      funcionário que acende de manhã e apaga no fim do dia. A equipe do MAPA foi
+      perguntar, ala por ala, e é isto que ela trouxe. Sem o nome e a função de quem
+      informou, o número vira achismo e a banca derruba.</p>
+      <div class="rol"><table id="tabBlocosFolha"></table></div>
+    </details>
+
+    <details class="dobra" id="dobraErros" style="margin-top:12px">
+      <summary>Erros que vão aparecer</summary>
+      <ul class="eq" id="errosFolha"></ul>
+    </details>
+
+    <h3 class="sec" style="margin-top:26px">Quem calcula e quem confere</h3>
+    <p class="ajuda" id="subCalc" style="margin-bottom:12px"></p>
+    <div class="barra" style="margin:0 0 12px"><i id="barraCalc"></i></div>
     <div id="listaFichas"></div>
 
     <details class="dobra" id="dobraNovaFicha" style="margin-top:18px">
@@ -1148,10 +1281,9 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div class="cx">
         <div class="campo"><label for="fcGrupo">Grupo de campo</label>
           <select id="fcGrupo"></select></div>
-        <div class="campo"><label for="fcHoras">Horas por dia que a luz fica acesa</label>
-          <input type="text" id="fcHoras" inputmode="decimal" autocomplete="off" value="6">
-          <p class="ajuda" style="margin:7px 0 0">Use a mesma linha que o grupo usou no
-          caderno. Vale para a conta inteira desta ficha.</p></div>
+        <!-- as horas não se digitam mais aqui: cada faixa da tabela traz as
+             suas, vindas do levantamento da equipe do MAPA -->
+        <input type="hidden" id="fcHoras" value="6">
         <div class="campo"><label for="fcCalc">Quem faz a conta</label>
           <select id="fcCalc"></select></div>
         <div class="campo"><label for="fcC1">Primeiro conferente (opcional)</label>
@@ -1163,7 +1295,9 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     </details>
 
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn peq sec" id="btAvaliar5">Avaliar a equipe</button>
+      <!-- A equipe de cálculo não se avalia entre si: lançar e conferir já é a
+           prova do trabalho, com nome e hora, e uma nota de colega em cima
+           disso seria contar a mesma coisa duas vezes. -->
       <button class="btn peq sec" id="btTrocarEu5">Não sou eu, trocar de pessoa</button>
     </div>
     <div class="fecho-area">
@@ -1178,312 +1312,6 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   </section>
 
   <!-- UMA FICHA DE CÁLCULO -->
-  <section id="tela-ficha" hidden>
-    <button class="volta" id="btVoltaFicha">&larr; voltar para as fichas</button>
-    <h2 style="font-size:1.15rem" id="tituloFicha"></h2>
-    <p class="ajuda" id="subFicha"></p>
-    <div id="avisoFicha"></div>
-
-    <div id="passo1Ficha">
-      <div class="cx" id="dadosFicha" style="margin-bottom:14px"></div>
-      <details class="dobra" open>
-        <summary>Como se faz, passo a passo</summary>
-        <p class="ajuda" style="margin:0">
-        <b>1.</b> Diferença entre a lâmpada antiga e a LED, dividida por 1000, vezes as
-        horas, vezes os dias do mês. Isso dá o <b>kWh evitado no mês</b>.<br>
-        <b>2.</b> Esse kWh vezes o preço do quilowatt-hora dá a <b>economia por mês</b>.<br>
-        <b>3.</b> Vezes 12 dá a <b>economia em um ano</b>.<br>
-        <b>4.</b> Vezes o número de meses desde a troca dá a <b>economia desde a troca</b>.<br>
-        Pode arredondar: de uma até quatro casas decimais, o sistema aceita.</p>
-      </details>
-      <div class="cx">
-        <div class="campo"><label for="vKwh">1. kWh evitados por mês, por lâmpada</label>
-          <input type="text" id="vKwh" inputmode="decimal" autocomplete="off"></div>
-        <div class="campo"><label for="vEco">2. Economia por mês, em reais</label>
-          <input type="text" id="vEco" inputmode="decimal" autocomplete="off"></div>
-        <div class="campo"><label for="vAno">3. Economia em um ano, em reais</label>
-          <input type="text" id="vAno" inputmode="decimal" autocomplete="off"></div>
-        <div class="campo"><label for="vTot">4. Economia desde a troca, em reais</label>
-          <input type="text" id="vTot" inputmode="decimal" autocomplete="off"></div>
-        <button class="btn" id="btConferirFicha">Conferir antes de salvar</button>
-      </div>
-    </div>
-
-    <div id="passo2Ficha" hidden>
-      <div class="cx">
-        <h3 style="margin:0 0 4px;font-family:var(--d);font-size:1rem">Confira o que você digitou</h3>
-        <p class="ajuda" style="margin:0 0 14px">Leia número por número. É isto que você
-        calculou no caderno?</p>
-        <div id="revisaoFicha"></div>
-        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:16px">
-          <button class="btn ok peq" id="btSimEIsso">Sim, é isto</button>
-          <button class="btn sec peq" id="btCorrigirFicha">Voltar e corrigir</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="passo3Ficha" hidden>
-      <div class="aviso erro" style="align-items:center">
-        <span><b>Depois de salvar, trava.</b><br>Você não vai poder alterar nada, e o
-        professor vê o que você enviou. Só salve se tiver certeza.</span>
-      </div>
-      <div style="display:flex;gap:9px;flex-wrap:wrap">
-        <button class="btn" id="btSalvarFichaEnvio">Salvar e travar</button>
-        <button class="btn sec peq" id="btDesistirFicha">Cancelar, quero rever</button>
-      </div>
-    </div>
-
-    <div id="resultadoFicha" hidden></div>
-  </section>
-
-  <!-- COMPARAÇÃO COM OUTRAS ESCOLAS -->
-  <section id="tela-compara" hidden>
-    <button class="volta" id="btVoltaCompara">← voltar</button>
-    <h2 style="font-size:1.15rem">A nossa escola e as outras</h2>
-    <p class="ajuda">Esta é a tela de treinar a resposta da Feira. A primeira parte é o
-    nosso número real. A segunda é hipótese: você digita os dados de outra escola e o
-    sistema calcula quanto ela economizaria se fizesse a mesma troca.</p>
-    <div id="caixaCompara2"></div>
-  </section>
-
-  <!-- CONFERIR A CONTA -->
-  <section id="tela-conta" hidden>
-    <button class="volta" id="btVoltaConta">← voltar para a lista</button>
-    <h2 style="font-size:1.15rem">Conferir a minha conta</h2>
-    <p class="ajuda">Faça a conta no caderno primeiro. Aqui você só digita o resultado
-    e o sistema diz se bateu. Ele não mostra a resposta.</p>
-    <div id="avisoConta"></div>
-
-    <div class="cx" style="margin-bottom:14px">
-      <label for="horasConta">Qual linha da tabela você está conferindo?</label>
-      <div class="chips" id="chipsHoras" style="margin-bottom:10px"></div>
-      <input type="text" id="horasConta" inputmode="decimal"
-             autocomplete="off" value="4">
-      <p class="ajuda" style="margin:9px 0 0">Horas por dia que a luz fica acesa. Use a
-      mesma linha que você fez no caderno.</p>
-    </div>
-
-    <div class="cx" id="dadosConta" style="margin-bottom:14px"></div>
-
-    <!-- As instruções vêm ANTES dos campos. Embaixo, o aluno tinha de descer até o
-         fim, ler e voltar para o passo 1 a cada tentativa. -->
-    <details class="dobra" id="comoSeFaz" open>
-      <summary>Como se faz, passo a passo</summary>
-      <p class="ajuda" style="margin:0">
-      <b>1.</b> Diferença entre a lâmpada antiga e a LED, dividida por 1000, vezes as
-      horas, vezes os dias do mês. Isso dá o <b>kWh evitado no mês</b>.<br>
-      <b>2.</b> Esse kWh vezes o preço do quilowatt-hora dá a <b>economia por mês</b>.<br>
-      <b>3.</b> Vezes 12 dá a <b>economia em um ano</b>.<br>
-      <b>4.</b> Vezes o número de meses desde a troca dá a <b>economia desde a troca</b>.<br>
-      Pode arredondar. O sistema aceita pequena diferença de arredondamento.</p>
-    </details>
-
-    <div id="passosConta"></div>
-
-    <p class="ajuda" style="margin-top:12px">O sistema guarda todas as suas tentativas,
-    inclusive as erradas, e o professor vê. Não chute: refaça a conta.</p>
-  </section>
-
-  <!-- UM AMBIENTE -->
-  <section id="tela-ambiente" hidden>
-    <button class="volta" id="btVolta">← voltar para a lista</button>
-    <h2 style="font-size:1.15rem" id="tituloAmb"></h2>
-    <p class="ajuda" id="subAmb"></p>
-    <div id="avisoAmb"></div>
-
-    <div class="cx">
-      <p class="ajuda" id="quemLanca" style="margin:0 0 12px"></p>
-      <label>Que equipamento você está lançando?</label>
-      <div class="tipos" id="tipos"></div>
-      <div class="dupla">
-        <div class="campo">
-          <label for="qtd">Quantos</label>
-          <input type="number" id="qtd" min="1" step="1" inputmode="numeric" value="1">
-        </div>
-        <div class="campo">
-          <label for="pot">Potência em watts</label>
-          <input type="text" id="pot" inputmode="decimal" autocomplete="off"
-                 placeholder="o que está escrito no aparelho">
-          <div class="chips" id="chipsPot"></div>
-        </div>
-      </div>
-      <label class="marca" id="marcaSemPot" for="semPot">
-        <input type="checkbox" id="semPot">
-        <span>Não deu para ler a potência
-        <small>Marque só depois de procurar na etiqueta, no vidro e na base. A foto
-        continua obrigatória nos dois casos.</small></span>
-      </label>
-      <!-- Dois motivos bem diferentes. O aparelho sem nada escrito não tem como
-           ser resolvido depois. A lâmpada alta, de poste ou de ginásio, tem: quem
-           troca a lâmpada sabe, e a potência entra na conta quando for confirmada. -->
-      <div class="escolha-sa" id="porqueSemPot" hidden style="margin:-4px 0 14px">
-        <label class="op-sa"><input type="radio" name="motSemPot" value="sem_etiqueta" checked>
-          <span><b>O aparelho não traz a potência escrita</b>
-          <small>procuramos na etiqueta, no vidro e na base e não tem nada</small></span></label>
-        <label class="op-sa"><input type="radio" name="motSemPot" value="nao_alcanca">
-          <span><b>É alta demais, não dá para chegar perto</b>
-          <small>lâmpada de poste, de ginásio, de forro alto: dá para ver que está lá,
-          mas não dá para ler o que está escrito nela</small></span></label>
-        <div class="campo" id="campoQuemSabe" hidden style="margin:2px 0 0">
-          <label for="quemSabe">Quem pode saber a potência depois</label>
-          <input type="text" id="quemSabe" autocomplete="off"
-                 placeholder="quem troca a lâmpada, o almoxarifado, a nota de compra">
-          <p class="ajuda" style="margin:7px 0 0">Enquanto a potência não for
-          confirmada, estas lâmpadas ficam de fora da conta da economia. Escreva
-          aqui quem pode fechar esse dado, e o professor vai atrás.</p>
-        </div>
-      </div>
-      <div class="campo">
-        <label>Foto do aparelho</label>
-        <div class="fotos" id="caixaFotos">
-          <div class="tiras" id="tiras"></div>
-          <!-- dois caminhos: o de cima abre a câmera na hora (capture), o de baixo
-               abre a galeria, para quem já fotografou antes de abrir o sistema -->
-          <input type="file" id="arqFoto" accept="image/*" capture="environment"
-                 multiple hidden>
-          <input type="file" id="arqGaleria" accept="image/*" multiple hidden>
-          <div class="doisBotoes">
-            <button type="button" class="btn sec peq" id="btFoto">Tirar foto do aparelho</button>
-            <button type="button" class="btn sec peq" id="btGaleria">Anexar foto da galeria</button>
-          </div>
-          <p class="ajuda" id="dicaFoto" style="margin:10px 0 0">Uma foto por
-          aparelho, no mínimo. Até quatro.</p>
-          <p class="ajuda" id="ajudaFoto" style="margin:6px 0 0"></p>
-        </div>
-      </div>
-      <div class="campo">
-        <label>Horas por dia que fica ligado</label>
-        <div id="horasBloco"></div>
-      </div>
-      <div class="campo">
-        <label for="obs">Observação (opcional)</label>
-        <input type="text" id="obs" placeholder="ex: duas queimadas">
-      </div>
-      <button class="btn" id="btAdd">Lançar este equipamento</button>
-    </div>
-
-    <h3 class="sec">Já lançado neste ambiente</h3>
-    <div id="listaItens"></div>
-
-    <h3 class="sec">Quem fez cada função aqui</h3>
-    <p class="ajuda" id="ajudaFuncoes"></p>
-    <div class="cx">
-      <div class="campo"><label for="fContador">Contador: contou em voz alta</label>
-        <select id="fContador"></select></div>
-      <div class="campo"><label for="fLeitor">Leitor: leu as potências</label>
-        <select id="fLeitor"></select></div>
-      <div class="campo"><label for="fAnotador">Anotador: preencheu a ficha</label>
-        <select id="fAnotador"></select></div>
-      <div class="campo"><label for="fConferente">Conferente: fotografou e reconferiu</label>
-        <select id="fConferente"></select></div>
-
-      <div class="acomp">
-        <b>Teve funcionário acompanhando?</b>
-        <p>Em alguns ambientes o aluno não pode entrar sozinho. Se alguém da escola
-        abriu a sala ou ficou junto durante a contagem, escreva aqui. Se foi só o
-        grupo, deixe em branco.</p>
-        <div class="dupla">
-          <div class="campo"><label for="acompNome">Nome de quem acompanhou</label>
-            <input type="text" id="acompNome" autocomplete="off"
-                   placeholder="deixe vazio se não houve"></div>
-          <div class="campo"><label for="acompFuncao">Função dele na escola</label>
-            <input type="text" id="acompFuncao" autocomplete="off"
-                   placeholder="ex: porteiro, secretária"></div>
-        </div>
-      </div>
-
-      <button class="btn sec" id="btFuncoes">Salvar quem fez o quê</button>
-    </div>
-
-    <div id="faltaConcluir" style="margin-top:18px"></div>
-    <div><button class="btn ok" id="btConcluir"></button></div>
-
-    <div id="semAcessoFeito"></div>
-    <details class="trancar" id="caixaTrancar">
-      <summary>Não deu para contar este ambiente</summary>
-      <p class="ajuda">Um ambiente só fica pendente para sempre se ninguém explicar
-      o que houve. Escolha abaixo o caso de vocês e escreva por extenso. O professor
-      lê tudo isso e leva à direção quando for preciso.</p>
-      <div class="escolha-sa">
-        <label class="op-sa"><input type="radio" name="tipoSA" value="proibido" checked>
-          <span><b>Existe, mas não deixaram entrar</b>
-          <small>D.M.L., casa de força, sala do servidor, almoxarifado</small></span></label>
-        <label class="op-sa"><input type="radio" name="tipoSA" value="inexistente">
-          <span><b>Não existe: está na planta, mas não foi construído</b>
-          <small>o espaço nunca saiu do papel, virou outra coisa ou foi demolido</small></span></label>
-      </div>
-      <div id="avisoTrancar"></div>
-      <div class="campo"><label for="saMotivo" id="lbMotivo">O que disseram a vocês</label>
-        <textarea id="saMotivo" rows="3"
-          placeholder="ex: a chave fica com a zeladoria e não liberam aluno entrar sozinho"></textarea></div>
-      <div class="dupla">
-        <div class="campo"><label for="saQuem" id="lbQuem">Quem informou ou proibiu</label>
-          <input type="text" id="saQuem" autocomplete="off" placeholder="nome por extenso"></div>
-        <div class="campo"><label for="saFuncao">Função dele na escola</label>
-          <input type="text" id="saFuncao" autocomplete="off"
-            placeholder="ex: zeladora, porteiro"></div>
-      </div>
-      <button class="btn sec" id="btTrancar">Registrar que não houve acesso</button>
-    </details>
-  </section>
-
-  <!-- FOLHA DA EQUIPE DE CÁLCULO -->
-  <section id="tela-folha" hidden>
-    <button class="volta" id="btVoltaFolha">&larr; Voltar</button>
-    <h2 style="font-size:1.15rem">Trocar por LED compensa?</h2>
-    <p class="ajuda" id="subFolha">Folha da equipe de cálculo.</p>
-
-    <h3 class="sec">Os números que a conta usa</h3>
-    <p class="ajuda">São sempre estes. Nenhum deles é invenção: a potência está escrita
-    na lâmpada, o preço veio da pesquisa da equipe de preço e a tarifa é a da Coelba.</p>
-    <div class="minis" id="minisFolha"></div>
-    <p class="ajuda" id="fonteTarifa" style="margin-top:8px"></p>
-    <p class="ajuda"><b>A voltagem não entra em nenhuma conta desta folha.</b> Ela serve
-    para comprar a lâmpada certa, não para calcular consumo.</p>
-
-    <h3 class="sec">Como se faz uma linha da tabela</h3>
-    <p class="ajuda">Exemplo com <b>4 horas por dia</b>, já resolvido. Faça igual para as
-    outras linhas.</p>
-    <ol class="passos-folha" id="exemploFolha"></ol>
-    <p class="ajuda">No passo 3, o 4 é o número de horas da linha e o 22 é o número de
-    dias. Não troque um pelo outro.</p>
-
-    <h3 class="sec">Complete a tabela</h3>
-    <p class="ajuda">A primeira linha já está pronta. Faça as outras sete. Cada linha é
-    enviada sozinha, e o sistema diz na hora o que bateu e o que não bateu.</p>
-    <div id="avisoFolha"></div>
-    <div id="linhasFolha"></div>
-
-    <h3 class="sec">Agora responda</h3>
-    <p class="ajuda">Estas quatro são para o professor ler. Não têm certo e errado
-    automático: escreva com suas palavras.</p>
-    <div class="campo"><label for="fq1">1. De 4 para 8 horas, o número de horas dobrou.
-      O que aconteceu com o retorno?</label>
-      <textarea id="fq1" rows="2"></textarea></div>
-    <div class="campo"><label for="fq2">2. E de 6 para 12 horas? Acontece a mesma
-      coisa?</label><textarea id="fq2" rows="2"></textarea></div>
-    <div class="campo"><label for="fq3">3. Escreva uma regra que sirva para qualquer
-      número de horas: retorno em meses =</label><textarea id="fq3" rows="2"></textarea></div>
-    <div class="campo"><label for="fq4">4. Uma sala tem 6 lâmpadas. Outra tem 37. As duas
-      ficam acesas 10 horas por dia. O retorno é o mesmo nas duas, ou é diferente? Por
-      quê?</label><textarea id="fq4" rows="3"></textarea></div>
-    <div id="avisoRespFolha"></div>
-    <button class="btn ok" id="btSalvarResp">Salvar as respostas</button>
-
-    <h3 class="sec">O dado que falta, e quem foi buscar</h3>
-    <p class="ajuda">A tabela acima não depende de ninguém: ela se faz aqui. Mas para
-    dizer qual linha vale para cada parte da escola, falta saber quantas horas por dia a
-    luz daquela parte fica acesa. Esse número ninguém mede: quem sabe é o funcionário
-    que acende de manhã e apaga no fim do dia. A equipe do MAPA já foi perguntar, e é
-    isto que ela trouxe:</p>
-    <div class="rol"><table id="tabBlocosFolha"></table></div>
-    <p class="ajuda">Sem o nome e a função de quem informou, o número vira achismo e a
-    banca derruba. Com eles, vira fonte.</p>
-
-    <h3 class="sec">Erros que vão aparecer</h3>
-    <ul class="eq" id="errosFolha"></ul>
-  </section>
-
   <!-- PREÇOS -->
   <section id="tela-precos" hidden>
     <h2 style="font-size:1.15rem">Pesquisa de preço do LED</h2>
@@ -2080,7 +1908,7 @@ function vrg(v){
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
   ['entrar','eusou','ambientes','ambiente','precos','avaliar','conta','mapa','palco',
-   'calculo','ficha','folha','compara','prof'].forEach(t =>
+   'calculo','compara','prof'].forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
   document.body.classList.toggle('prof', qual === 'prof');
   window.scrollTo(0,0);
@@ -2491,141 +2319,191 @@ async function carregarFichasProf() {
    ficha terminar errada, aí sim o valor certo aparece.
    Nada disto entra no relatório: a economia que vai para a direção o servidor
    calcula das lâmpadas contadas, não do que o aluno digitou aqui. */
-let FICHAS = [], FICHA = null, EQUIPE_CALC = [], GRUPOS_CAMPO = [], RASCUNHO = null;
+let FICHAS = [], FICHA = null, EQUIPE_CALC = [], GRUPOS_CAMPO = [], ANDAMENTO = [];
 
 /* ---------- A FOLHA DE UMA LÂMPADA ----------
    Era folha de papel. Aqui ela corrige na hora, linha por linha, com a mesma
    tolerância da ficha: de uma a quatro casas decimais. Cada passo é conferido
    contra o que a própria pessoa respondeu antes, para um erro na primeira
    coluna não ser contado três vezes. */
-let FOLHA = null;
-async function abrirFolha() {
-  if (!SOU) return msg('avisoCalc', 'Diga quem é você antes de abrir a folha.', 'erro');
-  telas('folha');
-  el('linhasFolha').innerHTML = '<p class="ajuda">Carregando...</p>';
+let CONTA = null;
+/* A conta da escola, faixa por faixa. Cada linha junta os ambientes que ficam
+   acesos o mesmo tempo, com as lâmpadas que foram contadas de verdade. A
+   pessoa preenche duas colunas por linha; o sistema confere com a mesma
+   tolerância de sempre, e a economia é julgada contra o kWh que ela mesma
+   escreveu, para um erro não ser contado duas vezes. */
+function arred(v, n) { const p = Math.pow(10, n); return Math.round(v * p) / p; }
+async function carregarConta() {
+  if (!SOU || !el('linhasConta')) return;
   let r;
-  try { r = await rpc('folha_minha', { p_token: EU.token, p_aluno: SOU.id }); }
-  catch (e) { return msg('avisoFolha', e.message, 'erro'); }
-  if (!r.ok) { el('linhasFolha').innerHTML = '';
-               return msg('avisoFolha', r.erro, 'erro'); }
-  FOLHA = r;
-  el('subFolha').textContent = 'Folha de ' + r.nome
-    + (r.serve ? ' · faz a conta do grupo ' + r.serve : '')
-    + ' · equipe de cálculo da Feira de Ciências 2026.';
-  el('minisFolha').innerHTML = [
-    [vrg(r.pot_antes) + ' W', 'lâmpada de hoje'],
-    [vrg(r.pot_led) + ' W', 'LED que substitui'],
-    [brl(r.preco_led), 'preço de uma LED'],
-    [vrg(r.dias) + ' dias', 'de aula no mês'],
-    ['R$ ' + vrg(r.tarifa), 'o quilowatt-hora']
-  ].map(x => '<div class="mini"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
-  el('fonteTarifa').textContent = r.fonte_tarifa
+  try { r = await rpc('conta_minha', { p_token: EU.token, p_aluno: SOU.id }); }
+  catch (e) { return msg('avisoCalc', e.message, 'erro'); }
+  if (!r.ok) return msg('avisoCalc', r.erro, 'erro');
+  CONTA = r;
+  el('capaSub').textContent = r.nome + (r.serve ? ' · faz a conta do grupo ' + r.serve : '')
+    + ' · cada linha é um horário da escola. Some as linhas e você tem a resposta '
+    + 'do projeto.';
+  el('numerosConta').innerHTML = [
+    [vrg(r.pot_antes) + ' W', 'lâmpada de antes'],
+    [vrg(r.pot_led) + ' W', 'LED que entrou'],
+    ['R$ ' + vrg(r.tarifa), 'o quilowatt-hora'],
+    [vrg(r.meses) + ' meses', 'desde a troca']
+  ].map(x => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
+  if (el('fonteTarifa')) el('fonteTarifa').textContent = r.fonte_tarifa
     ? 'A tarifa vem de: ' + r.fonte_tarifa + '. É a mesma que o relatório da escola usa.'
     : '';
-  pintarExemploFolha();
-  pintarLinhasFolha();
+  pintarExemploFaixa();
+  pintarLinhasConta();
+  pintarBalanco();
   pintarRespostasFolha();
   pintarBlocosFolha();
-  el('errosFolha').innerHTML = [
-    ['Esquecer de dividir por 1000', 'A resposta fica mil vezes maior e parece normal. '
-      + 'Se a economia de uma lâmpada deu mais de dez reais por mês, confira isso primeiro.'],
-    ['Usar a voltagem na conta', 'Não entra. Só watts, horas e dias.'],
-    ['Calcular os dois consumos e esquecer de subtrair', 'A economia é a diferença '
-      + 'entre os dois, não o consumo do LED.'],
-    ['Chutar a potência da lâmpada', 'Se não dá para ler o que está escrito, marque '
-      + '"não deu para ler". O sistema conta essas separado, e isso é honesto.']
-  ].map(x => '<li><span class="mk">!</span><span><b>' + x[0] + '.</b> ' + x[1]
-    + '</span></li>').join('');
+  pintarErrosFolha();
 }
-function pintarExemploFolha() {
-  const r = FOLHA, d = r.pot_antes - r.pot_led;
-  const kwh = d / 1000 * 4 * r.dias, ec = kwh * r.tarifa, ret = r.preco_led / ec;
-  el('exemploFolha').innerHTML = [
-    'Quanto se deixa de gastar em cada lâmpada: <code>' + vrg(r.pot_antes) + ' − '
-      + vrg(r.pot_led) + ' = ' + vrg(d) + ' W</code>',
-    'Passar para quilowatts: <code>' + vrg(d) + ' ÷ 1000 = ' + vrg(d/1000) + ' kW</code>',
-    'Consumo evitado no mês: <code>' + vrg(d/1000) + ' × 4 × ' + vrg(r.dias) + ' = '
-      + vrg(arred(kwh,3)) + ' kWh</code>',
-    'Economia por lâmpada: <code>' + vrg(arred(kwh,3)) + ' × ' + vrg(r.tarifa)
-      + ' = R$ ' + vrg(arred(ec,2)) + '</code>',
-    'Tempo de retorno: <code>' + vrg(r.preco_led) + ' ÷ ' + vrg(arred(ec,2)) + ' = '
-      + vrg(arred(ret,1)) + ' meses</code>'
+function pintarExemploFaixa() {
+  const l = (CONTA.linhas || [])[0];
+  if (!l) { el('exemploFaixa').innerHTML =
+    '<li>Assim que a contagem começar, o exemplo aparece aqui.</li>'; return; }
+  const kwh = l.watts / 1000 * l.horas * l.dias, ec = kwh * CONTA.tarifa;
+  el('exemploFaixa').innerHTML = [
+    'A linha diz quantos watts aquele horário deixou de gastar: <code>'
+      + vrg(l.watts) + ' W</code>',
+    'Passar para quilowatts: <code>' + vrg(l.watts) + ' ÷ 1000 = '
+      + vrg(arred(l.watts/1000, 3)) + ' kW</code>',
+    'Vezes as horas e os dias daquele horário: <code>' + vrg(arred(l.watts/1000,3))
+      + ' × ' + vrg(l.horas) + ' × ' + vrg(l.dias) + ' = ' + vrg(arred(kwh,3))
+      + ' kWh no mês</code>',
+    'Vezes o preço do quilowatt-hora: <code>' + vrg(arred(kwh,3)) + ' × '
+      + vrg(CONTA.tarifa) + ' = R$ ' + vrg(arred(ec,2)) + ' no mês</code>'
   ].map(t => '<li>' + t + '</li>').join('');
 }
-function arred(v, n) { const p = Math.pow(10, n); return Math.round(v * p) / p; }
-function pintarLinhasFolha() {
-  const r = FOLHA;
-  const feitas = (r.linhas || []).filter(l => !l.exemplo && l.em).length;
-  const certas = (r.linhas || []).filter(l => !l.exemplo && l.tudo_certo).length;
-  el('linhasFolha').innerHTML = (r.linhas || []).map(l => {
-    if (l.exemplo) {
-      return '<div class="lf exemplo"><div class="cab"><span class="hh">4 horas por dia'
-        + '<i>exemplo resolvido</i></span></div><div class="tres">'
-        + [[vrg(arred(l.certo_kwh,3)) + ' kWh', 'kWh evitados no mês'],
-           [brl(l.certo_economia), 'economia por lâmpada'],
-           [vrg(arred(l.certo_retorno,1)) + ' meses', 'retorno']]
-            .map(x => '<div><span class="vr">' + x[0] + '</span>'
-              + '<small style="display:block;color:var(--tinta2);font-size:.78rem">'
-              + x[1] + '</small></div>').join('')
-        + '</div></div>';
-    }
+function pintarLinhasConta() {
+  const r = CONTA, n = (r.linhas || []).length;
+  const enviadas = (r.linhas || []).filter(l => l.em).length;
+  const VOLTA = 2 * Math.PI * 50;
+  el('arcoContaVl').textContent = enviadas + '/' + n;
+  if (el('arcoConta'))
+    el('arcoConta').setAttribute('stroke-dashoffset',
+      (VOLTA * (1 - (n ? enviadas / n : 0))).toFixed(1));
+  if (!n) {
+    el('linhasConta').innerHTML = '<div class="aviso info"><span>A tabela se monta '
+      + 'sozinha conforme os grupos vão contando. Ainda não há lâmpada contada em '
+      + 'nenhum ambiente com horário levantado, então não há faixa para calcular. '
+      + 'Volte quando a contagem andar.</span></div>';
+    return;
+  }
+  el('linhasConta').innerHTML = (r.linhas || []).map(l => {
     const enviada = !!l.em;
-    const cls = !enviada ? '' : (l.tudo_certo ? ' certa' : ' errada');
-    const campo = (nome, rot, val, ok, certo, passo) =>
-      '<div class="campo"><label for="' + nome + '">' + rot
-      + (enviada ? '<span class="marca ' + (ok ? 'c' : 'x') + '">'
-          + (ok ? 'bateu' : 'não bateu') + '</span>' : '')
-      + '</label><input type="text" id="' + nome + '" inputmode="decimal" '
-      + 'autocomplete="off" value="' + (val != null ? vrg(val) : '') + '">'
-      + (enviada && !ok && certo != null
-          ? '<span class="certo">o certo é ' + passo(certo) + '</span>' : '')
-      + '</div>';
-    return '<div class="lf' + cls + '" data-h="' + l.horas + '">'
-      + '<div class="cab"><span class="hh">' + vrg(l.horas) + ' horas por dia</span>'
-      + (enviada && l.tudo_certo
-          ? '<span class="marca c">linha fechada</span>' : '') + '</div>'
-      + '<div class="tres">'
-      + campo('fk' + l.horas, 'kWh evitados no mês', l.kwh, l.ok_kwh, l.certo_kwh,
-              v => vrg(arred(v,3)))
-      + campo('fe' + l.horas, 'Economia por lâmpada', l.economia, l.ok_economia,
-              l.certo_economia, v => brl(v))
-      + campo('fr' + l.horas, 'Retorno em meses', l.retorno, l.ok_retorno,
-              l.certo_retorno, v => vrg(arred(v,1)))
+    const pendente = enviada && l.ok_kwh == null;
+    const cls = !enviada ? '' : pendente ? ' enviada'
+      : (l.ok_kwh && l.ok_economia ? ' certa' : ' errada');
+    const marca = (ok) => enviada && !pendente
+      ? '<span class="marca ' + (ok ? 'c' : 'x') + '">' + (ok ? 'bateu' : 'não bateu')
+        + '</span>' : '';
+    return '<div class="faixa' + cls + '" data-f="' + esc(l.faixa) + '">'
+      + '<div class="top"><div class="ttl"><b>' + esc(l.rotulo) + '</b>'
+      + (pendente ? '<span class="marca e">esperando a conferência</span>' : '')
       + '</div>'
-      + '<div style="margin-top:11px"><button class="btn peq sec env" data-h="'
-      + l.horas + '">' + (enviada ? 'Enviar de novo' : 'Enviar esta linha')
-      + '</button></div></div>';
+      + '<span class="ond">' + esc(l.blocos) + '</span>'
+      + '<div class="dado">'
+      +   '<span>ambientes<i>' + vrg(l.ambientes) + '</i></span>'
+      +   '<span>lâmpadas trocadas<i>' + vrg(l.lampadas) + '</i></span>'
+      +   '<span>deixou de gastar<i>' + vrg(l.watts) + ' W</i></span>'
+      +   '<span>' + (l.eventual ? 'horas por vez' : 'horas por dia')
+      +     '<i>' + vrg(l.horas) + '</i></span>'
+      +   '<span>' + (l.eventual ? 'vezes por mês' : 'dias no mês')
+      +     '<i>' + vrg(l.dias) + '</i></span>'
+      + '</div></div>'
+      + '<div class="conta">'
+      + '<p class="formula">' + vrg(l.watts) + ' ÷ 1000 × ' + vrg(l.horas) + ' × '
+      +   vrg(l.dias) + ' = kWh do mês &nbsp;·&nbsp; kWh × ' + vrg(r.tarifa)
+      +   ' = reais do mês</p>'
+      + '<div class="duas">'
+      +   '<div class="campo"><label for="ck' + l.ordem + '">kWh evitados no mês'
+      +     marca(l.ok_kwh) + '</label>'
+      +     '<input type="text" id="ck' + l.ordem + '" inputmode="decimal" '
+      +     'autocomplete="off" value="' + (l.kwh != null ? vrg(l.kwh) : '') + '">'
+      +     (l.certo_kwh != null ? '<span class="certo">o certo é '
+          + vrg(l.certo_kwh) + '</span>' : '') + '</div>'
+      +   '<div class="campo"><label for="ce' + l.ordem + '">Economia no mês, em reais'
+      +     marca(l.ok_economia) + '</label>'
+      +     '<input type="text" id="ce' + l.ordem + '" inputmode="decimal" '
+      +     'autocomplete="off" value="' + (l.economia != null ? vrg(l.economia) : '')
+      +     '">'
+      +     (l.certo_economia != null ? '<span class="certo">o certo é R$ '
+          + vrg(l.certo_economia) + '</span>' : '') + '</div>'
+      + '</div>'
+      + '<div style="margin-top:13px"><button class="btn peq sec env" data-f="'
+      + esc(l.faixa) + '" data-o="' + l.ordem + '">'
+      + (enviada ? 'Enviar de novo' : 'Enviar esta faixa') + '</button></div>'
+      + '</div></div>';
   }).join('');
-  document.querySelectorAll('#linhasFolha .env').forEach(b =>
-    b.addEventListener('click', () => enviarLinhaFolha(+b.dataset.h, b)));
-  msg('avisoFolha', feitas < 7
-    ? certas + ' de 7 linhas fechadas. Faltam ' + (7 - feitas) + ' para enviar.'
-    : (certas === 7
-        ? 'As sete linhas bateram. Agora responda as quatro perguntas abaixo.'
-        : certas + ' de 7 bateram. Reveja as que ficaram marcadas e envie de novo.'),
-    certas === 7 ? 'bom' : 'info');
+  document.querySelectorAll('#linhasConta .env').forEach(b =>
+    b.addEventListener('click', () => enviarFaixa(b.dataset.f, b.dataset.o, b)));
 }
-async function enviarLinhaFolha(h, b) {
-  const v = id => num(el(id).value);
-  const kwh = v('fk' + h), ec = v('fe' + h), ret = v('fr' + h);
-  if (kwh == null || ec == null || ret == null)
-    return msg('avisoFolha', 'Preencha as três colunas da linha de ' + vrg(h)
-      + ' horas antes de enviar.', 'erro');
+function pintarBalanco() {
+  const r = CONTA, n = (r.linhas || []).length;
+  if (!n) { el('totalConta').innerHTML = ''; return; }
+  const faltam = n - (r.linhas || []).filter(l => l.em).length;
+  const mes = r.meu_economia != null ? +r.meu_economia : null;
+  const desde = mes != null ? mes * r.meses : null;
+  const cel = (v, rot, falta) => '<div class="cel' + (falta ? ' falta' : '') + '"><b>'
+    + v + '</b><span>' + rot + '</span></div>';
+  el('totalConta').innerHTML = '<div class="balanco"><h3>O balanço geral</h3>'
+    + '<p class="ajuda">' + (faltam
+        ? 'Soma do que você já enviou. Faltam ' + faltam + ' faixa(s): o balanço '
+          + 'fecha quando a última entrar.'
+        : 'Soma das ' + n + ' faixas que você enviou. Este é o número do projeto.')
+    + '</p><div class="grade">'
+    + cel(r.meu_kwh != null ? vrg(arred(+r.meu_kwh, 2)) : '—',
+          'kWh evitados por mês, na escola inteira', r.meu_kwh == null)
+    + cel(mes != null ? brl(mes) : '—', 'economia por mês', mes == null)
+    + cel(desde != null ? brl(desde) : '—',
+          'economia desde a troca, em ' + vrg(r.meses) + ' meses', desde == null)
+    + '</div>'
+    + (r.libera && r.certo_total_kwh != null
+        ? '<p class="ajuda" style="margin:14px 0 0">O certo é '
+          + vrg(r.certo_total_kwh) + ' kWh por mês, ' + brl(r.certo_total_economia)
+          + ' por mês e ' + brl(r.certo_desde) + ' desde a troca.</p>'
+        : '')
+    + '</div>';
+}
+async function enviarFaixa(faixa, ordem, b) {
+  const kwh = num(el('ck' + ordem).value), ec = num(el('ce' + ordem).value);
+  if (kwh == null || ec == null)
+    return msg('avisoCalc', 'Preencha as duas colunas desta faixa antes de enviar.',
+               'erro'), aoAlcance('avisoCalc');
   b.disabled = true;
   let r;
   try {
-    r = await rpc('enviar_folha_linha', { p_token: EU.token, p_aluno: SOU.id,
-      p_horas: h, p_kwh: kwh, p_economia: ec, p_retorno: ret });
+    r = await rpc('enviar_faixa', { p_token: EU.token, p_aluno: SOU.id,
+      p_faixa: faixa, p_kwh: kwh, p_economia: ec });
   } catch (e) { r = { ok:false, erro:e.message }; }
   b.disabled = false;
-  if (!r.ok) return msg('avisoFolha', r.erro, 'erro');
-  await abrirFolha();
-  aoAlcance('avisoFolha');
+  if (!r.ok) { msg('avisoCalc', r.erro, 'erro'); return aoAlcance('avisoCalc'); }
+  msg('avisoCalc', r.pendente ? r.aviso : 'Faixa enviada.',
+      r.pendente ? 'info' : 'bom');
+  await carregarConta();
+  aoAlcance('avisoCalc');
 }
 function pintarRespostasFolha() {
-  const q = (FOLHA.respostas || {});
-  ['q1','q2','q3','q4'].forEach((k, i) =>
-    el('fq' + (i + 1)).value = q[k] || '');
+  const q = (CONTA && CONTA.respostas) || {};
+  ['q1','q2','q3','q4'].forEach((k, i) => {
+    const n = el('fq' + (i + 1)); if (n) n.value = q[k] || '';
+  });
+}
+function pintarErrosFolha() {
+  if (!el('errosFolha')) return;
+  el('errosFolha').innerHTML = [
+    ['Esquecer de dividir por 1000', 'A resposta fica mil vezes maior e parece normal. '
+      + 'Se a economia de um mês deu mais que a conta de luz de uma casa, confira isso '
+      + 'primeiro.'],
+    ['Usar a voltagem na conta', 'Não entra. Só watts, horas e dias.'],
+    ['Trocar as horas pelos dias', 'Na faixa de 24 horas são 24 horas e 30 dias. '
+      + 'Na de 12, são 12 horas e 22 dias letivos. Não troque um pelo outro.'],
+    ['Somar lâmpada que não foi trocada', 'A linha só conta as que já são LED. '
+      + 'As antigas entram na outra conta, a do que ainda há para ganhar.']
+  ].map(x => '<li><span class="mk">!</span><span><b>' + x[0] + '.</b> ' + x[1]
+    + '</span></li>').join('');
 }
 el('btSalvarResp') && el('btSalvarResp').addEventListener('click', async () => {
   const b = el('btSalvarResp'); b.disabled = true;
@@ -2638,35 +2516,29 @@ el('btSalvarResp') && el('btSalvarResp').addEventListener('click', async () => {
   b.disabled = false;
   msg('avisoRespFolha', r.ok ? 'Respostas salvas. O professor lê daqui.' : r.erro,
       r.ok ? 'bom' : 'erro');
-  aoAlcance('avisoRespFolha');
 });
-/* o horário de cada bloco é a resposta que a equipe do MAPA trouxe: mostrar
-   aqui liga a tabela da folha ao trabalho de campo, em vez de uma tabela vazia */
+/* o horário de cada faixa é a resposta que a equipe do MAPA trouxe */
 async function pintarBlocosFolha() {
+  if (!el('tabBlocosFolha')) return;
   let r;
   try { r = await rpc('mapa_ambientes', { p_token: EU.token }); } catch (e) { return; }
   if (!r || !r.ok) return;
-  const bs = (r.blocos || []);
   el('tabBlocosFolha').innerHTML =
-    '<thead><tr><th class="cresce">Parte da escola</th><th>Horas por dia</th>'
+    '<thead><tr><th class="cresce">Parte da escola</th><th>Tempo aceso</th>'
     + '<th class="cresce">Quem informou</th></tr></thead><tbody>'
-    + bs.map(b => {
+    + (r.blocos || []).map(b => {
         const pronto = blocoPronto(b);
         return '<tr><td class="cresce">' + esc(b.nome) + '</td>'
-          + '<td data-r="Horas por dia">' + (!pronto ? '<span class="tag a">falta</span>'
+          + '<td data-r="Tempo aceso">' + (!pronto ? '<span class="tag a">falta</span>'
               : b.uso_eventual
                 ? vrg(b.usos_mes) + 'x por mês, ' + vrg(b.horas_uso) + ' h'
-                : vrg(b.horas)) + '</td>'
+                : vrg(b.horas) + ' h/dia') + '</td>'
           + '<td class="cresce" data-r="Quem informou">'
           + (b.fonte_nome ? esc(b.fonte_nome)
               + (b.fonte_funcao ? ', ' + esc(b.fonte_funcao) : '')
               : '<span class="tag a">falta</span>') + '</td></tr>';
       }).join('') + '</tbody>';
 }
-el('btAbrirFolha') && el('btAbrirFolha').addEventListener('click', abrirFolha);
-el('btVoltaFolha') && el('btVoltaFolha').addEventListener('click', () => {
-  telas('calculo'); carregarCalculo();
-});
 
 let NUM_CALC = {};
 async function carregarCalculo() {
@@ -2683,18 +2555,30 @@ async function carregarCalculo() {
   EQUIPE_CALC = (ra && ra.ok ? ra.alunos : []) || [];
   if (ne && ne.ok) NUM_CALC = { pot_antes: ne.pot_antes, pot_led: ne.pot_led,
     dias_mes: ne.dias_mes, tarifa: ne.tarifa_hoje, meses: ne.meses };
+  // quanto cada pessoa da equipe já mandou da tabela por faixa
+  ANDAMENTO = [];
+  try {
+    const rc = await rpc('andamento_conta', { p_token: EU.token });
+    if (rc && rc.ok) ANDAMENTO = rc.gente || [];
+  } catch (e) {}
   pintarFichas();
   pintarFormFicha();
+  await carregarConta();
 }
 
 function pintarFichas() {
-  const prontas = FICHAS.filter(f => +f.enviados >= +f.previstos && +f.previstos > 0).length;
-  const total = GRUPOS_CAMPO.length;
-  el('barraCalc').style.width = total ? (prontas / total * 100) + '%' : '0';
-  el('subCalc').textContent = prontas + ' de ' + total + ' grupo'
-    + (total === 1 ? '' : 's') + ' com a conta fechada.'
-    + (FICHAS.length < total ? ' ' + (total - FICHAS.length)
-        + ' ainda sem ficha aberta.' : '');
+  // o andamento agora é por pessoa, não por grupo: cada um preenche a tabela
+  // inteira da escola
+  const gente = ANDAMENTO || [];
+  const tot = gente.length;
+  const fim = gente.filter(p => +p.faixas_total > 0
+                             && +p.faixas_enviadas >= +p.faixas_total).length;
+  el('barraCalc').style.width = tot ? (fim / tot * 100) + '%' : '0';
+  el('subCalc').textContent = tot
+    ? fim + ' de ' + tot + ' pessoa' + (tot === 1 ? '' : 's')
+      + ' da equipe já enviou a tabela inteira. Cada pessoa faz a conta da escola '
+      + 'toda; o grupo de campo abaixo diz quem confere quem.'
+    : 'Ninguém na equipe de cálculo ainda.';
 
   const semFicha = GRUPOS_CAMPO.filter(g => !FICHAS.some(f => f.grupo === g.codigo));
   el('listaFichas').innerHTML = (FICHAS.length
@@ -2703,8 +2587,8 @@ function pintarFichas() {
     + (semFicha.length
         ? '<p class="ajuda" style="margin-top:12px">Sem ficha: '
           + semFicha.map(g => esc(g.codigo)).join(', ') + '.</p>' : '');
-  document.querySelectorAll('#listaFichas .abrirFicha').forEach(b =>
-    b.addEventListener('click', () => abrirFichaCalculo(+b.dataset.f)));
+  // a lista não abre mais formulário: a conta é a tabela por faixa, no alto
+  // desta mesma tela. Aqui fica só quem calcula, quem confere e o andamento.
 }
 
 function postoDe(f, id) {
@@ -2714,41 +2598,39 @@ function postoDe(f, id) {
 const NOME_POSTO = { calculista:'faz a conta', conf1:'1º conferente', conf2:'2º conferente' };
 
 function cartaoFicha(f) {
-  const envios = f.envios || [];
-  const jaEnviei = SOU && envios.some(e => e.aluno === SOU.id);
-  const meuPosto = SOU ? postoDe(f, SOU.id) : null;
-  const falta = +f.previstos - +f.enviados;
+  // A conta agora é a tabela por faixa, feita por pessoa. Este cartão mostra
+  // só o emparelhamento: quem calcula, quem confere, e quanto cada um já
+  // mandou. O andamento vem de conta_faixa, não dos quatro números antigos.
   const linhas = [['calculista', f.calculista, f.calculista_nome],
                   ['conf1', f.conf1, f.conf1_nome],
                   ['conf2', f.conf2, f.conf2_nome]]
     .filter(x => x[1])
     .map(x => {
-      const e = envios.find(y => y.aluno === x[1]);
-      const marca = !e ? '<span class="pill erro">ainda não enviou</span>'
-        : e.tudo_certo ? '<span class="pill c">bateu tudo</span>'
-        : '<span class="pill am">' + [['kWh', e.ok_kwh], ['mês', e.ok_economia],
-             ['ano', e.ok_ano], ['desde a troca', e.ok_total]]
-             .filter(p => !p[1]).map(p => p[0]).join(', ') + ' não bateu</span>';
+      const p = (ANDAMENTO || []).find(y => +y.id === +x[1]);
+      const fez = p ? +p.faixas_enviadas : 0;
+      const tot = p ? +p.faixas_total : 0;
+      const marca = !tot ? ''
+        : fez === 0 ? '<span class="pill erro">ainda não começou</span>'
+        : fez < tot ? '<span class="pill am">' + fez + ' de ' + tot + ' faixas</span>'
+        : '<span class="pill c">as ' + tot + ' faixas enviadas</span>';
       return '<li><span class="nm">' + esc(x[2] || '')
         + ' <i style="font-style:normal;font-family:var(--m);font-size:.72rem;'
         + 'color:var(--tinta3)">' + NOME_POSTO[x[0]] + '</i></span>' + marca + '</li>';
     }).join('');
-  const estado = +f.previstos === 0 ? '<span class="pill erro">sem ninguém na ficha</span>'
-    : f.resolvida ? '<span class="pill c">conta fechada</span>'
-    : falta > 0 ? '<span class="pill am">falta ' + falta + ' enviar</span>'
-    : '<span class="pill erro">todos enviaram e ninguém acertou</span>';
-  return '<div class="gcard' + (f.resolvida ? '' : ' semcampo') + '"><div class="top">'
-    + '<div class="cab"><span class="cod">' + esc(f.grupo) + '</span>'
-    + '<span class="qtamb">' + vrg(f.horas) + ' h por dia</span></div>'
+  const quantos = +f.previstos || 0;
+  const estado = quantos === 0
+    ? '<span class="pill erro">sem ninguém na ficha</span>'
+    : quantos === 1
+      ? '<span class="pill k">só quem calcula, sem conferência</span>'
+      : '<span class="pill k">' + (quantos - 1) + ' conferente'
+        + (quantos === 2 ? '' : 's') + '</span>';
+  return '<div class="gcard"><div class="top">'
+    + '<div class="cab"><span class="cod">' + esc(f.grupo) + '</span></div>'
     + '<div class="res">' + esc(f.grupo_resumo || '') + '</div></div>'
     + '<ul class="gente">' + linhas + '</ul>'
-    + '<div class="pe">' + estado
-    + (meuPosto && !jaEnviei
-        ? '<button class="btn peq abrirFicha" data-f="' + f.id
-          + '" style="margin-left:auto">Fazer a minha conta</button>' : '')
-    + (jaEnviei ? '<span class="pill k">você já enviou</span>' : '')
-    + '</div></div>';
+    + '<div class="pe">' + estado + '</div></div>';
 }
+
 
 function pintarFormFicha() {
   const pessoas = EQUIPE_CALC;
@@ -2768,9 +2650,15 @@ function encaixarFicha() {
   el('fcCalc').value = f && f.calculista ? f.calculista : '';
   el('fcC1').value = f && f.conf1 ? f.conf1 : '';
   el('fcC2').value = f && f.conf2 ? f.conf2 : '';
-  const travada = f && +f.enviados > 0;
-  ['fcHoras','fcCalc','fcC1','fcC2','btSalvarFicha'].forEach(i => el(i).disabled = !!travada);
+  // a ficha trava quando alguém dela já começou a tabela por faixa
+  const equipe = [f && f.calculista, f && f.conf1, f && f.conf2].filter(Boolean);
+  const travada = equipe.some(id =>
+    (ANDAMENTO || []).some(p => +p.id === +id && +p.faixas_enviadas > 0));
+  ['fcCalc','fcC1','fcC2','btSalvarFicha'].forEach(i => el(i).disabled = !!travada);
   el('btSalvarFicha').textContent = f ? 'Salvar as mudanças' : 'Abrir a ficha';
+  msg('avisoCalc', travada
+    ? 'Esta ficha já tem faixa enviada por alguém dela, então não muda mais.' : '',
+    'info');
 }
 el('fcGrupo').addEventListener('change', encaixarFicha);
 el('btSalvarFicha').addEventListener('click', async () => {
@@ -2783,122 +2671,6 @@ el('btSalvarFicha').addEventListener('click', async () => {
   await carregarCalculo();
   setTimeout(() => msg('avisoCalc',''), 2500);
 });
-
-/* ---------- fazer a conta ----------
-   abrirFichaCalculo, e não abrirFicha: esse nome já era da ficha do colega na
-   avaliação, e uma função sobrescrevia a outra em silêncio. */
-function abrirFichaCalculo(id) {
-  FICHA = FICHAS.find(f => f.id === id);
-  if (!FICHA) return;
-  RASCUNHO = null;
-  el('tituloFicha').textContent = 'A conta do grupo ' + FICHA.grupo;
-  el('subFicha').textContent = 'Você é ' + NOME_POSTO[postoDe(FICHA, SOU.id)]
-    + '. Faça a conta no caderno primeiro e traga só os quatro resultados.';
-  el('dadosFicha').innerHTML =
-    '<p class="ajuda" style="margin:0">Use estes números, que são os mesmos para todo '
-    + 'mundo desta ficha:</p><ul style="margin:9px 0 0;padding-left:20px;font-size:.9rem">'
-    + '<li>Horas por dia que a luz fica acesa: <b>' + vrg(FICHA.horas) + '</b></li>'
-    + '<li>Lâmpada antiga: <b>' + vrg(NUM_CALC.pot_antes) + ' W</b> · LED: <b>'
-      + vrg(NUM_CALC.pot_led) + ' W</b></li>'
-    + '<li>Dias letivos no mês: <b>' + vrg(NUM_CALC.dias_mes) + '</b></li>'
-    // a tarifa NÃO pode sair arredondada aqui: brl() daria R$ 0,88 e o aluno
-    // faria a conta com 0,88, que não bate com a do sistema
-    + '<li>Preço do quilowatt-hora: <b>R$ ' + vrg(NUM_CALC.tarifa) + '</b></li>'
-    + '<li>Meses desde a troca: <b>' + vrg(NUM_CALC.meses) + '</b></li></ul>';
-  ['vKwh','vEco','vAno','vTot'].forEach(i => el(i).value = '');
-  el('passo1Ficha').hidden = false;
-  el('passo2Ficha').hidden = true;
-  el('passo3Ficha').hidden = true;
-  el('resultadoFicha').hidden = true;
-  msg('avisoFicha','');
-  telas('ficha');
-}
-el('btVoltaFicha').addEventListener('click', () => { telas('calculo'); carregarCalculo(); });
-
-el('btConferirFicha').addEventListener('click', () => {
-  const v = { kwh: num(el('vKwh').value), eco: num(el('vEco').value),
-              ano: num(el('vAno').value), tot: num(el('vTot').value) };
-  if (v.kwh === null || v.eco === null || v.ano === null || v.tot === null)
-    return msg('avisoFicha', 'Preencha os quatro resultados antes de conferir.', 'erro');
-  RASCUNHO = v;
-  el('revisaoFicha').innerHTML = [
-    ['kWh evitados por mês', vrg(v.kwh)],
-    ['Economia por mês', 'R$ ' + vrg(v.eco)],
-    ['Economia em um ano', 'R$ ' + vrg(v.ano)],
-    ['Economia desde a troca', 'R$ ' + vrg(v.tot)]
-  ].map(x => '<div class="item"><span class="d">' + x[0]
-      + '</span><span class="q" style="font-size:1.05rem">' + x[1] + '</span></div>').join('');
-  el('passo1Ficha').hidden = true;
-  el('passo2Ficha').hidden = false;
-  msg('avisoFicha','');
-  window.scrollTo(0,0);
-});
-el('btCorrigirFicha').addEventListener('click', () => {
-  el('passo2Ficha').hidden = true; el('passo1Ficha').hidden = false; window.scrollTo(0,0);
-});
-el('btSimEIsso').addEventListener('click', () => {
-  el('passo2Ficha').hidden = true; el('passo3Ficha').hidden = false; window.scrollTo(0,0);
-});
-el('btDesistirFicha').addEventListener('click', () => {
-  el('passo3Ficha').hidden = true; el('passo1Ficha').hidden = false; window.scrollTo(0,0);
-});
-
-el('btSalvarFichaEnvio').addEventListener('click', async () => {
-  if (!RASCUNHO || !FICHA || !SOU) return;
-  const b = el('btSalvarFichaEnvio'); b.disabled = true; b.textContent = 'Salvando...';
-  let r;
-  try {
-    r = await rpc('enviar_calculo', { p_token: EU.token, p_ficha: FICHA.id,
-      p_aluno: SOU.id, p_kwh: RASCUNHO.kwh, p_economia: RASCUNHO.eco,
-      p_ano: RASCUNHO.ano, p_total: RASCUNHO.tot });
-  } catch (e) { r = { ok:false, erro:e.message }; }
-  b.disabled = false; b.textContent = 'Salvar e travar';
-  if (!r.ok) { msg('avisoFicha', r.erro, 'erro'); window.scrollTo(0,0); return; }
-  el('passo3Ficha').hidden = true;
-  pintarResultadoFicha(r);
-});
-
-function pintarResultadoFicha(r) {
-  const passos = [['kWh por mês', r.ok_kwh], ['Economia por mês', r.ok_economia],
-                  ['Economia em um ano', r.ok_ano], ['Desde a troca', r.ok_total]];
-  let h = '<div class="aviso ' + (r.tudo_certo ? 'bom' : 'info') + '"><span><b>'
-    + (r.tudo_certo ? 'Bateu tudo.' : 'Salvo. Alguma coisa não bateu.')
-    + '</b><br>' + (r.tudo_certo
-        ? 'Os quatro passos conferem com a conta do sistema.'
-        : 'Veja abaixo em qual passo deu diferença.') + '</span></div>'
-    + '<div class="cx"><h3 style="margin:0 0 10px;font-family:var(--d);font-size:1rem">'
-    + 'Passo a passo</h3>'
-    + passos.map(p => '<div class="item"><span class="d">' + p[0] + '</span>'
-        + '<span class="pill ' + (p[1] ? 'c">bateu' : 'erro">não bateu') + '</span></div>').join('')
-    + '</div>';
-
-  if (r.resposta) {
-    const v = r.resposta;
-    h += '<div class="cx" style="margin-top:14px;border-color:var(--ambar)">'
-      + '<h3 style="margin:0 0 6px;font-family:var(--d);font-size:1rem">'
-      + 'Todo mundo da ficha já enviou e a conta não fechou</h3>'
-      + '<p class="ajuda" style="margin:0 0 12px">Por isso os valores certos aparecem '
-      + 'agora. Refaça no caderno comparando com os seus, para achar onde escapou.</p>'
-      + [['kWh evitados por mês', vrg(v.kwh)],
-         ['Economia por mês', 'R$ ' + vrg(v.economia)],
-         ['Economia em um ano', 'R$ ' + vrg(v.ano)],
-         ['Economia desde a troca', 'R$ ' + vrg(v.total)]]
-        .map(x => '<div class="item"><span class="d">' + x[0]
-          + '</span><span class="q" style="font-size:1.05rem">' + x[1] + '</span></div>').join('')
-      + '</div>';
-  } else if (!r.tudo_certo) {
-    h += '<p class="ajuda" style="margin-top:12px">O valor certo não aparece agora: '
-      + (r.alguem_certo
-          ? 'alguém da ficha já acertou, então a conta do grupo está fechada.'
-          : 'ainda falta ' + r.faltam + ' pessoa(s) desta ficha enviar.') + '</p>';
-  }
-  h += '<div style="margin-top:16px"><button class="btn sec peq" id="btFimFicha">'
-    + 'Voltar para as fichas</button></div>';
-  el('resultadoFicha').innerHTML = h;
-  el('resultadoFicha').hidden = false;
-  el('btFimFicha').addEventListener('click', () => { telas('calculo'); carregarCalculo(); });
-  window.scrollTo(0,0);
-}
 
 /* quanto das fotos já foi usado: o banco tem 500 MB e o professor precisa
    enxergar isso antes de encher, não depois */
@@ -4467,8 +4239,9 @@ function abrirFicha(id) {
   window.scrollTo(0, 0);
 }
 
-['btAvaliar','btAvaliar2','btAvaliar3','btAvaliar4','btAvaliar5'].forEach(id =>
-  el(id).addEventListener('click', abrirAvaliacao));
+// btAvaliar5 saiu: a equipe de cálculo não se avalia entre si
+['btAvaliar','btAvaliar2','btAvaliar3','btAvaliar4'].forEach(id =>
+  el(id) && el(id).addEventListener('click', abrirAvaliacao));
 el('btVoltaAval').addEventListener('click', () => {
   if (!el('fichaColega').hidden) { el('fichaColega').hidden = true; el('listaColegas').hidden = false; }
   else irParaMinhaTela();
