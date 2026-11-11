@@ -317,6 +317,15 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .op-sa b{display:block;font-size:.91rem;line-height:1.35;font-weight:700;color:var(--tinta)}
 .op-sa small{display:block;font-size:.81rem;color:var(--tinta2);line-height:1.4;
   margin-top:3px;text-transform:none;letter-spacing:normal}
+/* a tela do mapa tem a própria regra de label, mais específica que a de cima:
+   sem isto as três opções voltam a sair gritando em caixa alta */
+.amb-mapa .op-sa{display:flex;text-transform:none;letter-spacing:normal;
+  font-size:1rem;font-weight:400;color:var(--tinta);margin-bottom:0;
+  font-family:var(--c)}
+.amb-mapa .op-sa b{font-family:var(--d);font-size:.91rem;font-weight:700;
+  text-transform:none;letter-spacing:normal;color:var(--tinta)}
+.amb-mapa .op-sa small{font-family:var(--c);font-size:.81rem;font-weight:400;
+  text-transform:none;letter-spacing:normal;color:var(--tinta2)}
 
 /* FOTO DO APARELHO
    Todo aparelho contado entra com foto. A foto é a prova de que aquele
@@ -430,7 +439,12 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
   color:var(--tinta2);cursor:pointer}
 .vinte4 input{width:18px;height:18px;flex:none;accent-color:var(--azul)}
 .horas-ok{font-family:var(--m);font-size:.8rem;color:var(--verde);font-weight:600;
-  margin-top:9px}
+  margin-top:9px;line-height:1.45}
+/* bloco sem horário não entra na conta. Dizer isso no cartão é o que faz a
+   equipe do mapa ir atrás do dado em vez de deixar o campo em branco. */
+.horas-falta{font-family:var(--m);font-size:.78rem;color:var(--ambar);font-weight:600;
+  margin-top:9px;line-height:1.45}
+.amb-mapa .evt{border-left:3px solid var(--azul);padding-left:13px;margin:4px 0 2px}
 .fala-cx{display:flex;gap:12px;background:var(--sup);border:1px solid var(--linha);
   border-left:3px solid var(--linha2);border-radius:var(--r);padding:14px 16px;
   margin-bottom:11px}
@@ -564,6 +578,14 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .gcard .gente li:last-child{border-bottom:0}
 .gcard .nm{flex:1;min-width:0;font-size:.87rem;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
+/* a que grupo de campo cada pessoa da equipe de cálculo atende: quem monta os
+   grupos procura isso no nome, não na aba das fichas */
+.gcard .nm .vinc{display:block;white-space:normal;font-family:var(--m);
+  font-size:.71rem;line-height:1.3;color:var(--azul);margin-top:2px}
+.gcard .gente li:has(.vinc){align-items:flex-start}
+.gcard .ondemuda{margin:0;padding:11px 16px 12px;font-size:.76rem;line-height:1.45;
+  color:var(--tinta2);border-top:1px solid var(--linha);background:var(--sup2)}
+.gcard .ondemuda b{color:var(--tinta)}
 /* na ficha de cálculo o posto (faz a conta, 1º conferente) é a informação que
    importa, e estava sendo cortado pelo nome. Aqui ele desce para a linha de
    baixo em vez de sumir. */
@@ -1241,10 +1263,30 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       </div>
       <label class="marca" id="marcaSemPot" for="semPot">
         <input type="checkbox" id="semPot">
-        <span>O aparelho não traz a potência escrita
+        <span>Não deu para ler a potência
         <small>Marque só depois de procurar na etiqueta, no vidro e na base. A foto
-        continua obrigatória: ela mostra o aparelho sem a informação.</small></span>
+        continua obrigatória nos dois casos.</small></span>
       </label>
+      <!-- Dois motivos bem diferentes. O aparelho sem nada escrito não tem como
+           ser resolvido depois. A lâmpada alta, de poste ou de ginásio, tem: quem
+           troca a lâmpada sabe, e a potência entra na conta quando for confirmada. -->
+      <div class="escolha-sa" id="porqueSemPot" hidden style="margin:-4px 0 14px">
+        <label class="op-sa"><input type="radio" name="motSemPot" value="sem_etiqueta" checked>
+          <span><b>O aparelho não traz a potência escrita</b>
+          <small>procuramos na etiqueta, no vidro e na base e não tem nada</small></span></label>
+        <label class="op-sa"><input type="radio" name="motSemPot" value="nao_alcanca">
+          <span><b>É alta demais, não dá para chegar perto</b>
+          <small>lâmpada de poste, de ginásio, de forro alto: dá para ver que está lá,
+          mas não dá para ler o que está escrito nela</small></span></label>
+        <div class="campo" id="campoQuemSabe" hidden style="margin:2px 0 0">
+          <label for="quemSabe">Quem pode saber a potência depois</label>
+          <input type="text" id="quemSabe" autocomplete="off"
+                 placeholder="quem troca a lâmpada, o almoxarifado, a nota de compra">
+          <p class="ajuda" style="margin:7px 0 0">Enquanto a potência não for
+          confirmada, estas lâmpadas ficam de fora da conta da economia. Escreva
+          aqui quem pode fechar esse dado, e o professor vai atrás.</p>
+        </div>
+      </div>
       <div class="campo">
         <label>Foto do aparelho</label>
         <div class="fotos" id="caixaFotos">
@@ -1258,7 +1300,9 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
             <button type="button" class="btn sec peq" id="btFoto">Tirar foto do aparelho</button>
             <button type="button" class="btn sec peq" id="btGaleria">Anexar foto da galeria</button>
           </div>
-          <p class="ajuda" id="ajudaFoto" style="margin:10px 0 0"></p>
+          <p class="ajuda" id="dicaFoto" style="margin:10px 0 0">Uma foto por
+          aparelho, no mínimo. Até quatro.</p>
+          <p class="ajuda" id="ajudaFoto" style="margin:6px 0 0"></p>
         </div>
       </div>
       <div class="campo">
@@ -1475,6 +1519,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div class="graf" id="grafTipos"></div>
       <h3 class="sec" style="margin-top:4px">O que já foi contado</h3>
       <div class="rol"><table id="tabTipos"></table></div>
+      <div id="potPendentes"></div>
       <h3 class="sec">Preços pesquisados</h3>
       <div class="rol"><table id="tabPrecos"></table></div>
       <p class="ajuda" id="espacoFotos" style="margin-top:16px"></p>
@@ -2222,6 +2267,10 @@ function pintarFormFichaProf() {
   el('pfC2').innerHTML = lista('ninguém confere');
   encaixarFichaProf();
 }
+/* GUARDA_FICHA existe por um motivo: ao salvar, a tela se repinta, e a repintura
+   chamava esta função, que apagava o "Ficha salva" antes de alguém ler. O
+   professor clicava, não via nada mudar e concluía que o sistema não deixava. */
+let GUARDA_FICHA = '';
 function encaixarFichaProf() {
   const f = FICHAS_PROF.find(x => x.grupo === el('pfGrupo').value);
   el('pfHoras').value = f && f.horas != null ? vrg(f.horas) : '6';
@@ -2232,20 +2281,40 @@ function encaixarFichaProf() {
   ['pfHoras','pfCalc','pfC1','pfC2','btSalvarFichaProf']
     .forEach(i => el(i).disabled = !!travada);
   el('btSalvarFichaProf').textContent = f ? 'Salvar as mudanças' : 'Abrir a ficha';
-  msg('avisoFichaProf', travada
-    ? 'Esta ficha já teve envio. Para mexer nela, os envios teriam de ser apagados.'
-    : '', 'info');
+  if (travada)
+    msg('avisoFichaProf',
+      'Esta ficha já teve envio. Para mexer nela, os envios teriam de ser apagados.',
+      'info');
+  else if (!GUARDA_FICHA) msg('avisoFichaProf', '');
 }
-el('pfGrupo').addEventListener('change', encaixarFichaProf);
+el('pfGrupo').addEventListener('change', () => {
+  GUARDA_FICHA = ''; encaixarFichaProf();
+});
 el('btSalvarFichaProf').addEventListener('click', async () => {
   const n = v => el(v).value ? parseInt(el(v).value, 10) : null;
-  const r = await rpc('criar_ficha', { p_token: EU.token, p_grupo: el('pfGrupo').value,
-    p_horas: num(el('pfHoras').value), p_calculista: n('pfCalc'),
-    p_conf1: n('pfC1'), p_conf2: n('pfC2'), p_quem: null });
-  if (!r.ok) return msg('avisoFichaProf', r.erro, 'erro');
-  msg('avisoFichaProf', 'Ficha salva.', 'bom');
+  const b = el('btSalvarFichaProf');
+  const grupo = el('pfGrupo').value;
+  b.disabled = true;
+  let r;
+  try {
+    r = await rpc('criar_ficha', { p_token: EU.token, p_grupo: grupo,
+      p_horas: num(el('pfHoras').value), p_calculista: n('pfCalc'),
+      p_conf1: n('pfC1'), p_conf2: n('pfC2'), p_quem: null });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  b.disabled = false;
+  if (!r.ok) { GUARDA_FICHA = ''; msg('avisoFichaProf', r.erro, 'erro');
+               return aoAlcance('avisoFichaProf'); }
+  const nomes = ['pfCalc','pfC1','pfC2'].map(i => {
+    const o = el(i).selectedOptions[0];
+    return o && o.value ? o.textContent : null;
+  }).filter(Boolean);
+  GUARDA_FICHA = 'Ficha do grupo ' + grupo + ' salva: '
+    + nomes.join(', ') + (nomes.length === 1 ? ' (sem conferente).' : '.');
+  msg('avisoFichaProf', GUARDA_FICHA, 'bom');
   await carregarFichasProf();
-  setTimeout(() => msg('avisoFichaProf',''), 2500);
+  msg('avisoFichaProf', GUARDA_FICHA, 'bom');
+  aoAlcance('avisoFichaProf');
+  setTimeout(() => { GUARDA_FICHA = ''; msg('avisoFichaProf',''); }, 6000);
 });
 
 /* o professor vê as fichas por inteiro, inclusive o que cada um digitou */
@@ -2566,6 +2635,52 @@ async function carregarEspacoFotos() {
     + ' aparelho(s), ocupando ' + vrg(r.megas) + ' MB dos 500 MB do banco.'
     + (semFoto ? ' ' + semFoto + ' aparelho(s) ficaram sem foto, lançados antes da '
         + 'foto passar a ser obrigatória.' : '');
+  carregarPotPendentes();
+}
+
+/* As lâmpadas contadas que ficaram sem potência. Duas listas, porque têm
+   destinos diferentes: a que não tem nada escrito acabou ali, e a que é alta
+   demais ainda pode ser fechada com quem troca a lâmpada. Toda lâmpada desta
+   tela está FORA da conta da economia enquanto estiver aqui. */
+async function carregarPotPendentes() {
+  const n = el('potPendentes');
+  if (!n || !EU || (EU.papel !== 'professor' && EU.papel !== 'gestao')) return;
+  let r;
+  try { r = await rpc('potencias_a_confirmar', { p_token: EU.token }); }
+  catch (e) { return; }
+  if (!r || !r.ok) { n.innerHTML = ''; return; }
+  const its = r.itens || [];
+  if (!its.length) { n.innerHTML = ''; return; }
+  const linha = x =>
+    '<div class="item"><span class="q">' + x.quantidade + '×</span>'
+    + '<span class="d">' + esc(x.tipo) + ' · ' + esc(x.ambiente || '')
+    + ' <i style="font-style:normal;font-family:var(--m);font-size:.74rem;'
+    + 'color:var(--tinta3)">grupo ' + esc(x.grupo || '') + '</i>'
+    + '<small style="white-space:normal;display:block;margin-top:2px">'
+    + (x.quem_sabe ? 'Pode saber a potência: ' + esc(x.quem_sabe)
+                   : 'Ninguém indicado para confirmar.')
+    + (x.lancou ? ' · lançado por ' + esc(x.lancou) : '')
+    + (x.fotos ? ' · ' + x.fotos + ' foto(s)' : ' · sem foto')
+    + '</small></span></div>';
+  const altas = its.filter(x => x.motivo === 'nao_alcanca');
+  const nada  = its.filter(x => x.motivo !== 'nao_alcanca');
+  let h = '<h3 class="sec" style="margin-top:22px">Potência a confirmar</h3>'
+    + '<p class="ajuda">' + vrg(r.lampadas) + ' lâmpada(s) contadas estão fora do '
+    + 'cálculo da economia porque a potência não foi lida. Cada uma que for '
+    + 'confirmada aumenta o número final do projeto.</p>';
+  if (altas.length)
+    h += '<h4 style="margin:16px 0 7px">Altas demais para alcançar</h4>'
+      + '<p class="ajuda">' + vrg(r.altas) + ' lâmpada(s) de poste, ginásio ou forro '
+      + 'alto. A foto prova que estão lá. A potência se fecha com quem troca a '
+      + 'lâmpada, com o almoxarifado ou com a nota de compra. Depois de confirmada, '
+      + 'o lançamento é refeito com o valor certo.</p>'
+      + altas.map(linha).join('');
+  if (nada.length)
+    h += '<h4 style="margin:16px 0 7px">Sem nada escrito no aparelho</h4>'
+      + '<p class="ajuda">Nestes não há o que buscar: a lâmpada não traz a potência '
+      + 'em lugar nenhum. Ficam registrados como contados e fora do cálculo.</p>'
+      + nada.map(linha).join('');
+  n.innerHTML = h;
 }
 
 /* ---------- FOTO DO APARELHO ----------
@@ -2664,16 +2779,37 @@ el('btFoto').addEventListener('click', () => el('arqFoto').click());
 el('btGaleria').addEventListener('click', () => el('arqGaleria').click());
 el('arqFoto').addEventListener('change', receberFotos);
 el('arqGaleria').addEventListener('change', receberFotos);
+function motivoSemPot() {
+  const m = document.querySelector('input[name="motSemPot"]:checked');
+  return m ? m.value : 'sem_etiqueta';
+}
+function pintarPorqueSemPot() {
+  const marcado = el('semPot').checked;
+  el('porqueSemPot').hidden = !marcado;
+  el('campoQuemSabe').hidden = !(marcado && motivoSemPot() === 'nao_alcanca');
+  const dica = el('dicaFoto');
+  if (dica) dica.textContent = marcado && motivoSemPot() === 'nao_alcanca'
+    ? 'Mesmo de longe, fotografe a lâmpada no lugar: é isso que prova que ela foi '
+      + 'contada. Se der, uma foto do poste inteiro e outra mais perto.'
+    : 'Uma foto por aparelho, no mínimo. Até quatro.';
+}
 el('semPot').addEventListener('change', () => {
   const marcado = el('semPot').checked;
   el('marcaSemPot').classList.toggle('on', marcado);
   el('pot').disabled = marcado;
   if (marcado) el('pot').value = '';
+  pintarPorqueSemPot();
 });
+document.querySelectorAll('input[name="motSemPot"]').forEach(r =>
+  r.addEventListener('change', pintarPorqueSemPot));
 function limparFotos() {
   FOTOS = []; OCUPADO_FOTO = false;
   el('semPot').checked = false; el('pot').disabled = false;
   el('marcaSemPot').classList.remove('on');
+  const op = document.querySelector('input[name="motSemPot"][value="sem_etiqueta"]');
+  if (op) op.checked = true;
+  el('quemSabe').value = '';
+  pintarPorqueSemPot();
   pintarFotos();
 }
 
@@ -2918,8 +3054,11 @@ async function carregarItens() {
       return '<div class="item"><span class="q">' + i.quantidade + '×</span>' +
       '<span class="d">' + esc(i.tipo) +
       '<small>' + (i.potencia_w != null ? vrg(i.potencia_w) + ' W'
-                   : (i.sem_potencia ? 'o aparelho não traz a potência escrita'
-                                     : 'potência não identificada')) +
+                   : (i.motivo_sem_potencia === 'nao_alcanca'
+                        ? 'alta demais para ler a potência'
+                          + (i.quem_sabe ? ' · pode saber: ' + esc(i.quem_sabe) : '')
+                      : i.sem_potencia ? 'o aparelho não traz a potência escrita'
+                                       : 'potência não identificada')) +
       (i.obs ? ' · ' + esc(i.obs) : '') + '</small>' +
       (fs.length ? '<span class="vistas">' + fs.map(f =>
           '<img src="data:image/jpeg;base64,' + f.mini + '" alt="Foto do aparelho" '
@@ -2955,17 +3094,21 @@ el('btAdd').addEventListener('click', async () => {
 
   if (OCUPADO_FOTO)
     return msg('avisoAmb', 'Espere a foto terminar de ser preparada.', 'erro');
+  const motivo = semPot ? motivoSemPot() : null;
   if (!FOTOS.length) {
     el('caixaFotos').classList.add('falta');
     el('caixaFotos').scrollIntoView({ block:'center', behavior:'smooth' });
-    return msg('avisoAmb', 'Falta a foto. Todo aparelho contado entra com pelo menos '
-      + 'uma foto, inclusive quando não tem a potência escrita.', 'erro');
+    return msg('avisoAmb', motivo === 'nao_alcanca'
+      ? 'Falta a foto. Mesmo de longe, fotografe a lâmpada no lugar: a foto é o '
+        + 'que prova que ela existe e foi contada.'
+      : 'Falta a foto. Todo aparelho contado entra com pelo menos uma foto, '
+        + 'inclusive quando não tem a potência escrita.', 'erro');
   }
   if (!semPot && pot === null)
-    return msg('avisoAmb', 'Escreva a potência em watts. Se o aparelho não traz essa '
-      + 'informação, marque a caixa abaixo da potência.', 'erro');
+    return msg('avisoAmb', 'Escreva a potência em watts. Se não deu para ler, marque '
+      + 'a caixa abaixo da potência e diga por quê.', 'erro');
   if (semPot && pot !== null)
-    return msg('avisoAmb', 'Ou a potência está escrita, ou o aparelho não traz. '
+    return msg('avisoAmb', 'Ou a potência está escrita, ou não deu para ler. '
       + 'Desmarque uma das duas.', 'erro');
   if (!ONLINE)
     return msg('avisoAmb', 'Sem internet agora. O lançamento sobe junto com a foto, e '
@@ -2981,6 +3124,8 @@ el('btAdd').addEventListener('click', async () => {
       p_quantidade: parseInt(el('qtd').value, 10),
       p_potencia: semPot ? null : pot, p_horas: null,   /* a hora vem do bloco */
       p_sem_potencia: semPot,
+      p_motivo: motivo,
+      p_quem_sabe: motivo === 'nao_alcanca' ? el('quemSabe').value : null,
       p_fotos: FOTOS.map(f => ({ cheia: f.cheia, mini: f.mini })),
       p_obs: el('obs').value,
       p_aluno: SOU ? SOU.id : null });
@@ -3087,6 +3232,23 @@ async function carregarMontar() {
   const todos = r.alunos || [];
   const PAP = { campo:'campo', calculo:'cálculo', conferencia:'conferência', preco:'preço' };
 
+  /* Quem é da equipe CÁLCULO serve a um grupo de campo, e esse vínculo mora na
+     ficha, não no aluno. Quem monta os grupos procura o vínculo aqui, no nome,
+     então ele aparece aqui também, só para ler, com o caminho de onde se muda. */
+  const POSTO = { calculista:'faz a conta', conf1:'1º conferente', conf2:'2º conferente' };
+  let vinculo = {}, semFicha = 0;
+  try {
+    const rf = await rpc('calculo_fichas', { p_token: EU.token });
+    if (rf && rf.ok) {
+      (rf.fichas || []).forEach(f =>
+        [['calculista', f.calculista], ['conf1', f.conf1], ['conf2', f.conf2]]
+          .forEach(([posto, id]) => { if (id)
+            (vinculo[id] = vinculo[id] || []).push(f.grupo + ' · ' + POSTO[posto]); }));
+      semFicha = (rf.grupos_de_campo || []).filter(c =>
+        !(rf.fichas || []).some(f => f.grupo === c.codigo)).length;
+    }
+  } catch (e) {}
+
   // um card por grupo, com os integrantes e a função de cada um
   el('cards').innerHTML = '<div class="cards">' + gs.map(g => {
     const gente = todos.filter(a => a.grupo === g.codigo)
@@ -3100,7 +3262,11 @@ async function carregarMontar() {
           '<li data-id="' + a.id + '">' +
             '<span class="nm" title="' + a.nome + '">' + a.nome +
               (doisTurnos ? ' <i style="font-style:normal;font-family:var(--m);font-size:.72rem;'
-                 + 'color:var(--tinta3)">' + a.turma + '</i>' : '') + '</span>' +
+                 + 'color:var(--tinta3)">' + a.turma + '</i>' : '') +
+              (g.papel === 'calculo'
+                ? '<small class="vinc">' + (vinculo[a.id]
+                    ? esc(vinculo[a.id].join(' · '))
+                    : 'sem grupo ainda') + '</small>' : '') + '</span>' +
             // no mapa e na apresentação todo mundo faz a mesma coisa: pedir uma
             // função ali só dá trabalho e não quer dizer nada
             (doisTurnos ? '' :
@@ -3131,7 +3297,15 @@ async function carregarMontar() {
         : g.tipo === 'apresentacao' ? 'as duas turmas'
         : g.ambientes + ' ambientes') + '</span></div>' +
       '<div class="res">' + g.resumo + '</div></div>' +
-      corpo + '<div class="pe">' + pe + '</div></div>';
+      corpo
+      + (g.papel === 'calculo'
+          ? '<p class="ondemuda">Cada um aqui faz a conta de um grupo de campo. '
+            + 'Esse vínculo se escolhe na aba <b>Conferência</b>, em '
+            + '<b>Montar a ficha de um grupo</b>, um grupo de cada vez.'
+            + (semFicha ? ' Faltam ' + semFicha + ' grupo(s) sem ficha.' : '')
+            + '</p>'
+          : '')
+      + '<div class="pe">' + pe + '</div></div>';
   }).join('') + '</div>';
 
   // quem ainda não foi alocado
@@ -4304,7 +4478,7 @@ function horasTexto(h) {
 
 /* ---------- 1. o horário de cada bloco ---------- */
 function pintarBlocos() {
-  const feitos = BLOCOS.filter(b => b.horas != null).length;
+  const feitos = BLOCOS.filter(blocoPronto).length;
   const pct = BLOCOS.length ? feitos / BLOCOS.length * 100 : 0;
   animar(() => { el('barraBlocos').style.width = pct.toFixed(1) + '%'; });
   el('subBlocos').textContent = feitos + ' de ' + BLOCOS.length + ' blocos com horário'
@@ -4313,10 +4487,38 @@ function pintarBlocos() {
   BLOCOS.forEach(ligarCartaoBloco);
 }
 
+/* Três modos, porque a escola tem três jeitos de acender a luz:
+   hora fixa (sala de aula), aceso o tempo todo (corredor, área técnica) e
+   só quando é usado (laboratório, auditório, quadra). Esse terceiro não tem
+   "horas por dia": tem vezes por mês e horas por vez, e esse número vem da
+   escala ou da agenda de quem controla a chave, nunca de estimativa. */
+function modoDoBloco(b) {
+  return b.uso_eventual ? 'eventual' : b.sempre ? 'sempre' : 'fixo';
+}
+/* Não usa o campo "pronto" que o servidor manda: o celular guarda respostas
+   antigas para funcionar sem sinal, e resposta antiga não tem esse campo. */
+function blocoPronto(b) {
+  return b.uso_eventual ? (b.usos_mes != null && b.horas_uso != null)
+                        : b.horas != null;
+}
+function horasMesTexto(b) {
+  if (b.uso_eventual) {
+    const um = +b.usos_mes, hu = +b.horas_uso;
+    return 'Acende ' + vrg(um) + (um === 1 ? ' vez' : ' vezes') + ' por mês, '
+      + horasTexto(hu) + ' de cada vez: ' + vrg(Math.round(um * hu * 100) / 100)
+      + ' horas por mês.';
+  }
+  return 'A luz deste bloco fica acesa ' + horasTexto(b.horas) + ' por dia.';
+}
 function cartaoBloco(b) {
   const d = x => x === null || x === undefined ? '' : x;
   const quantos = (b.ambientes || []).length;
-  const pronto = b.horas != null;
+  const pronto = blocoPronto(b);
+  const modo = modoDoBloco(b);
+  const op = (v, titulo, sub) =>
+    '<label class="op-sa"><input type="radio" name="modo' + b.id + '" value="' + v + '"'
+    + (modo === v ? ' checked' : '') + '><span><b>' + titulo + '</b>'
+    + '<small>' + sub + '</small></span></label>';
   return '<div class="amb-mapa' + (pronto ? ' pronto' : '') + '" id="b-' + b.id + '">'
     + '<div class="ond">' + quantos + (quantos === 1 ? ' ambiente' : ' ambientes')
     + ' neste bloco</div>'
@@ -4325,13 +4527,36 @@ function cartaoBloco(b) {
         + '</p>' : '')
     + '<details class="quais"><summary>Ver quais ambientes</summary><p>'
     + (b.ambientes || []).map(a => esc(a.nome)).join(' · ') + '</p></details>'
-    + '<label class="vinte4"><input type="checkbox" class="v24"'
-    + (b.sempre ? ' checked' : '') + '> Fica aceso 24 horas, sem desligar</label>'
-    + '<div class="linha horas"' + (b.sempre ? ' hidden' : '') + '>'
+    + '<div class="escolha-sa" style="margin-top:12px">'
+    +   op('fixo', 'Acende e apaga em hora certa',
+             'sala de aula, secretaria, cozinha')
+    +   op('sempre', 'Fica aceso 24 horas, sem desligar',
+             'corredor, área técnica, iluminação externa')
+    +   op('eventual', 'Só acende quando é usado',
+             'laboratório, auditório, quadra: não acende todo dia')
+    + '</div>'
+    + '<div class="linha horas"' + (modo === 'fixo' ? '' : ' hidden') + '>'
     +   '<div class="campo"><label>Acende às</label>'
     +     '<input type="time" class="liga" value="' + d(b.liga) + '"></div>'
     +   '<div class="campo"><label>Apaga às</label>'
     +     '<input type="time" class="desliga" value="' + d(b.desliga) + '"></div>'
+    + '</div>'
+    + '<div class="evt"' + (modo === 'eventual' ? '' : ' hidden') + '>'
+    +   '<div class="linha">'
+    +     '<div class="campo"><label>Vezes por mês</label>'
+    +       '<input type="text" class="umes" inputmode="decimal" placeholder="ex: 8" '
+    +       'value="' + esc(b.usos_mes != null ? vrg(b.usos_mes) : '') + '"></div>'
+    +     '<div class="campo"><label>Horas de cada vez</label>'
+    +       '<input type="text" class="huso" inputmode="decimal" placeholder="ex: 2" '
+    +       'value="' + esc(b.horas_uso != null ? vrg(b.horas_uso) : '') + '"></div>'
+    +   '</div>'
+    +   '<div class="campo"><label>De onde veio esse número</label>'
+    +     '<input type="text" class="orig" placeholder="a escala do laboratório, a '
+    +     'agenda da coordenação, o horário da grade" value="'
+    +     esc(d(b.fonte_origem)) + '"></div>'
+    +   '<p class="ajuda" style="margin:-4px 0 10px">Não vale estimar de cabeça. '
+    +   'Pergunte a quem tem a escala ou a agenda e escreva de onde saiu. É isso '
+    +   'que vocês vão responder se alguém perguntar na feira.</p>'
     + '</div>'
     + '<div class="linha">'
     +   '<div class="campo"><label>Quem informou</label>'
@@ -4347,8 +4572,10 @@ function cartaoBloco(b) {
     + (PODE_MAPA ? '<div style="margin-top:12px"><button class="btn peq ok grava"'
         + ' style="width:auto">Salvar o horário deste bloco</button></div>' : '')
     + '<div class="res"></div>'
-    + (pronto ? '<div class="horas-ok">A luz deste bloco fica acesa '
-        + horasTexto(b.horas) + ' por dia</div>' : '')
+    + (pronto ? '<div class="horas-ok">' + horasMesTexto(b) + '</div>'
+              : '<div class="horas-falta">Sem isto preenchido, os ' + quantos
+                + ' ambiente' + (quantos === 1 ? '' : 's') + ' deste bloco ficam '
+                + 'de fora da conta da economia.</div>')
     + (b.quem_registrou ? '<p class="ajuda" style="margin:9px 0 0;font-size:.76rem">'
         + 'Registrado por ' + esc(b.quem_registrou) + '</p>' : '')
     + '</div>';
@@ -4357,20 +4584,41 @@ function cartaoBloco(b) {
 function ligarCartaoBloco(b) {
   const cx = el('b-' + b.id);
   if (!cx) return;
-  const v24 = cx.querySelector('.v24'), horas = cx.querySelector('.horas');
-  if (v24) v24.addEventListener('change', () => { horas.hidden = v24.checked; });
+  const horas = cx.querySelector('.horas'), evt = cx.querySelector('.evt');
+  cx.querySelectorAll('input[name="modo' + b.id + '"]').forEach(r =>
+    r.addEventListener('change', () => {
+      horas.hidden = r.value !== 'fixo';
+      evt.hidden   = r.value !== 'eventual';
+      cx.querySelector('.res').innerHTML = '';
+    }));
   const bt = cx.querySelector('.grava');
   if (bt) bt.addEventListener('click', () => salvarBloco(b.id, cx, bt));
 }
 
 async function salvarBloco(id, cx, bt) {
   const onde = cx.querySelector('.res');
-  const v24 = cx.querySelector('.v24').checked;
+  const marcado = cx.querySelector('input[name="modo' + id + '"]:checked');
+  const modo = marcado ? marcado.value : 'fixo';
+  const v24 = modo === 'sempre', evt = modo === 'eventual';
   const liga = cx.querySelector('.liga').value;
   const desliga = cx.querySelector('.desliga').value;
-  if (!v24 && (!liga || !desliga)) {
+  const umes = evt ? num(cx.querySelector('.umes').value) : null;
+  const huso = evt ? num(cx.querySelector('.huso').value) : null;
+  const orig = cx.querySelector('.orig').value.trim();
+  if (modo === 'fixo' && (!liga || !desliga)) {
     onde.innerHTML = '<div class="aviso erro">Informe a hora que acende e a que apaga, '
-      + 'ou marque que fica aceso 24 horas.</div>';
+      + 'ou escolha outro modo acima.</div>';
+    return;
+  }
+  if (evt && (umes == null || huso == null || !(umes > 0) || !(huso > 0))) {
+    onde.innerHTML = '<div class="aviso erro">Diga quantas vezes por mês este bloco '
+      + 'acende e quantas horas fica aceso de cada vez.</div>';
+    return;
+  }
+  if (evt && orig.length < 4) {
+    onde.innerHTML = '<div class="aviso erro">Escreva de onde veio esse número: a '
+      + 'escala, a agenda, o horário da grade. Sem fonte isso vira chute, e é a '
+      + 'primeira coisa que perguntam na feira.</div>';
     return;
   }
   const fnome = cx.querySelector('.fnome').value.trim();
@@ -4388,7 +4636,10 @@ async function salvarBloco(id, cx, bt) {
   let r;
   try {
     r = await rpc('salvar_bloco', { p_token: EU.token, p_bloco: id,
-      p_liga: v24 ? null : liga, p_desliga: v24 ? null : desliga, p_sempre: v24,
+      p_liga: modo === 'fixo' ? liga : null,
+      p_desliga: modo === 'fixo' ? desliga : null,
+      p_sempre: v24, p_eventual: evt, p_usos_mes: umes, p_horas_uso: huso,
+      p_origem: orig || null,
       p_fonte_nome: fnome, p_fonte_funcao: cx.querySelector('.ffun').value.trim(),
       p_obs: cx.querySelector('.obs').value.trim(), p_aluno: SOU ? SOU.id : null });
   } catch (e) {
@@ -4398,12 +4649,20 @@ async function salvarBloco(id, cx, bt) {
   bt.disabled = false; bt.textContent = 'Salvar o horário deste bloco';
   if (!r.ok) { onde.innerHTML = '<div class="aviso erro">' + esc(r.erro) + '</div>'; return; }
   onde.innerHTML = '<div class="aviso bom">Guardado para os ' + r.ambientes
-    + ' ambientes do bloco: fica aceso ' + horasTexto(r.horas) + ' por dia.</div>';
+    + ' ambientes do bloco: '
+    + (evt ? 'acende ' + vrg(umes) + (umes === 1 ? ' vez' : ' vezes') + ' por mês, '
+             + horasTexto(huso) + ' de cada vez, ' + vrg(r.horas_mes) + ' horas por mês.'
+           : 'fica aceso ' + horasTexto(r.horas) + ' por dia.') + '</div>';
   const i = BLOCOS.findIndex(x => x.id === id);
   if (i >= 0) {
-    BLOCOS[i].sempre = v24;
-    BLOCOS[i].liga = v24 ? null : liga; BLOCOS[i].desliga = v24 ? null : desliga;
-    BLOCOS[i].horas = r.horas; BLOCOS[i].fonte_nome = fnome;
+    BLOCOS[i].sempre = v24; BLOCOS[i].uso_eventual = evt;
+    BLOCOS[i].liga = modo === 'fixo' ? liga : null;
+    BLOCOS[i].desliga = modo === 'fixo' ? desliga : null;
+    BLOCOS[i].usos_mes = evt ? umes : null;
+    BLOCOS[i].horas_uso = evt ? huso : null;
+    BLOCOS[i].fonte_origem = orig || null;
+    BLOCOS[i].horas = evt ? huso : r.horas;
+    BLOCOS[i].fonte_nome = fnome;
     BLOCOS[i].quem_registrou = SOU ? SOU.nome : BLOCOS[i].quem_registrou;
   }
   setTimeout(pintarBlocos, 1600);
@@ -5044,19 +5303,24 @@ async function carregarMapaProf() {
     [(+z.conferidos || 0) + '<i>de ' + (+z.ambientes || 0) + '</i>',
      'ambientes conferidos'],
     [+z.nao_construidos || 0, 'não construídos'],
-    [+z.sem_horario || 0,     'ambientes sem horário do bloco']
+    [+z.sem_horario || 0,     'ambientes fora da conta por falta de horário']
   ].map(x => '<div class="mini"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
 
-  const semFonte = b.filter(x => x.horas != null && !x.fonte_nome).length;
-  el('ajudaMapaProf').textContent = semFonte
-    ? semFonte + ' bloco(s) com horário mas sem o nome de quem informou.'
+  const semFonte = b.filter(x => blocoPronto(x) && !x.fonte_nome).length;
+  el('ajudaMapaProf').textContent = (semFonte
+    ? semFonte + ' bloco(s) com horário mas sem o nome de quem informou. '
     : (+z.blocos_com_horario
-        ? 'Todo horário levantado tem fonte registrada.'
-        : 'Nenhum bloco teve o horário levantado ainda.');
+        ? 'Todo horário levantado tem fonte registrada. '
+        : 'Nenhum bloco teve o horário levantado ainda. '))
+    + (+z.sem_horario
+        ? 'Os ' + z.sem_horario + ' ambientes sem horário ficam de fora do cálculo '
+          + 'da economia, em vez de entrarem com um valor suposto. Fechar esses '
+          + 'blocos aumenta o número final.'
+        : 'Nenhum ambiente está fora do cálculo por falta de horário.');
 
   el('tabMapaProf').innerHTML =
     '<thead><tr><th class="cresce">Bloco</th><th>Ambientes</th><th>Acende</th>'
-    + '<th>Apaga</th><th>Horas por dia</th>'
+    + '<th>Apaga ou frequência</th><th>Tempo aceso</th>'
     + '<th class="cresce">Quem informou</th></tr></thead><tbody>'
     + b.map(x => {
         const falta = +x.sem_conferir || 0, nao = +x.nao_construidos || 0;
@@ -5068,10 +5332,26 @@ async function carregarMapaProf() {
           + (nao ? ' <span class="tag c">' + nao + ' fora</span>' : '')
           + (falta ? ' <span class="tag a">' + falta + ' a conferir</span>' : '')
           + '</td>'
-          + '<td data-r="Acende">' + (x.sempre ? '24h' : esc(x.liga || '')) + '</td>'
-          + '<td data-r="Apaga">' + (x.sempre ? '24h' : esc(x.desliga || '')) + '</td>'
-          + '<td data-r="Horas por dia" data-v="' + (x.horas == null ? -1 : x.horas) + '"><b>'
-          + (x.horas == null ? '' : (+x.horas).toLocaleString('pt-BR')) + '</b></td>'
+          + '<td data-r="Acende">' + (x.uso_eventual ? 'só no uso'
+              : x.sempre ? '24h' : esc(x.liga || '')) + '</td>'
+          + '<td data-r="Apaga">' + (x.uso_eventual
+              ? (x.usos_mes != null ? vrg(x.usos_mes) + 'x/mês' : '')
+              : x.sempre ? '24h' : esc(x.desliga || '')) + '</td>'
+          // um bloco de uso eventual não tem horas por dia: tem horas por mês,
+          // e misturar as duas unidades na mesma coluna daria número errado
+          + '<td data-r="Horas" data-v="'
+          + (x.uso_eventual ? (x.horas_mes == null ? -1 : x.horas_mes / 22)
+                            : (x.horas == null ? -1 : x.horas)) + '"><b>'
+          + (x.uso_eventual
+              ? (x.horas_mes == null ? '' : vrg(x.horas_mes) + ' h/mês')
+              : (x.horas == null ? '' : (+x.horas).toLocaleString('pt-BR') + ' h/dia'))
+          + '</b>'
+          + (x.uso_eventual && x.fonte_origem
+              ? '<small style="display:block;font-family:var(--c);font-size:.73rem;'
+                + 'color:var(--tinta2);white-space:normal;margin-top:2px">'
+                + esc(x.fonte_origem) + '</small>' : '')
+          + (!blocoPronto(x) ? ' <span class="tag a">fora da conta</span>' : '')
+          + '</td>'
           + '<td class="cresce" data-r="Quem informou">'
           + (x.fonte_nome ? esc(x.fonte_nome)
               + (x.fonte_funcao ? ', ' + esc(x.fonte_funcao) : '')
@@ -5632,10 +5912,18 @@ function montarParecer(r, P, lamp, precoMed, feitos, tot, qtdPrecos) {
       + 'potência. Elas foram registradas como não lidas e ficaram fora do cálculo, em vez '
       + 'de receberem um valor estimado.');
   }
+  pt.push('Nem todo ambiente acende todo dia. Laboratório, auditório e quadra só '
+    + 'acendem quando são usados, e para eles o levantamento registra quantas vezes '
+    + 'por mês a luz é ligada e por quantas horas de cada vez, conforme a escala ou '
+    + 'a agenda de quem controla o espaço.');
   if (+E.ambientes_sem_horario) {
-    pt.push('Em ' + n(E.ambientes_sem_horario) + ' ambiente(s) o horário ainda não foi '
-      + 'levantado. Para eles foi usado o horário de referência de ' + P.horas_dia
-      + ' horas por dia, e isso está indicado no sistema.');
+    pt.push('Em ' + n(E.ambientes_sem_horario) + ' ambiente(s) com lâmpada contada o '
+      + 'horário não foi levantado. Esses ambientes ficaram FORA do cálculo, em vez de '
+      + 'receberem um horário estimado. O resultado deste parecer é, portanto, um piso: '
+      + 'a economia real é maior que a informada aqui.');
+    (E.fora_da_conta || []).forEach(f =>
+      pt.push('   Fora do cálculo: ' + f.bloco + ' (' + f.ambientes
+        + ' ambiente(s), ' + n(f.lampadas) + ' lâmpadas contadas).'));
   }
   pt.push('');
 
