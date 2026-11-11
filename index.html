@@ -1312,6 +1312,191 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
   </section>
 
   <!-- UMA FICHA DE CÁLCULO -->
+  <section id="tela-ambiente" hidden>
+    <button class="volta" id="btVolta">← voltar para a lista</button>
+    <h2 style="font-size:1.15rem" id="tituloAmb"></h2>
+    <p class="ajuda" id="subAmb"></p>
+    <div id="avisoAmb"></div>
+
+    <div class="cx">
+      <p class="ajuda" id="quemLanca" style="margin:0 0 12px"></p>
+      <label>Que equipamento você está lançando?</label>
+      <div class="tipos" id="tipos"></div>
+      <div class="dupla">
+        <div class="campo">
+          <label for="qtd">Quantos</label>
+          <input type="number" id="qtd" min="1" step="1" inputmode="numeric" value="1">
+        </div>
+        <div class="campo">
+          <label for="pot">Potência em watts</label>
+          <input type="text" id="pot" inputmode="decimal" autocomplete="off"
+                 placeholder="o que está escrito no aparelho">
+          <div class="chips" id="chipsPot"></div>
+        </div>
+      </div>
+      <label class="marca" id="marcaSemPot" for="semPot">
+        <input type="checkbox" id="semPot">
+        <span>Não deu para ler a potência
+        <small>Marque só depois de procurar na etiqueta, no vidro e na base. A foto
+        continua obrigatória nos dois casos.</small></span>
+      </label>
+      <!-- Dois motivos bem diferentes. O aparelho sem nada escrito não tem como
+           ser resolvido depois. A lâmpada alta, de poste ou de ginásio, tem: quem
+           troca a lâmpada sabe, e a potência entra na conta quando for confirmada. -->
+      <div class="escolha-sa" id="porqueSemPot" hidden style="margin:-4px 0 14px">
+        <label class="op-sa"><input type="radio" name="motSemPot" value="sem_etiqueta" checked>
+          <span><b>O aparelho não traz a potência escrita</b>
+          <small>procuramos na etiqueta, no vidro e na base e não tem nada</small></span></label>
+        <label class="op-sa"><input type="radio" name="motSemPot" value="nao_alcanca">
+          <span><b>É alta demais, não dá para chegar perto</b>
+          <small>lâmpada de poste, de ginásio, de forro alto: dá para ver que está lá,
+          mas não dá para ler o que está escrito nela</small></span></label>
+        <div class="campo" id="campoQuemSabe" hidden style="margin:2px 0 0">
+          <label for="quemSabe">Quem pode saber a potência depois</label>
+          <input type="text" id="quemSabe" autocomplete="off"
+                 placeholder="quem troca a lâmpada, o almoxarifado, a nota de compra">
+          <p class="ajuda" style="margin:7px 0 0">Enquanto a potência não for
+          confirmada, estas lâmpadas ficam de fora da conta da economia. Escreva
+          aqui quem pode fechar esse dado, e o professor vai atrás.</p>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Foto do aparelho</label>
+        <div class="fotos" id="caixaFotos">
+          <div class="tiras" id="tiras"></div>
+          <!-- dois caminhos: o de cima abre a câmera na hora (capture), o de baixo
+               abre a galeria, para quem já fotografou antes de abrir o sistema -->
+          <input type="file" id="arqFoto" accept="image/*" capture="environment"
+                 multiple hidden>
+          <input type="file" id="arqGaleria" accept="image/*" multiple hidden>
+          <div class="doisBotoes">
+            <button type="button" class="btn sec peq" id="btFoto">Tirar foto do aparelho</button>
+            <button type="button" class="btn sec peq" id="btGaleria">Anexar foto da galeria</button>
+          </div>
+          <p class="ajuda" id="dicaFoto" style="margin:10px 0 0">Uma foto por
+          aparelho, no mínimo. Até quatro.</p>
+          <p class="ajuda" id="ajudaFoto" style="margin:6px 0 0"></p>
+        </div>
+      </div>
+      <div class="campo">
+        <label>Horas por dia que fica ligado</label>
+        <div id="horasBloco"></div>
+      </div>
+      <div class="campo">
+        <label for="obs">Observação (opcional)</label>
+        <input type="text" id="obs" placeholder="ex: duas queimadas">
+      </div>
+      <button class="btn" id="btAdd">Lançar este equipamento</button>
+    </div>
+
+    <h3 class="sec">Já lançado neste ambiente</h3>
+    <div id="listaItens"></div>
+
+    <h3 class="sec">Quem fez cada função aqui</h3>
+    <p class="ajuda" id="ajudaFuncoes"></p>
+    <div class="cx">
+      <div class="campo"><label for="fContador">Contador: contou em voz alta</label>
+        <select id="fContador"></select></div>
+      <div class="campo"><label for="fLeitor">Leitor: leu as potências</label>
+        <select id="fLeitor"></select></div>
+      <div class="campo"><label for="fAnotador">Anotador: preencheu a ficha</label>
+        <select id="fAnotador"></select></div>
+      <div class="campo"><label for="fConferente">Conferente: fotografou e reconferiu</label>
+        <select id="fConferente"></select></div>
+
+      <div class="acomp">
+        <b>Teve funcionário acompanhando?</b>
+        <p>Em alguns ambientes o aluno não pode entrar sozinho. Se alguém da escola
+        abriu a sala ou ficou junto durante a contagem, escreva aqui. Se foi só o
+        grupo, deixe em branco.</p>
+        <div class="dupla">
+          <div class="campo"><label for="acompNome">Nome de quem acompanhou</label>
+            <input type="text" id="acompNome" autocomplete="off"
+                   placeholder="deixe vazio se não houve"></div>
+          <div class="campo"><label for="acompFuncao">Função dele na escola</label>
+            <input type="text" id="acompFuncao" autocomplete="off"
+                   placeholder="ex: porteiro, secretária"></div>
+        </div>
+      </div>
+
+      <button class="btn sec" id="btFuncoes">Salvar quem fez o quê</button>
+    </div>
+
+    <div id="faltaConcluir" style="margin-top:18px"></div>
+    <div><button class="btn ok" id="btConcluir"></button></div>
+
+    <div id="semAcessoFeito"></div>
+    <details class="trancar" id="caixaTrancar">
+      <summary>Não deu para contar este ambiente</summary>
+      <p class="ajuda">Um ambiente só fica pendente para sempre se ninguém explicar
+      o que houve. Escolha abaixo o caso de vocês e escreva por extenso. O professor
+      lê tudo isso e leva à direção quando for preciso.</p>
+      <div class="escolha-sa">
+        <label class="op-sa"><input type="radio" name="tipoSA" value="proibido" checked>
+          <span><b>Existe, mas não deixaram entrar</b>
+          <small>D.M.L., casa de força, sala do servidor, almoxarifado</small></span></label>
+        <label class="op-sa"><input type="radio" name="tipoSA" value="inexistente">
+          <span><b>Não existe: está na planta, mas não foi construído</b>
+          <small>o espaço nunca saiu do papel, virou outra coisa ou foi demolido</small></span></label>
+      </div>
+      <div id="avisoTrancar"></div>
+      <div class="campo"><label for="saMotivo" id="lbMotivo">O que disseram a vocês</label>
+        <textarea id="saMotivo" rows="3"
+          placeholder="ex: a chave fica com a zeladoria e não liberam aluno entrar sozinho"></textarea></div>
+      <div class="dupla">
+        <div class="campo"><label for="saQuem" id="lbQuem">Quem informou ou proibiu</label>
+          <input type="text" id="saQuem" autocomplete="off" placeholder="nome por extenso"></div>
+        <div class="campo"><label for="saFuncao">Função dele na escola</label>
+          <input type="text" id="saFuncao" autocomplete="off"
+            placeholder="ex: zeladora, porteiro"></div>
+      </div>
+      <button class="btn sec" id="btTrancar">Registrar que não houve acesso</button>
+    </details>
+  </section>
+  <section id="tela-conta" hidden>
+    <button class="volta" id="btVoltaConta">← voltar para a lista</button>
+    <h2 style="font-size:1.15rem">Conferir a minha conta</h2>
+    <p class="ajuda">Faça a conta no caderno primeiro. Aqui você só digita o resultado
+    e o sistema diz se bateu. Ele não mostra a resposta.</p>
+    <div id="avisoConta"></div>
+
+    <div class="cx" style="margin-bottom:14px">
+      <label for="horasConta">Qual linha da tabela você está conferindo?</label>
+      <div class="chips" id="chipsHoras" style="margin-bottom:10px"></div>
+      <input type="text" id="horasConta" inputmode="decimal"
+             autocomplete="off" value="4">
+      <p class="ajuda" style="margin:9px 0 0">Horas por dia que a luz fica acesa. Use a
+      mesma linha que você fez no caderno.</p>
+    </div>
+
+    <div class="cx" id="dadosConta" style="margin-bottom:14px"></div>
+
+    <!-- As instruções vêm ANTES dos campos. Embaixo, o aluno tinha de descer até o
+         fim, ler e voltar para o passo 1 a cada tentativa. -->
+    <details class="dobra" id="comoSeFaz" open>
+      <summary>Como se faz, passo a passo</summary>
+      <p class="ajuda" style="margin:0">
+      <b>1.</b> Diferença entre a lâmpada antiga e a LED, dividida por 1000, vezes as
+      horas, vezes os dias do mês. Isso dá o <b>kWh evitado no mês</b>.<br>
+      <b>2.</b> Esse kWh vezes o preço do quilowatt-hora dá a <b>economia por mês</b>.<br>
+      <b>3.</b> Vezes 12 dá a <b>economia em um ano</b>.<br>
+      <b>4.</b> Vezes o número de meses desde a troca dá a <b>economia desde a troca</b>.<br>
+      Pode arredondar. O sistema aceita pequena diferença de arredondamento.</p>
+    </details>
+
+    <div id="passosConta"></div>
+
+    <p class="ajuda" style="margin-top:12px">O sistema guarda todas as suas tentativas,
+    inclusive as erradas, e o professor vê. Não chute: refaça a conta.</p>
+  </section>
+  <section id="tela-compara" hidden>
+    <button class="volta" id="btVoltaCompara">← voltar</button>
+    <h2 style="font-size:1.15rem">A nossa escola e as outras</h2>
+    <p class="ajuda">Esta é a tela de treinar a resposta da Feira. A primeira parte é o
+    nosso número real. A segunda é hipótese: você digita os dados de outra escola e o
+    sistema calcula quanto ela economizaria se fizesse a mesma troca.</p>
+    <div id="caixaCompara2"></div>
+  </section>
   <!-- PREÇOS -->
   <section id="tela-precos" hidden>
     <h2 style="font-size:1.15rem">Pesquisa de preço do LED</h2>
@@ -1906,6 +2091,15 @@ function vrg(v){
   return isNaN(n) ? String(v) : String(n).replace('.', ',');
 }
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+/* vrg() não agrupa milhar de propósito: ela também escreve o valor DENTRO dos
+   campos de digitação, e ponto de milhar ali atrapalha quem vai editar. Para
+   LER, número grande sem ponto é ilegível no celular, então quem só mostra
+   usa mil(). */
+function mil(v, casas){
+  const n = +v;
+  if (v === null || v === undefined || v === '' || isNaN(n)) return '';
+  return n.toLocaleString('pt-BR', { maximumFractionDigits: casas == null ? 3 : casas });
+}
 function telas(qual) {
   ['entrar','eusou','ambientes','ambiente','precos','avaliar','conta','mapa','palco',
    'calculo','compara','prof'].forEach(t =>
