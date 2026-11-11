@@ -275,6 +275,39 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
    para onde se vai DEPOIS que o trabalho da tela está feito: fica embaixo de
    tudo, separada por uma linha, sozinha, e é a única coisa azul sólida da
    tela, para ninguém confundir com as ações do dia a dia. */
+/* NÃO CONSEGUIMOS ENTRAR
+   D.M.L., casa de força, sala do servidor. O ambiente existe, mas o aluno não
+   entra. Sem este registro aquele ambiente ficava pendente para sempre, e a
+   escola nunca saberia por quê. */
+.amb.trancado{border-left:4px solid var(--tinta3)}
+.amb.trancado .st{color:var(--tinta3)}
+.trancar{margin-top:16px;border:1.5px dashed var(--linha2);border-radius:var(--r2);
+  padding:14px 15px;background:var(--papel)}
+.trancar>summary{cursor:pointer;font-family:var(--d);font-weight:700;font-size:.92rem;
+  list-style:none;color:var(--tinta)}
+.trancar>summary::-webkit-details-marker{display:none}
+.trancar>summary::before{content:"▸ ";color:var(--tinta3)}
+.trancar[open]>summary::before{content:"▾ "}
+.trancar[open]>summary{margin-bottom:10px}
+.trancar p.ajuda{margin:0 0 12px}
+.trancar .campo{margin-bottom:12px}
+.trancado-cx{margin-top:16px;border-left:3px solid var(--tinta3);
+  background:var(--sup2);border-radius:0 var(--r2) var(--r2) 0;padding:14px 16px}
+.trancado-cx b{display:block;font-family:var(--d);font-size:.69rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.09em;color:var(--tinta2);margin-bottom:5px}
+.trancado-cx .mot{font-size:.92rem;line-height:1.45;margin:0 0 9px}
+.trancado-cx small{display:block;font-size:.8rem;color:var(--tinta2);line-height:1.45}
+/* As duas razões: foram impedidos de entrar, ou o ambiente não existe.
+   São casos diferentes para a escola, então o registro separa os dois. */
+.escolha-sa{display:grid;gap:9px;margin-bottom:14px}
+.op-sa{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
+  border:2px solid var(--linha2);border-radius:var(--r2);padding:11px 13px;
+  background:var(--sup);min-height:44px}
+.op-sa:has(input:checked){border-color:var(--acao);background:var(--sup2)}
+.op-sa input{width:21px;height:21px;margin:1px 0 0;accent-color:var(--acao);flex:0 0 auto}
+.op-sa b{display:block;font-size:.91rem;line-height:1.35;font-weight:700}
+.op-sa small{display:block;font-size:.78rem;color:var(--tinta2);line-height:1.4;margin-top:3px}
+
 /* FOTO DO APARELHO
    Todo aparelho contado entra com foto. A foto é a prova de que aquele
    aparelho existe e de que a potência lida é a que está escrita nele. Quando
@@ -1264,6 +1297,34 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 
     <div id="faltaConcluir" style="margin-top:18px"></div>
     <div><button class="btn ok" id="btConcluir"></button></div>
+
+    <div id="semAcessoFeito"></div>
+    <details class="trancar" id="caixaTrancar">
+      <summary>Não deu para contar este ambiente</summary>
+      <p class="ajuda">Um ambiente só fica pendente para sempre se ninguém explicar
+      o que houve. Escolha abaixo o caso de vocês e escreva por extenso. O professor
+      lê tudo isso e leva à direção quando for preciso.</p>
+      <div class="escolha-sa">
+        <label class="op-sa"><input type="radio" name="tipoSA" value="proibido" checked>
+          <span><b>Existe, mas não deixaram entrar</b>
+          <small>D.M.L., casa de força, sala do servidor, almoxarifado</small></span></label>
+        <label class="op-sa"><input type="radio" name="tipoSA" value="inexistente">
+          <span><b>Não existe: está na planta, mas não foi construído</b>
+          <small>o espaço nunca saiu do papel, virou outra coisa ou foi demolido</small></span></label>
+      </div>
+      <div id="avisoTrancar"></div>
+      <div class="campo"><label for="saMotivo" id="lbMotivo">O que disseram a vocês</label>
+        <textarea id="saMotivo" rows="3"
+          placeholder="ex: a chave fica com a zeladoria e não liberam aluno entrar sozinho"></textarea></div>
+      <div class="dupla">
+        <div class="campo"><label for="saQuem" id="lbQuem">Quem informou ou proibiu</label>
+          <input type="text" id="saQuem" autocomplete="off" placeholder="nome por extenso"></div>
+        <div class="campo"><label for="saFuncao">Função dele na escola</label>
+          <input type="text" id="saFuncao" autocomplete="off"
+            placeholder="ex: zeladora, porteiro"></div>
+      </div>
+      <button class="btn sec" id="btTrancar">Registrar que não houve acesso</button>
+    </details>
   </section>
 
   <!-- PREÇOS -->
@@ -1370,6 +1431,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div class="minis" id="minis"></div>
       <div class="graf" id="grafGrupos"></div>
       <div class="graf" id="grafSaldo"></div>
+      <div id="semAcessoProf"></div>
       <h3 class="sec">Etapa de cada grupo</h3>
       <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
       <div class="rol"><table id="tabGrupos"></table></div>
@@ -2041,24 +2103,46 @@ async function carregarAmbientes() {
     const lista = r.ambientes || [];
     if (r.horas_padrao != null) HORAS_PADRAO = +r.horas_padrao;
     const feitos = lista.filter(a => a.concluido).length;
+    const fechados = lista.filter(a => a.sem_acesso).length;
+    const nexiste = lista.filter(a =>
+      a.sem_acesso && a.sem_acesso_tipo === 'inexistente').length;
+    const barrados = fechados - nexiste;
+    // um ambiente sem acesso, ou que nem foi construído, não fica pendente
+    // para sempre: ele é resolvido de outro jeito, com a explicação anexada
+    const resolvidos = feitos + fechados;
     el('tituloLista').textContent = 'Grupo ' + EU.codigo;
     el('subLista').textContent = EU.resumo + ' · ' + feitos + ' de ' + lista.length +
-      ' ambiente' + (lista.length===1?'':'s') + ' concluído' + (feitos===1?'':'s') + '.';
-    el('barraLista').style.width = lista.length ? (feitos/lista.length*100)+'%' : '0';
+      ' ambiente' + (lista.length===1?'':'s') + ' concluído' + (feitos===1?'':'s') + '.'
+      + (barrados ? ' ' + barrados + ' sem acesso.' : '')
+      + (nexiste ? ' ' + nexiste + ' não existe' + (nexiste===1?'':'m') + '.' : '');
+    el('barraLista').style.width = lista.length ? (resolvidos/lista.length*100)+'%' : '0';
     el('listaAmbientes').innerHTML = lista.map(a => {
-      const cls = a.concluido ? 'feito' : (a.itens > 0 ? 'andando' : '');
-      const ic  = a.concluido ? '✓' : (a.itens > 0 ? '•' : '');
-      const det = a.itens > 0
+      const inex = a.sem_acesso && a.sem_acesso_tipo === 'inexistente';
+      const cls = a.sem_acesso ? 'trancado'
+                : a.concluido ? 'feito' : (a.itens > 0 ? 'andando' : '');
+      const ic  = a.sem_acesso ? (inex ? '—' : '⊘')
+                : a.concluido ? '✓' : (a.itens > 0 ? '•' : '');
+      const det = a.sem_acesso
+        ? (inex
+            ? 'não existe · está na planta, mas não foi construído'
+            : 'sem acesso · informado por ' + esc(a.sem_acesso_quem || ''))
+        : a.itens > 0
         ? (a.itens + ' lançamento' + (a.itens===1?'':'s') + ' · ' + a.lampadas + ' lâmpadas'
            + (+a.funcoes < 4 ? ' · falta dizer quem fez o quê' : ''))
         : 'ainda sem lançamento';
       return '<button class="amb ' + cls + '" data-id="' + a.id + '">' +
              '<span class="n">' + String(a.ordem).padStart(2,'0') + '</span>' +
-             '<span class="t">' + a.nome + '<small>' + det + '</small></span>' +
+             '<span class="t">' + esc(a.nome) + '<small>' + det + '</small></span>' +
              '<span class="st">' + ic + '</span></button>';
     }).join('');
-    if (feitos === lista.length && lista.length)
-      msg('avisoLista','Todos os ambientes do seu grupo estão concluídos. Pode avisar o professor.','bom');
+    if (resolvidos === lista.length && lista.length)
+      msg('avisoLista', fechados
+        ? 'Os ambientes do seu grupo estão resolvidos: ' + feitos + ' contados'
+          + (barrados ? ', ' + barrados + ' sem acesso' : '')
+          + (nexiste ? ' e ' + nexiste + ' que não existe' + (nexiste===1?'':'m') : '')
+          + ', tudo com a explicação registrada. Pode avisar o professor.'
+        : 'Todos os ambientes do seu grupo estão concluídos. Pode avisar o professor.',
+        'bom');
     else msg('avisoLista','');
     document.querySelectorAll('#listaAmbientes .amb').forEach(b =>
       b.addEventListener('click', () => abrirAmbiente(+b.dataset.id, lista)));
@@ -2632,6 +2716,13 @@ async function abrirAmbiente(id, lista) {
     + 'contando as queimadas também.';
   TIPO = 'Lâmpada'; TIPOS_ABERTO = false;
   ITENS_AQUI = 0; FUNCOES_AQUI = 0;
+  el('saMotivo').value = ''; el('saQuem').value = ''; el('saFuncao').value = '';
+  el('caixaTrancar').open = false;
+  const op = document.querySelector('input[name="tipoSA"][value="proibido"]');
+  if (op) op.checked = true;
+  pintarEscolhaSA();
+  msg('avisoTrancar','');
+  pintarSemAcesso();
   montarTipos(); chipsPot(); pintarHorasBloco(); limparFotos();
   el('qtd').value = 1; el('pot').value = ''; el('obs').value = '';
   msg('avisoAmb','');
@@ -2666,6 +2757,96 @@ function marcarAcomp() {
   if (cx) cx.classList.toggle('tem', !!el('acompNome').value.trim());
 }
 el('acompNome').addEventListener('input', marcarAcomp);
+/* ---------- quando o aluno não pode entrar ----------
+   O ambiente existe e continua na conta da escola, mas ninguém do grupo pôde
+   entrar. O registro exige o motivo por extenso e o nome de quem informou:
+   sem isso vira "não deu" e o professor não tem o que levar à direção. */
+function tipoSA() {
+  const m = document.querySelector('input[name="tipoSA"]:checked');
+  return m ? m.value : 'proibido';
+}
+/* As duas razões pedem coisas diferentes. Quando foram impedidos de entrar, o
+   nome de quem impediu é o que o professor leva à direção. Quando o ambiente
+   não existe, não há quem culpar: o que importa é o que eles acharam no lugar. */
+function pintarEscolhaSA() {
+  const inex = tipoSA() === 'inexistente';
+  el('lbMotivo').textContent = inex
+    ? 'O que vocês encontraram no lugar'
+    : 'O que disseram a vocês';
+  el('saMotivo').placeholder = inex
+    ? 'ex: no lugar da sala de leitura tem um muro, a sala não chegou a ser construída'
+    : 'ex: a chave fica com a zeladoria e não liberam aluno entrar sozinho';
+  el('lbQuem').textContent = inex
+    ? 'Quem confirmou, se alguém disse'
+    : 'Quem informou ou proibiu';
+  el('saQuem').placeholder = inex ? 'pode ficar em branco' : 'nome por extenso';
+  el('btTrancar').textContent = inex
+    ? 'Registrar que este ambiente não existe'
+    : 'Registrar que não houve acesso';
+}
+document.querySelectorAll('input[name="tipoSA"]').forEach(r =>
+  r.addEventListener('change', () => { pintarEscolhaSA(); msg('avisoTrancar',''); }));
+
+function pintarSemAcesso() {
+  const cx = el('semAcessoFeito'), cai = el('caixaTrancar');
+  if (!AMB) return;
+  if (AMB.sem_acesso) {
+    const inex = AMB.sem_acesso_tipo === 'inexistente';
+    const quem = AMB.sem_acesso_quem
+      ? (inex ? 'Confirmado por ' : 'Informado por ') + esc(AMB.sem_acesso_quem)
+        + (AMB.sem_acesso_funcao ? ', ' + esc(AMB.sem_acesso_funcao) : '') + '.'
+      : 'Ninguém da escola foi citado: o grupo viu no lugar.';
+    cx.innerHTML = '<div class="trancado-cx"><b>'
+      + (inex ? 'Ambiente que não existe' : 'Sem acesso a este ambiente') + '</b>'
+      + '<p class="mot">' + esc(AMB.sem_acesso_motivo || '') + '</p>'
+      + '<small>' + quem + '</small>'
+      + '<div style="margin-top:12px"><button class="btn sec peq" id="btDestrancar">'
+      + (inex ? 'Ele existe sim, desfazer' : 'Conseguimos entrar, desfazer')
+      + '</button></div></div>';
+    el('btDestrancar').addEventListener('click', () => trancar(false));
+    cai.hidden = true;
+    el('btConcluir').hidden = true;
+    el('faltaConcluir').innerHTML = '';
+  } else {
+    cx.innerHTML = '';
+    cai.hidden = false;
+    el('btConcluir').hidden = false;
+  }
+}
+async function trancar(valor) {
+  const b = el(valor ? 'btTrancar' : 'btDestrancar');
+  if (b) b.disabled = true;
+  const tp = tipoSA();
+  let r;
+  try {
+    r = await rpc('marcar_sem_acesso', { p_token: EU.token, p_ambiente: AMB.id,
+      p_valor: valor, p_motivo: valor ? el('saMotivo').value : null,
+      p_quem: valor ? el('saQuem').value : null,
+      p_funcao: valor ? el('saFuncao').value : null,
+      p_aluno: SOU ? SOU.id : null,
+      p_tipo: valor ? tp : null });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  if (b) b.disabled = false;
+  if (!r.ok) { msg(valor ? 'avisoTrancar' : 'avisoAmb', r.erro, 'erro');
+               return aoAlcance(valor ? 'avisoTrancar' : 'avisoAmb'); }
+  AMB.sem_acesso = valor;
+  AMB.sem_acesso_tipo   = valor ? tp : null;
+  AMB.sem_acesso_motivo = valor ? el('saMotivo').value.trim() : null;
+  AMB.sem_acesso_quem   = valor ? el('saQuem').value.trim() || null : null;
+  AMB.sem_acesso_funcao = valor ? el('saFuncao').value.trim() || null : null;
+  msg('avisoTrancar','');
+  pintarSemAcesso();
+  pintarFaltaConcluir();
+  msg('avisoAmb', valor
+    ? (tp === 'inexistente'
+        ? 'Registrado. Este ambiente sai da lista com a explicação anexada, e o '
+          + 'professor fica sabendo que ele não existe.'
+        : 'Registrado. Este ambiente sai da lista de pendências com o motivo anexado.')
+    : 'Desfeito. O ambiente voltou a pedir a contagem.', 'bom');
+  aoAlcance('avisoAmb');
+}
+el('btTrancar').addEventListener('click', () => trancar(true));
+
 /* O que ainda impede este ambiente de ser concluído, dito ANTES de a pessoa
    tentar. O aviso de erro aparecia no alto da tela e o botão fica lá embaixo:
    quem lançava pelo celular tocava no botão, nada acontecia à vista, e não
@@ -2674,7 +2855,7 @@ let ITENS_AQUI = 0, FUNCOES_AQUI = 0;
 function pintarFaltaConcluir() {
   const n = el('faltaConcluir');
   if (!n) return;
-  if (!AMB || AMB.concluido) { n.innerHTML = ''; return; }
+  if (!AMB || AMB.concluido || AMB.sem_acesso) { n.innerHTML = ''; return; }
   const faltas = [];
   if (!ITENS_AQUI) faltas.push('lançar pelo menos um equipamento, com a foto dele');
   if (FUNCOES_AQUI < 4) faltas.push('dizer quem fez cada uma das quatro funções aqui'
@@ -3046,7 +3227,13 @@ async function carregarProf() {
   const precoMed = precos.length ? precos.reduce((a,b)=>a+b,0)/precos.length : P.preco_led;
 
   const C = contas(r, P, lamp, precoMed);
-  pintarHeroi(r, feitos, tot, lamp, precos.length);
+  // o anel mede o que está RESOLVIDO: contado ou fechado com justificativa.
+  // Um D.M.L. que ninguém pode abrir nunca seria contado, e o anel ficaria
+  // parado em 97% para sempre.
+  pintarHeroi(r, feitos + (+r.total_sem_acesso || 0), tot, lamp, precos.length,
+              (+r.total_sem_acesso || 0) - (+r.total_inexistentes || 0),
+              +r.total_inexistentes || 0);
+  pintarSemAcessoProf(r.sem_acesso || []);
   pintarMinis(r, P, C, lamp, precoMed, precos.length);
   pintarGrafGrupos(r.grupos || []);
   pintarGrafSaldo(C, P, lamp);
@@ -3370,7 +3557,49 @@ function proximaAcao(r, feitos, tot, lamp, qtdPrecos) {
   return { ok:true, rotulo:'Tudo pronto', texto:'Inventário completo e preço pesquisado. O parecer da aba Parecer já pode virar ofício.' };
 }
 
-function pintarHeroi(r, feitos, tot, lamp, qtdPrecos) {
+/* Os ambientes que ficaram sem contagem, nos dois casos: os que o grupo não
+   conseguiu abrir, que é o que o professor leva à direção para destravar as
+   chaves, e os que estão na planta mas não existem, que é o que ele usa para
+   corrigir a planta e o total da escola. */
+function pintarSemAcessoProf(lista) {
+  const n = el('semAcessoProf');
+  if (!n) return;
+  if (!lista.length) { n.innerHTML = ''; return; }
+  const cartao = x =>
+    '<div class="item"><span class="d"><b>' + esc(x.nome) + '</b> · grupo '
+    + esc(x.grupo) + '<small style="white-space:normal;display:block;margin-top:3px">'
+    + esc(x.motivo || '') + '</small>'
+    + '<small style="white-space:normal;display:block">'
+    + (x.quem
+        ? (x.tipo === 'inexistente' ? 'Confirmado por ' : 'Informado por ')
+          + esc(x.quem) + (x.funcao ? ', ' + esc(x.funcao) : '')
+        : 'Ninguém da escola foi citado')
+    + (x.registrou ? '. Registrado por ' + esc(x.registrou) : '')
+    + '.</small></span></div>';
+  const barrados = lista.filter(x => x.tipo !== 'inexistente');
+  const inex     = lista.filter(x => x.tipo === 'inexistente');
+  let h = '';
+  if (barrados.length)
+    h += '<h3 class="sec" style="margin-top:26px">Ambientes sem acesso</h3>'
+      + '<p class="ajuda">' + barrados.length + ' ambiente(s) que o grupo não pôde abrir. '
+      + 'Eles continuam contando no total da escola, mas sem lâmpada levantada. '
+      + 'Com a chave em mãos, o grupo desfaz o registro e conta normalmente.</p>'
+      + barrados.map(cartao).join('');
+  if (inex.length)
+    h += '<h3 class="sec" style="margin-top:26px">Ambientes que não existem</h3>'
+      + '<p class="ajuda">' + inex.length + ' ambiente(s) que estão na planta mas não '
+      + 'foram construídos, ou que viraram outra coisa. Confira com a leitura do grupo '
+      + 'e corrija a planta: enquanto estiverem na lista, eles puxam o total da escola '
+      + 'para cima sem nunca receber contagem.</p>'
+      + inex.map(cartao).join('');
+  n.innerHTML = h;
+}
+
+function pintarHeroi(r, feitos, tot, lamp, qtdPrecos, fechados, inexistentes) {
+  const nota = [
+    fechados ? fechados + ' sem acesso' : '',
+    inexistentes ? inexistentes + ' que não existe' + (inexistentes===1?'':'m') : ''
+  ].filter(Boolean).join(' e ');
   const pct = tot ? feitos / tot : 0;
   const VOLTA = 2 * Math.PI * 52;
   const acao = proximaAcao(r, feitos, tot, lamp, qtdPrecos);
@@ -3386,7 +3615,10 @@ function pintarHeroi(r, feitos, tot, lamp, qtdPrecos) {
     + '<text class="vl" id="arcoVl" x="60" y="59" text-anchor="middle" font-size="26">0%</text>'
     + '<text class="lb" x="60" y="76" text-anchor="middle" font-size="8">concluído</text>'
     + '</svg>'
-    + '<div><div class="titulo">' + feitos + ' de ' + tot + ' ambientes fechados</div>'
+    + '<div><div class="titulo">' + feitos + ' de ' + tot + ' ambientes fechados'
+    + (nota ? '<i style="font-style:normal;font-family:var(--m);font-size:.6em;'
+        + 'color:var(--tinta3);display:block;margin-top:3px">' + nota
+        + ', com explicação registrada</i>' : '') + '</div>'
     + '<p class="frase">A troca por LED já foi feita na reforma. O que este inventário '
     + 'apura é quanto ela economizou desde então. O número só fecha quando os ' + tot
     + ' ambientes estiverem contados e com horário levantado.</p>'
