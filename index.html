@@ -445,6 +445,42 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .horas-falta{font-family:var(--m);font-size:.78rem;color:var(--ambar);font-weight:600;
   margin-top:9px;line-height:1.45}
 .amb-mapa .evt{border-left:3px solid var(--azul);padding-left:13px;margin:4px 0 2px}
+
+/* FOLHA DA EQUIPE DE CÁLCULO
+   Era uma folha de papel. Na tela ela ganha a correção na hora, linha por
+   linha, com a mesma tolerância da ficha: de uma a quatro casas decimais. */
+.passo-folha{display:flex;gap:13px;align-items:center;border:2px solid var(--azul);
+  border-radius:var(--r);padding:14px 16px;margin-bottom:18px;background:var(--azul-sup);
+  flex-wrap:wrap}
+.passo-folha .num{font-family:var(--d);font-size:1.5rem;font-weight:800;color:var(--azul);
+  line-height:1;flex:none}
+.passo-folha div{flex:1;min-width:190px}
+.passo-folha b{display:block;font-family:var(--d);font-size:1rem;color:var(--tinta)}
+.passo-folha small{display:block;font-size:.81rem;color:var(--tinta2);line-height:1.4;
+  margin-top:3px}
+.passos-folha{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:9px}
+.passos-folha li{font-size:.92rem;line-height:1.5}
+.passos-folha code{font-family:var(--m);font-size:.88rem;background:var(--sup2);
+  padding:2px 6px;border-radius:5px;white-space:nowrap}
+.lf{border:1px solid var(--linha);border-radius:var(--r2);background:var(--sup);
+  padding:13px 15px;margin-bottom:11px}
+.lf.exemplo{background:var(--verde-sup);border-color:var(--verde)}
+.lf.certa{border-left:4px solid var(--verde)}
+.lf.errada{border-left:4px solid var(--ambar)}
+.lf .cab{display:flex;align-items:baseline;gap:9px;margin-bottom:10px;flex-wrap:wrap}
+.lf .hh{font-family:var(--d);font-size:1.1rem;font-weight:800;color:var(--azul)}
+.lf .hh i{font-style:normal;font-size:.72rem;font-weight:600;color:var(--tinta2);
+  margin-left:5px}
+.lf .tres{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:560px){.lf .tres{grid-template-columns:1fr}}
+.lf .campo{margin-bottom:0}
+.lf .vr{font-family:var(--m);font-size:1.05rem;font-weight:600;color:var(--verde)}
+.lf .marca{display:inline-block;font-family:var(--m);font-size:.73rem;font-weight:700;
+  padding:2px 7px;border-radius:20px;margin-left:6px}
+.lf .marca.c{background:var(--verde-sup);color:var(--verde)}
+.lf .marca.x{background:var(--ambar-sup);color:var(--ambar)}
+.lf .certo{display:block;font-family:var(--m);font-size:.78rem;color:var(--tinta2);
+  margin-top:4px}
 .fala-cx{display:flex;gap:12px;background:var(--sup);border:1px solid var(--linha);
   border-left:3px solid var(--linha2);border-radius:var(--r);padding:14px 16px;
   margin-bottom:11px}
@@ -1084,7 +1120,17 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 
   <!-- EQUIPE DE CÁLCULO -->
   <section id="tela-calculo" hidden>
-    <h2 style="font-size:1.15rem">A conta de cada grupo</h2>
+    <!-- Duas folhas, nesta ordem: primeiro a conta de UMA lâmpada, que é onde a
+         pessoa aprende o caminho; depois a conta da escola inteira, que é o
+         número que vai para o relatório. -->
+    <div class="passo-folha">
+      <span class="num">1</span>
+      <div><b>A conta de uma lâmpada</b>
+      <small>Oito linhas de horas por dia. É aqui que você treina o caminho da conta
+      antes de responder pelo seu grupo.</small></div>
+      <button type="button" class="btn peq sec" id="btAbrirFolha">Abrir a folha</button>
+    </div>
+    <h2 style="font-size:1.15rem">2. A conta de cada grupo</h2>
     <p class="ajuda">Cada grupo de campo tem uma ficha. Nela, uma pessoa faz a conta e
     até duas conferem, cada uma por conta própria, sem ver o resultado da outra. O
     sistema só diz em qual passo deu diferença. O valor certo só aparece quando todo
@@ -1379,6 +1425,63 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       </div>
       <button class="btn sec" id="btTrancar">Registrar que não houve acesso</button>
     </details>
+  </section>
+
+  <!-- FOLHA DA EQUIPE DE CÁLCULO -->
+  <section id="tela-folha" hidden>
+    <button class="volta" id="btVoltaFolha">&larr; Voltar</button>
+    <h2 style="font-size:1.15rem">Trocar por LED compensa?</h2>
+    <p class="ajuda" id="subFolha">Folha da equipe de cálculo.</p>
+
+    <h3 class="sec">Os números que a conta usa</h3>
+    <p class="ajuda">São sempre estes. Nenhum deles é invenção: a potência está escrita
+    na lâmpada, o preço veio da pesquisa da equipe de preço e a tarifa é a da Coelba.</p>
+    <div class="minis" id="minisFolha"></div>
+    <p class="ajuda" id="fonteTarifa" style="margin-top:8px"></p>
+    <p class="ajuda"><b>A voltagem não entra em nenhuma conta desta folha.</b> Ela serve
+    para comprar a lâmpada certa, não para calcular consumo.</p>
+
+    <h3 class="sec">Como se faz uma linha da tabela</h3>
+    <p class="ajuda">Exemplo com <b>4 horas por dia</b>, já resolvido. Faça igual para as
+    outras linhas.</p>
+    <ol class="passos-folha" id="exemploFolha"></ol>
+    <p class="ajuda">No passo 3, o 4 é o número de horas da linha e o 22 é o número de
+    dias. Não troque um pelo outro.</p>
+
+    <h3 class="sec">Complete a tabela</h3>
+    <p class="ajuda">A primeira linha já está pronta. Faça as outras sete. Cada linha é
+    enviada sozinha, e o sistema diz na hora o que bateu e o que não bateu.</p>
+    <div id="avisoFolha"></div>
+    <div id="linhasFolha"></div>
+
+    <h3 class="sec">Agora responda</h3>
+    <p class="ajuda">Estas quatro são para o professor ler. Não têm certo e errado
+    automático: escreva com suas palavras.</p>
+    <div class="campo"><label for="fq1">1. De 4 para 8 horas, o número de horas dobrou.
+      O que aconteceu com o retorno?</label>
+      <textarea id="fq1" rows="2"></textarea></div>
+    <div class="campo"><label for="fq2">2. E de 6 para 12 horas? Acontece a mesma
+      coisa?</label><textarea id="fq2" rows="2"></textarea></div>
+    <div class="campo"><label for="fq3">3. Escreva uma regra que sirva para qualquer
+      número de horas: retorno em meses =</label><textarea id="fq3" rows="2"></textarea></div>
+    <div class="campo"><label for="fq4">4. Uma sala tem 6 lâmpadas. Outra tem 37. As duas
+      ficam acesas 10 horas por dia. O retorno é o mesmo nas duas, ou é diferente? Por
+      quê?</label><textarea id="fq4" rows="3"></textarea></div>
+    <div id="avisoRespFolha"></div>
+    <button class="btn ok" id="btSalvarResp">Salvar as respostas</button>
+
+    <h3 class="sec">O dado que falta, e quem foi buscar</h3>
+    <p class="ajuda">A tabela acima não depende de ninguém: ela se faz aqui. Mas para
+    dizer qual linha vale para cada parte da escola, falta saber quantas horas por dia a
+    luz daquela parte fica acesa. Esse número ninguém mede: quem sabe é o funcionário
+    que acende de manhã e apaga no fim do dia. A equipe do MAPA já foi perguntar, e é
+    isto que ela trouxe:</p>
+    <div class="rol"><table id="tabBlocosFolha"></table></div>
+    <p class="ajuda">Sem o nome e a função de quem informou, o número vira achismo e a
+    banca derruba. Com eles, vira fonte.</p>
+
+    <h3 class="sec">Erros que vão aparecer</h3>
+    <ul class="eq" id="errosFolha"></ul>
   </section>
 
   <!-- PREÇOS -->
@@ -1977,7 +2080,7 @@ function vrg(v){
 function brl(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function telas(qual) {
   ['entrar','eusou','ambientes','ambiente','precos','avaliar','conta','mapa','palco',
-   'calculo','ficha','compara','prof'].forEach(t =>
+   'calculo','ficha','folha','compara','prof'].forEach(t =>
     el('tela-' + t).hidden = (t !== qual));
   document.body.classList.toggle('prof', qual === 'prof');
   window.scrollTo(0,0);
@@ -2389,6 +2492,181 @@ async function carregarFichasProf() {
    Nada disto entra no relatório: a economia que vai para a direção o servidor
    calcula das lâmpadas contadas, não do que o aluno digitou aqui. */
 let FICHAS = [], FICHA = null, EQUIPE_CALC = [], GRUPOS_CAMPO = [], RASCUNHO = null;
+
+/* ---------- A FOLHA DE UMA LÂMPADA ----------
+   Era folha de papel. Aqui ela corrige na hora, linha por linha, com a mesma
+   tolerância da ficha: de uma a quatro casas decimais. Cada passo é conferido
+   contra o que a própria pessoa respondeu antes, para um erro na primeira
+   coluna não ser contado três vezes. */
+let FOLHA = null;
+async function abrirFolha() {
+  if (!SOU) return msg('avisoCalc', 'Diga quem é você antes de abrir a folha.', 'erro');
+  telas('folha');
+  el('linhasFolha').innerHTML = '<p class="ajuda">Carregando...</p>';
+  let r;
+  try { r = await rpc('folha_minha', { p_token: EU.token, p_aluno: SOU.id }); }
+  catch (e) { return msg('avisoFolha', e.message, 'erro'); }
+  if (!r.ok) { el('linhasFolha').innerHTML = '';
+               return msg('avisoFolha', r.erro, 'erro'); }
+  FOLHA = r;
+  el('subFolha').textContent = 'Folha de ' + r.nome
+    + (r.serve ? ' · faz a conta do grupo ' + r.serve : '')
+    + ' · equipe de cálculo da Feira de Ciências 2026.';
+  el('minisFolha').innerHTML = [
+    [vrg(r.pot_antes) + ' W', 'lâmpada de hoje'],
+    [vrg(r.pot_led) + ' W', 'LED que substitui'],
+    [brl(r.preco_led), 'preço de uma LED'],
+    [vrg(r.dias) + ' dias', 'de aula no mês'],
+    ['R$ ' + vrg(r.tarifa), 'o quilowatt-hora']
+  ].map(x => '<div class="mini"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
+  el('fonteTarifa').textContent = r.fonte_tarifa
+    ? 'A tarifa vem de: ' + r.fonte_tarifa + '. É a mesma que o relatório da escola usa.'
+    : '';
+  pintarExemploFolha();
+  pintarLinhasFolha();
+  pintarRespostasFolha();
+  pintarBlocosFolha();
+  el('errosFolha').innerHTML = [
+    ['Esquecer de dividir por 1000', 'A resposta fica mil vezes maior e parece normal. '
+      + 'Se a economia de uma lâmpada deu mais de dez reais por mês, confira isso primeiro.'],
+    ['Usar a voltagem na conta', 'Não entra. Só watts, horas e dias.'],
+    ['Calcular os dois consumos e esquecer de subtrair', 'A economia é a diferença '
+      + 'entre os dois, não o consumo do LED.'],
+    ['Chutar a potência da lâmpada', 'Se não dá para ler o que está escrito, marque '
+      + '"não deu para ler". O sistema conta essas separado, e isso é honesto.']
+  ].map(x => '<li><span class="mk">!</span><span><b>' + x[0] + '.</b> ' + x[1]
+    + '</span></li>').join('');
+}
+function pintarExemploFolha() {
+  const r = FOLHA, d = r.pot_antes - r.pot_led;
+  const kwh = d / 1000 * 4 * r.dias, ec = kwh * r.tarifa, ret = r.preco_led / ec;
+  el('exemploFolha').innerHTML = [
+    'Quanto se deixa de gastar em cada lâmpada: <code>' + vrg(r.pot_antes) + ' − '
+      + vrg(r.pot_led) + ' = ' + vrg(d) + ' W</code>',
+    'Passar para quilowatts: <code>' + vrg(d) + ' ÷ 1000 = ' + vrg(d/1000) + ' kW</code>',
+    'Consumo evitado no mês: <code>' + vrg(d/1000) + ' × 4 × ' + vrg(r.dias) + ' = '
+      + vrg(arred(kwh,3)) + ' kWh</code>',
+    'Economia por lâmpada: <code>' + vrg(arred(kwh,3)) + ' × ' + vrg(r.tarifa)
+      + ' = R$ ' + vrg(arred(ec,2)) + '</code>',
+    'Tempo de retorno: <code>' + vrg(r.preco_led) + ' ÷ ' + vrg(arred(ec,2)) + ' = '
+      + vrg(arred(ret,1)) + ' meses</code>'
+  ].map(t => '<li>' + t + '</li>').join('');
+}
+function arred(v, n) { const p = Math.pow(10, n); return Math.round(v * p) / p; }
+function pintarLinhasFolha() {
+  const r = FOLHA;
+  const feitas = (r.linhas || []).filter(l => !l.exemplo && l.em).length;
+  const certas = (r.linhas || []).filter(l => !l.exemplo && l.tudo_certo).length;
+  el('linhasFolha').innerHTML = (r.linhas || []).map(l => {
+    if (l.exemplo) {
+      return '<div class="lf exemplo"><div class="cab"><span class="hh">4 horas por dia'
+        + '<i>exemplo resolvido</i></span></div><div class="tres">'
+        + [[vrg(arred(l.certo_kwh,3)) + ' kWh', 'kWh evitados no mês'],
+           [brl(l.certo_economia), 'economia por lâmpada'],
+           [vrg(arred(l.certo_retorno,1)) + ' meses', 'retorno']]
+            .map(x => '<div><span class="vr">' + x[0] + '</span>'
+              + '<small style="display:block;color:var(--tinta2);font-size:.78rem">'
+              + x[1] + '</small></div>').join('')
+        + '</div></div>';
+    }
+    const enviada = !!l.em;
+    const cls = !enviada ? '' : (l.tudo_certo ? ' certa' : ' errada');
+    const campo = (nome, rot, val, ok, certo, passo) =>
+      '<div class="campo"><label for="' + nome + '">' + rot
+      + (enviada ? '<span class="marca ' + (ok ? 'c' : 'x') + '">'
+          + (ok ? 'bateu' : 'não bateu') + '</span>' : '')
+      + '</label><input type="text" id="' + nome + '" inputmode="decimal" '
+      + 'autocomplete="off" value="' + (val != null ? vrg(val) : '') + '">'
+      + (enviada && !ok && certo != null
+          ? '<span class="certo">o certo é ' + passo(certo) + '</span>' : '')
+      + '</div>';
+    return '<div class="lf' + cls + '" data-h="' + l.horas + '">'
+      + '<div class="cab"><span class="hh">' + vrg(l.horas) + ' horas por dia</span>'
+      + (enviada && l.tudo_certo
+          ? '<span class="marca c">linha fechada</span>' : '') + '</div>'
+      + '<div class="tres">'
+      + campo('fk' + l.horas, 'kWh evitados no mês', l.kwh, l.ok_kwh, l.certo_kwh,
+              v => vrg(arred(v,3)))
+      + campo('fe' + l.horas, 'Economia por lâmpada', l.economia, l.ok_economia,
+              l.certo_economia, v => brl(v))
+      + campo('fr' + l.horas, 'Retorno em meses', l.retorno, l.ok_retorno,
+              l.certo_retorno, v => vrg(arred(v,1)))
+      + '</div>'
+      + '<div style="margin-top:11px"><button class="btn peq sec env" data-h="'
+      + l.horas + '">' + (enviada ? 'Enviar de novo' : 'Enviar esta linha')
+      + '</button></div></div>';
+  }).join('');
+  document.querySelectorAll('#linhasFolha .env').forEach(b =>
+    b.addEventListener('click', () => enviarLinhaFolha(+b.dataset.h, b)));
+  msg('avisoFolha', feitas < 7
+    ? certas + ' de 7 linhas fechadas. Faltam ' + (7 - feitas) + ' para enviar.'
+    : (certas === 7
+        ? 'As sete linhas bateram. Agora responda as quatro perguntas abaixo.'
+        : certas + ' de 7 bateram. Reveja as que ficaram marcadas e envie de novo.'),
+    certas === 7 ? 'bom' : 'info');
+}
+async function enviarLinhaFolha(h, b) {
+  const v = id => num(el(id).value);
+  const kwh = v('fk' + h), ec = v('fe' + h), ret = v('fr' + h);
+  if (kwh == null || ec == null || ret == null)
+    return msg('avisoFolha', 'Preencha as três colunas da linha de ' + vrg(h)
+      + ' horas antes de enviar.', 'erro');
+  b.disabled = true;
+  let r;
+  try {
+    r = await rpc('enviar_folha_linha', { p_token: EU.token, p_aluno: SOU.id,
+      p_horas: h, p_kwh: kwh, p_economia: ec, p_retorno: ret });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  b.disabled = false;
+  if (!r.ok) return msg('avisoFolha', r.erro, 'erro');
+  await abrirFolha();
+  aoAlcance('avisoFolha');
+}
+function pintarRespostasFolha() {
+  const q = (FOLHA.respostas || {});
+  ['q1','q2','q3','q4'].forEach((k, i) =>
+    el('fq' + (i + 1)).value = q[k] || '');
+}
+el('btSalvarResp') && el('btSalvarResp').addEventListener('click', async () => {
+  const b = el('btSalvarResp'); b.disabled = true;
+  let r;
+  try {
+    r = await rpc('enviar_folha_respostas', { p_token: EU.token, p_aluno: SOU.id,
+      p_q1: el('fq1').value, p_q2: el('fq2').value,
+      p_q3: el('fq3').value, p_q4: el('fq4').value });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  b.disabled = false;
+  msg('avisoRespFolha', r.ok ? 'Respostas salvas. O professor lê daqui.' : r.erro,
+      r.ok ? 'bom' : 'erro');
+  aoAlcance('avisoRespFolha');
+});
+/* o horário de cada bloco é a resposta que a equipe do MAPA trouxe: mostrar
+   aqui liga a tabela da folha ao trabalho de campo, em vez de uma tabela vazia */
+async function pintarBlocosFolha() {
+  let r;
+  try { r = await rpc('mapa_ambientes', { p_token: EU.token }); } catch (e) { return; }
+  if (!r || !r.ok) return;
+  const bs = (r.blocos || []);
+  el('tabBlocosFolha').innerHTML =
+    '<thead><tr><th class="cresce">Parte da escola</th><th>Horas por dia</th>'
+    + '<th class="cresce">Quem informou</th></tr></thead><tbody>'
+    + bs.map(b => {
+        const pronto = blocoPronto(b);
+        return '<tr><td class="cresce">' + esc(b.nome) + '</td>'
+          + '<td data-r="Horas por dia">' + (!pronto ? '<span class="tag a">falta</span>'
+              : b.uso_eventual
+                ? vrg(b.usos_mes) + 'x por mês, ' + vrg(b.horas_uso) + ' h'
+                : vrg(b.horas)) + '</td>'
+          + '<td class="cresce" data-r="Quem informou">'
+          + (b.fonte_nome ? esc(b.fonte_nome)
+              + (b.fonte_funcao ? ', ' + esc(b.fonte_funcao) : '')
+              : '<span class="tag a">falta</span>') + '</td></tr>';
+      }).join('') + '</tbody>';
+}
+el('btAbrirFolha') && el('btAbrirFolha').addEventListener('click', abrirFolha);
+el('btVoltaFolha') && el('btVoltaFolha').addEventListener('click', () => {
+  telas('calculo'); carregarCalculo();
+});
 
 let NUM_CALC = {};
 async function carregarCalculo() {
@@ -3230,20 +3508,26 @@ async function carregarMontar() {
                  || String(x.codigo).localeCompare(String(y.codigo), 'pt-BR'));
   const opts = gs.map(g => g.codigo);
   const todos = r.alunos || [];
-  const PAP = { campo:'campo', calculo:'cálculo', conferencia:'conferência', preco:'preço' };
+  const PAP = { campo:'conta no campo', calculo:'faz a conta deste grupo',
+                conferencia:'confere a conta deste grupo', preco:'preço' };
 
   /* Quem é da equipe CÁLCULO serve a um grupo de campo, e esse vínculo mora na
      ficha, não no aluno. Quem monta os grupos procura o vínculo aqui, no nome,
      então ele aparece aqui também, só para ler, com o caminho de onde se muda. */
   const POSTO = { calculista:'faz a conta', conf1:'1º conferente', conf2:'2º conferente' };
-  let vinculo = {}, semFicha = 0;
+  let vinculo = {}, quemCalcula = {}, semFicha = 0;
   try {
     const rf = await rpc('calculo_fichas', { p_token: EU.token });
     if (rf && rf.ok) {
       (rf.fichas || []).forEach(f =>
-        [['calculista', f.calculista], ['conf1', f.conf1], ['conf2', f.conf2]]
-          .forEach(([posto, id]) => { if (id)
-            (vinculo[id] = vinculo[id] || []).push(f.grupo + ' · ' + POSTO[posto]); }));
+        [['calculista', f.calculista, f.calculista_nome],
+         ['conf1', f.conf1, f.conf1_nome],
+         ['conf2', f.conf2, f.conf2_nome]]
+          .forEach(([posto, id, nome]) => { if (id) {
+            (vinculo[id] = vinculo[id] || []).push(f.grupo + ' · ' + POSTO[posto]);
+            (quemCalcula[f.grupo] = quemCalcula[f.grupo] || [])
+              .push({ nome: nome, posto: POSTO[posto] });
+          } }));
       semFicha = (rf.grupos_de_campo || []).filter(c =>
         !(rf.fichas || []).some(f => f.grupo === c.codigo)).length;
     }
@@ -3294,6 +3578,17 @@ async function carregarMontar() {
         + (+g.conferencia ? '<span class="pill f">' + g.conferencia + ' conferência</span>' : '')
         + (+g.preco ? '<span class="pill p">' + g.preco + ' preço</span>' : '')
       : '<span class="pill erro">vazio</span>';
+    /* quem calcula para este grupo saiu da lista de cima: a pessoa está na
+       equipe CÁLCULO. O nome dela aparece aqui para o grupo não parecer órfão. */
+    const calc = quemCalcula[g.codigo] || [];
+    const rodapeCalc = (!doisTurnos && (gente.length || calc.length))
+      ? '<p class="ondemuda">' + (calc.length
+          ? 'Conta deste grupo: ' + calc.map(x =>
+              '<b>' + esc(x.nome || '') + '</b> (' + x.posto + ')').join(', ')
+            + '. Essas pessoas estão na equipe CÁLCULO e entram com a senha dela.'
+          : 'Ninguém calcula para este grupo ainda. Marque alguém da lista acima '
+            + 'como <b>faz a conta deste grupo</b>.') + '</p>'
+      : '';
     return '<div class="gcard' + cls + '"><div class="top">' +
       '<div class="cab"><span class="cod">' + g.codigo + '</span>' +
       '<span class="qtamb">' + (g.tipo === 'mapa' ? 'a escola inteira'
@@ -3304,11 +3599,11 @@ async function carregarMontar() {
       corpo
       + (g.papel === 'calculo'
           ? '<p class="ondemuda">Cada um aqui faz a conta de um grupo de campo. '
-            + 'Esse vínculo se escolhe na aba <b>Conferência</b>, em '
-            + '<b>Montar a ficha de um grupo</b>, um grupo de cada vez.'
+            + 'Para mudar, marque a pessoa como <b>faz a conta deste grupo</b> no '
+            + 'card do grupo, ou use a aba <b>Conferência</b>.'
             + (semFicha ? ' Faltam ' + semFicha + ' grupo(s) sem ficha.' : '')
             + '</p>'
-          : '')
+          : rodapeCalc)
       + '<div class="pe">' + pe + '</div></div>';
   }).join('') + '</div>';
 
@@ -3324,7 +3619,7 @@ async function carregarMontar() {
   const selF = id =>
     '<select class="selFuncao" data-id="' + id + '" title="Função dentro do grupo" ' +
     'style="width:auto;padding:6px 8px">' +
-      ['campo','calculo','conferencia','preco'].map(f =>
+      ['campo','calculo','conferencia'].map(f =>
         '<option value="' + f + '"' + (f === 'campo' ? ' selected' : '') + '>' +
         PAP[f] + '</option>').join('') +
     '</select>';
