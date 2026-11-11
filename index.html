@@ -810,7 +810,46 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .graf .sub:last-child{margin:12px 0 0}
 
 .linhas{display:flex;flex-direction:column;gap:11px}
-.lin{display:grid;grid-template-columns:2.6rem 1fr 5.4rem;gap:12px;align-items:center}
+/* a coluna do código é larga o bastante para o maior código que existe
+   (APRESENTA), senão o nome sai cortado */
+.lin{display:grid;grid-template-columns:5.6rem 1fr 6.6rem 1rem;gap:12px;
+  align-items:center;width:100%;background:none;border:0;padding:5px 6px;
+  border-radius:var(--r2);cursor:pointer;text-align:left;font:inherit;
+  transition:background .15s}
+.lin:hover,.lin:focus-visible{background:var(--sup2)}
+.lin:focus-visible{outline:2px solid var(--azul);outline-offset:1px}
+.lin .seta{font-size:1.15rem;color:var(--tinta3);line-height:1;
+  transition:transform .18s;text-align:center}
+.lin[aria-expanded="true"] .seta{transform:rotate(90deg);color:var(--azul)}
+.lin[aria-expanded="true"]{background:var(--sup2)}
+.lin .vl i{display:block;font-style:normal;font-size:.68rem;color:var(--ambar);
+  margin-top:1px}
+
+/* o que há dentro de um grupo */
+.dentro{margin:2px 0 10px}
+.dentro-cx{border-left:3px solid var(--azul);background:var(--sup2);
+  border-radius:0 var(--r2) var(--r2) 0;padding:15px 17px}
+.dentro-cx h5{margin:18px 0 9px;font-family:var(--d);font-size:.82rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--tinta2)}
+.dentro-cx h5:first-of-type{margin-top:4px}
+.amb-det{background:var(--sup);border:1px solid var(--linha);border-radius:var(--r2);
+  padding:11px 13px;margin-bottom:8px;border-left:3px solid var(--linha2)}
+.amb-det.pronto{border-left-color:var(--verde)}
+.amb-det.andando{border-left-color:var(--ambar)}
+.amb-det.sem-acesso{border-left-color:var(--tinta3)}
+.amb-det.nao-existe{border-left-color:var(--tinta3);opacity:.75}
+.amb-det .cab{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.amb-det .cab b{font-family:var(--d);font-size:.92rem;font-weight:700;line-height:1.25}
+.amb-det small{display:block;font-family:var(--m);font-size:.71rem;color:var(--tinta3);
+  margin-top:3px;line-height:1.4}
+.amb-det p{margin:6px 0 0;font-size:.82rem;color:var(--tinta2);line-height:1.45}
+.amb-det .quem{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.amb-det .quem span{font-size:.75rem;background:var(--sup2);border-radius:var(--r2);
+  padding:4px 8px;line-height:1.3}
+.amb-det .quem i{display:block;font-style:normal;font-family:var(--m);font-size:.65rem;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--tinta3)}
+.mini-tab{font-size:.82rem}
+.mini-tab th{font-size:.68rem}
 .lin .cod{font-family:var(--d);font-weight:800;font-size:.88rem;color:var(--azul);
   letter-spacing:-.02em}
 .lin .trilho{height:11px;background:var(--papel);border-radius:999px;overflow:hidden;
@@ -2873,14 +2912,18 @@ async function carregarCalculo() {
     r = await rpc('calculo_fichas', { p_token: EU.token,
                                       p_aluno: SOU ? SOU.id : null });
     ra = await rpc('listar_alunos', { p_token: EU.token, p_grupo: null });
-    ne = await rpc('economia', { p_token: EU.token });
+    // a tela do cálculo precisa só dos parâmetros, não do resultado: pedir
+    // economia aqui colocava a resposta da conta ao alcance de quem olhasse
+    // o tráfego da página
+    ne = await rpc('numeros_do_projeto', { p_token: EU.token });
   } catch (e) { return msg('avisoCalc', e.message, 'erro'); }
   if (!r.ok) return msg('avisoCalc', r.erro, 'erro');
   FICHAS = r.fichas || [];
   GRUPOS_CAMPO = r.grupos_de_campo || [];
   EQUIPE_CALC = (ra && ra.ok ? ra.alunos : []) || [];
-  if (ne && ne.ok) NUM_CALC = { pot_antes: ne.pot_antes, pot_led: ne.pot_led,
-    dias_mes: ne.dias_mes, tarifa: ne.tarifa_hoje, meses: ne.meses };
+  if (ne && ne.ok) { const nn = ne.numeros || {};
+    NUM_CALC = { pot_antes: +nn.pot_antes, pot_led: +nn.pot_led,
+      dias_mes: +nn.dias_mes, tarifa: +ne.tarifa_hoje, meses: +ne.meses }; }
   // quanto cada pessoa da equipe já mandou da tabela por faixa
   ANDAMENTO = [];
   try {
@@ -4277,20 +4320,131 @@ function pintarGrafGrupos(grupos) {
       + 'para este painel começar a mostrar o avanço.</p>';
     return;
   }
+  // grupo sem ambiente (MAPA, APRESENTA) não se mede em ambientes: mostrar
+  // "0 de 0" numa barra cinza dava a impressão errada de grupo parado
+  const comAmb = grupos.filter(function(g){ return +g.ambientes > 0; });
+  const semAmb = grupos.filter(function(g){ return +g.ambientes === 0; });
   cx.innerHTML = '<h4>Avanço de cada grupo</h4>'
     + '<p class="sub">Ambientes concluídos sobre o total de cada grupo. '
-    + 'Cinza é grupo que ainda não começou; âmbar está no meio; verde fechou.</p>'
-    + '<div class="linhas">' + grupos.map(function(g){
-        const a = +g.ambientes, c = +g.concluidos, pct = a ? c / a : 0;
-        const est = a === 0 ? 'parado' : (c === 0 ? 'parado' : (c < a ? 'andando' : ''));
-        return '<div class="lin ' + est + '"><span class="cod">' + esc(g.codigo) + '</span>'
-          + '<span class="trilho"><i class="fita" data-pct="' + (pct * 100).toFixed(1) + '"></i></span>'
-          + '<span class="vl">' + c + ' de ' + a + '</span></div>';
-      }).join('') + '</div>';
+    + 'Cinza é grupo que ainda não começou; âmbar está no meio; verde fechou. '
+    + 'Toque num grupo para ver por dentro.</p>'
+    + '<div class="linhas">' + comAmb.map(function(g){
+        const a = +g.ambientes, c = +g.concluidos,
+              sa = +g.sem_acesso || 0, pct = a ? (c + sa) / a : 0;
+        const est = (c + sa) === 0 ? 'parado' : ((c + sa) < a ? 'andando' : '');
+        return '<button type="button" class="lin ' + est + '" data-g="' + esc(g.codigo)
+          + '" aria-expanded="false"><span class="cod">' + esc(g.codigo) + '</span>'
+          + '<span class="trilho"><i class="fita" data-pct="'
+            + (pct * 100).toFixed(1) + '"></i></span>'
+          + '<span class="vl">' + (c + sa) + ' de ' + a
+          + (sa ? '<i>' + sa + ' sem acesso</i>' : '') + '</span>'
+          + '<span class="seta" aria-hidden="true">&rsaquo;</span></button>'
+          + '<div class="dentro" id="dentro-' + esc(g.codigo) + '" hidden></div>';
+      }).join('') + '</div>'
+    + (semAmb.length
+        ? '<p class="sub" style="margin:14px 0 0">Não entram nesta barra porque não '
+          + 'têm ambiente próprio: ' + semAmb.map(function(g){
+              return '<b>' + esc(g.codigo) + '</b>'; }).join(', ')
+          + '. O trabalho deles aparece nas abas Mapa e Apresentação.</p>'
+        : '');
+  cx.querySelectorAll('.lin').forEach(function(b){
+    b.addEventListener('click', function(){ abrirDentro(b.dataset.g, b); });
+  });
   animar(function(){
     const fitas = cx.querySelectorAll('.fita');
     for (let i = 0; i < fitas.length; i++) fitas[i].style.width = fitas[i].dataset.pct + '%';
   });
+}
+
+/* o que há dentro de um grupo: ambiente por ambiente e pessoa por pessoa */
+async function abrirDentro(cod, bt) {
+  const n = el('dentro-' + cod);
+  if (!n) return;
+  if (!n.hidden) { n.hidden = true; bt.setAttribute('aria-expanded','false'); return; }
+  // um aberto de cada vez, para a página não virar um rolo
+  document.querySelectorAll('#grafGrupos .dentro').forEach(function(x){ x.hidden = true; });
+  document.querySelectorAll('#grafGrupos .lin').forEach(function(x){
+    x.setAttribute('aria-expanded','false'); });
+  n.hidden = false; bt.setAttribute('aria-expanded','true');
+  n.innerHTML = '<p class="ajuda" style="margin:0">Carregando...</p>';
+  let r;
+  try { r = await rpc('detalhe_grupo', { p_token: EU.token, p_grupo: cod }); }
+  catch (e) { n.innerHTML = '<p class="ajuda">' + esc(e.message) + '</p>'; return; }
+  if (!r.ok) { n.innerHTML = '<p class="ajuda">' + esc(r.erro) + '</p>'; return; }
+
+  const FUN = { contador:'contou', leitor:'leu a potência', anotador:'anotou',
+                conferente:'conferiu' };
+  const ambs = r.ambientes || [];
+  const linhaAmb = function(a) {
+    const inex = a.sem_acesso && a.sem_acesso_tipo === 'inexistente';
+    const est = a.sem_acesso ? (inex ? 'nao-existe' : 'sem-acesso')
+              : a.concluido ? 'pronto' : (+a.itens > 0 ? 'andando' : 'parado');
+    const sel = a.sem_acesso ? (inex ? 'não existe' : 'sem acesso')
+              : a.concluido ? 'concluído'
+              : (+a.itens > 0 ? 'em andamento' : 'não começou');
+    const det = a.sem_acesso
+      ? esc(a.sem_acesso_motivo || '')
+        + (a.sem_acesso_quem ? ' · informado por ' + esc(a.sem_acesso_quem) : '')
+      : +a.itens > 0
+        ? a.itens + ' lançamento' + (+a.itens === 1 ? '' : 's') + ' · '
+          + mil(a.lampadas, 0) + ' lâmpadas · ' + a.fotos + ' foto'
+          + (+a.fotos === 1 ? '' : 's')
+          + (+a.sem_potencia ? ' · ' + mil(a.sem_potencia,0) + ' sem potência lida' : '')
+          + (+a.funcoes < 4 ? ' · falta dizer quem fez o quê' : '')
+        : 'ainda sem lançamento';
+    const quem = (a.quem || []).length
+      ? '<div class="quem">' + (a.quem || []).map(function(q){
+          return '<span><i>' + (FUN[q.funcao] || esc(q.funcao)) + '</i>'
+               + esc(q.nome) + '</span>'; }).join('') + '</div>'
+      : '';
+    return '<div class="amb-det ' + est + '">'
+      + '<div class="cab"><b>' + esc(a.nome) + '</b>'
+      + '<span class="pill ' + (est === 'pronto' ? 'c' : est === 'parado' ? 'erro' : 'am')
+      + '">' + sel + '</span></div>'
+      + '<small>' + esc(a.bloco || '') + '</small>'
+      + '<p>' + det + '</p>'
+      + (a.acomp_nome ? '<small>Acompanhou: ' + esc(a.acomp_nome)
+          + (a.acomp_funcao ? ', ' + esc(a.acomp_funcao) : '') + '</small>' : '')
+      + quem + '</div>';
+  };
+  const gente = (r.gente || []);
+  const f = r.ficha;
+  n.innerHTML =
+    '<div class="dentro-cx">'
+    + '<p class="ajuda" style="margin:0 0 12px"><b>' + esc(r.codigo) + '</b> · '
+      + esc(r.turma || '') + ' · ' + esc(r.resumo || '') + '</p>'
+    + '<h5>Ambiente por ambiente</h5>'
+    + (ambs.length ? ambs.map(linhaAmb).join('')
+        : '<p class="ajuda">Este grupo não tem ambiente atribuído.</p>')
+    + '<h5>Quem é do grupo</h5>'
+    + (gente.length ? '<div class="rol"><table class="mini-tab"><thead><tr>'
+        + '<th class="cresce">Nome</th><th>Turma</th><th>Funções</th>'
+        + '<th>Lançou</th><th>Avaliou</th></tr></thead><tbody>'
+        + gente.map(function(p){
+            return '<tr><td class="cresce">' + esc(p.nome) + '</td>'
+              + '<td data-r="Turma">' + esc(p.turma || '') + '</td>'
+              + '<td data-r="Funções">' + p.funcoes + '</td>'
+              + '<td data-r="Lançou">' + p.lancou + '</td>'
+              + '<td data-r="Avaliou">' + p.avaliou + ' de ' + p.colegas + '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+        : '<p class="ajuda">Ninguém neste grupo ainda.</p>')
+    + (f ? '<h5>A conta deste grupo</h5>'
+        + '<p class="ajuda" style="margin:0 0 9px">Faz a conta: <b>'
+        + esc(f.calculista || 'ninguém') + '</b>'
+        + (f.conf1 ? ' · confere: ' + esc(f.conf1) : '')
+        + (f.conf2 ? ' e ' + esc(f.conf2) : '') + '.</p>'
+        + ((f.quem_enviou || []).length
+            ? '<div class="rol"><table class="mini-tab"><thead><tr>'
+              + '<th class="cresce">Nome</th><th>Faixas enviadas</th>'
+              + '<th>Faixas certas</th></tr></thead><tbody>'
+              + f.quem_enviou.map(function(q){
+                  return '<tr><td class="cresce">' + esc(q.nome) + '</td>'
+                    + '<td data-r="Enviadas">' + q.faixas + ' de ' + f.faixas_total + '</td>'
+                    + '<td data-r="Certas">' + q.certas + '</td></tr>';
+                }).join('') + '</tbody></table></div>'
+            : '')
+        : '')
+    + '</div>';
 }
 
 /* linha do saldo: a matemática do projeto desenhada */
