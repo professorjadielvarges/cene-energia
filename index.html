@@ -538,6 +538,19 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .balanco .cel span{display:block;font-size:.74rem;color:var(--tinta2);margin-top:4px;
   line-height:1.35}
 .balanco .cel.falta b{color:var(--tinta3)}
+/* os dois passos da conta: o treino e a escola */
+.etapa{display:flex;gap:13px;align-items:flex-start;margin:22px 0 13px;
+  padding:13px 15px;border-radius:var(--r2);background:var(--sup2);
+  border-left:4px solid var(--azul)}
+.etapa .n{font-family:var(--m);font-size:.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.11em;color:var(--azul);flex:none;
+  padding-top:3px}
+.etapa div{flex:1;min-width:0}
+.etapa b{display:block;font-family:var(--d);font-size:1rem;color:var(--tinta);
+  line-height:1.25}
+.etapa small{display:block;font-size:.81rem;color:var(--tinta2);line-height:1.45;
+  margin-top:4px}
+.etapa.feito{border-left-color:var(--verde)}
 .passos-folha{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:9px}
 .passos-folha li{font-size:.92rem;line-height:1.5}
 .passos-folha code{font-family:var(--m);font-size:.88rem;background:var(--sup2);
@@ -1233,6 +1246,26 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <ol class="passos-folha" id="exemploFaixa"></ol>
     </details>
 
+    <!-- PASSO 1: o treino com uma lâmpada, oito linhas de horas. As horas aqui
+         são hipotéticas, de propósito: a pessoa aprende o caminho da conta sem
+         depender do que já foi contado na escola. Só depois vem a tabela das
+         faixas reais, logo abaixo. -->
+    <div class="etapa" id="etapa1">
+      <span class="n">Passo 1</span>
+      <div><b>Treino: a conta de uma lâmpada</b>
+      <small id="subTreino">Oito linhas de horas por dia. A de 4 horas já vem
+      resolvida, como exemplo. Faça as outras sete.</small></div>
+    </div>
+    <div id="avisoFolha"></div>
+    <div id="linhasFolha"></div>
+
+    <div class="etapa" id="etapa2">
+      <span class="n">Passo 2</span>
+      <div><b>A conta da escola, com as faixas de verdade</b>
+      <small>Agora com as lâmpadas que os grupos contaram. Mesmo caminho do
+      treino, só que com os números da nossa escola.</small></div>
+    </div>
+
     <div id="linhasConta"></div>
     <div id="totalConta"></div>
 
@@ -1269,7 +1302,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <ul class="eq" id="errosFolha"></ul>
     </details>
 
-    <h3 class="sec" style="margin-top:26px">Quem calcula e quem confere</h3>
+    <h3 class="sec" style="margin-top:26px" id="tituloFichas">Quem calcula e quem confere</h3>
     <p class="ajuda" id="subCalc" style="margin-bottom:12px"></p>
     <div class="barra" style="margin:0 0 12px"><i id="barraCalc"></i></div>
     <div id="listaFichas"></div>
@@ -2513,7 +2546,8 @@ async function carregarFichasProf() {
    ficha terminar errada, aí sim o valor certo aparece.
    Nada disto entra no relatório: a economia que vai para a direção o servidor
    calcula das lâmpadas contadas, não do que o aluno digitou aqui. */
-let FICHAS = [], FICHA = null, EQUIPE_CALC = [], GRUPOS_CAMPO = [], ANDAMENTO = [];
+let FICHAS = [], FICHA = null, EQUIPE_CALC = [], GRUPOS_CAMPO = [], ANDAMENTO = [],
+    PODE_MONTAR = false;
 
 /* ---------- A FOLHA DE UMA LÂMPADA ----------
    Era folha de papel. Aqui ela corrige na hora, linha por linha, com a mesma
@@ -2552,6 +2586,103 @@ async function carregarConta() {
   pintarRespostasFolha();
   pintarBlocosFolha();
   pintarErrosFolha();
+  await carregarTreino();
+}
+
+/* ---------- PASSO 1: O TREINO COM UMA LÂMPADA ----------
+   Oito linhas de horas, a de 4 h resolvida. As horas são hipotéticas de
+   propósito: a pessoa aprende o caminho sem depender da contagem da escola.
+   Mesmas travas da tabela por faixa: o resultado só sai depois do último
+   conferente, e o valor certo só depois de ter enviado aquela linha. */
+let TREINO = null;
+async function carregarTreino() {
+  if (!SOU || !el('linhasFolha')) return;
+  let r;
+  try { r = await rpc('folha_minha', { p_token: EU.token, p_aluno: SOU.id }); }
+  catch (e) { return; }
+  if (!r || !r.ok) { el('linhasFolha').innerHTML = ''; return; }
+  TREINO = r;
+  const ls = r.linhas || [];
+  const feitas = ls.filter(l => !l.exemplo && l.em).length;
+  const certas = ls.filter(l => !l.exemplo && l.tudo_certo).length;
+  const pend = ls.filter(l => !l.exemplo && l.em && l.ok_kwh == null).length;
+  el('etapa1').classList.toggle('feito', certas === 7);
+  el('linhasFolha').innerHTML = ls.map(l => {
+    if (l.exemplo) {
+      return '<div class="lf exemplo"><div class="cab"><span class="hh">4 horas por dia'
+        + '<i>exemplo resolvido</i></span></div><div class="tres">'
+        + [[mil(l.certo_kwh, 3) + ' kWh', 'kWh evitados no mês'],
+           [brl(+l.certo_economia), 'economia por lâmpada'],
+           [mil(l.certo_retorno, 1) + ' meses', 'tempo para se pagar']]
+            .map(x => '<div><span class="vr">' + x[0] + '</span>'
+              + '<small style="display:block;color:var(--tinta2);font-size:.78rem">'
+              + x[1] + '</small></div>').join('')
+        + '</div></div>';
+    }
+    const enviada = !!l.em;
+    const pendente = enviada && l.ok_kwh == null;
+    const cls = !enviada ? '' : pendente ? ' pendente'
+              : (l.tudo_certo ? ' certa' : ' errada');
+    const campo = (nome, rot, val, ok, certo, mostra) =>
+      '<div class="campo"><label for="' + nome + '">' + rot
+      + (enviada && !pendente ? '<span class="marca ' + (ok ? 'c' : 'x') + '">'
+          + (ok ? 'bateu' : 'não bateu') + '</span>' : '')
+      + '</label><input type="text" id="' + nome + '" inputmode="decimal" '
+      + 'autocomplete="off" value="' + (val != null ? vrg(val) : '') + '">'
+      + (certo != null ? '<span class="certo">o certo é ' + mostra(certo)
+          + '</span>' : '') + '</div>';
+    const faltam = pendente
+      ? Math.max(1, (+l.previstos || 1) - (+l.enviaram || 0)) : 0;
+    return '<div class="lf' + cls + '" data-h="' + l.horas + '">'
+      + '<div class="cab"><span class="hh">' + vrg(l.horas) + ' horas por dia</span>'
+      + (pendente ? '<span class="marca e">esperando a conferência</span>'
+         : enviada && l.tudo_certo ? '<span class="marca c">linha fechada</span>' : '')
+      + '</div>'
+      + (pendente ? '<p class="ajuda" style="margin:-2px 0 10px">Enviada. O resultado '
+          + 'fica guardado até ' + (faltam === 1 ? 'o conferente que falta'
+              : 'os ' + faltam + ' conferentes que faltam')
+          + ' enviar esta mesma linha.</p>' : '')
+      + '<div class="tres">'
+      + campo('fk' + l.horas, 'kWh evitados no mês', l.kwh, l.ok_kwh, l.certo_kwh,
+              v => mil(v, 3))
+      + campo('fe' + l.horas, 'Economia por lâmpada', l.economia, l.ok_economia,
+              l.certo_economia, v => brl(+v))
+      + campo('fr' + l.horas, 'Tempo para se pagar, em meses', l.retorno,
+              l.ok_retorno, l.certo_retorno, v => mil(v, 1) + ' meses')
+      + '</div>'
+      + '<div style="margin-top:11px"><button class="btn peq sec envt" data-h="'
+      + l.horas + '">' + (enviada ? 'Enviar de novo' : 'Enviar esta linha')
+      + '</button></div></div>';
+  }).join('');
+  document.querySelectorAll('#linhasFolha .envt').forEach(b =>
+    b.addEventListener('click', () => enviarLinhaTreino(+b.dataset.h, b)));
+  msg('avisoFolha', feitas < 7
+    ? feitas + ' de 7 linhas enviadas'
+      + (pend ? ', ' + pend + ' esperando a conferência' : '')
+      + '. Faltam ' + (7 - feitas) + '.'
+    : pend
+      ? 'As sete foram enviadas. ' + pend + ' esperando a conferência: volte depois.'
+      : certas === 7
+        ? 'As sete linhas bateram. Agora vá para o passo 2, com os números da escola.'
+        : certas + ' de 7 bateram. Reveja as marcadas e envie de novo.',
+    certas === 7 ? 'bom' : 'info');
+}
+async function enviarLinhaTreino(h, b) {
+  const v = id => num(el(id).value);
+  const kwh = v('fk' + h), ec = v('fe' + h), ret = v('fr' + h);
+  if (kwh == null || ec == null || ret == null)
+    return msg('avisoFolha', 'Preencha as três colunas da linha de ' + vrg(h)
+      + ' horas antes de enviar.', 'erro'), aoAlcance('avisoFolha');
+  b.disabled = true;
+  let r;
+  try {
+    r = await rpc('enviar_folha_linha', { p_token: EU.token, p_aluno: SOU.id,
+      p_horas: h, p_kwh: kwh, p_economia: ec, p_retorno: ret });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  b.disabled = false;
+  if (!r.ok) { msg('avisoFolha', r.erro, 'erro'); return aoAlcance('avisoFolha'); }
+  await carregarTreino();
+  aoAlcance('avisoFolha');
 }
 function pintarExemploFaixa() {
   const l = (CONTA.linhas || [])[0];
@@ -2560,14 +2691,14 @@ function pintarExemploFaixa() {
   const kwh = l.watts / 1000 * l.horas * l.dias, ec = kwh * CONTA.tarifa;
   el('exemploFaixa').innerHTML = [
     'A linha diz quantos watts aquele horário deixou de gastar: <code>'
-      + vrg(l.watts) + ' W</code>',
-    'Passar para quilowatts: <code>' + vrg(l.watts) + ' ÷ 1000 = '
+      + mil(l.watts, 0) + ' W</code>',
+    'Passar para quilowatts: <code>' + mil(l.watts, 0) + ' ÷ 1000 = '
       + vrg(arred(l.watts/1000, 3)) + ' kW</code>',
     'Vezes as horas e os dias daquele horário: <code>' + vrg(arred(l.watts/1000,3))
-      + ' × ' + vrg(l.horas) + ' × ' + vrg(l.dias) + ' = ' + vrg(arred(kwh,3))
+      + ' × ' + vrg(l.horas) + ' × ' + vrg(l.dias) + ' = ' + mil(arred(kwh,3), 3)
       + ' kWh no mês</code>',
-    'Vezes o preço do quilowatt-hora: <code>' + vrg(arred(kwh,3)) + ' × '
-      + vrg(CONTA.tarifa) + ' = R$ ' + vrg(arred(ec,2)) + ' no mês</code>'
+    'Vezes o preço do quilowatt-hora: <code>' + mil(arred(kwh,3), 3) + ' × '
+      + vrg(CONTA.tarifa) + ' = ' + brl(arred(ec,2)) + ' no mês</code>'
   ].map(t => '<li>' + t + '</li>').join('');
 }
 function pintarLinhasConta() {
@@ -2600,15 +2731,15 @@ function pintarLinhasConta() {
       + '<span class="ond">' + esc(l.blocos) + '</span>'
       + '<div class="dado">'
       +   '<span>ambientes<i>' + vrg(l.ambientes) + '</i></span>'
-      +   '<span>lâmpadas trocadas<i>' + vrg(l.lampadas) + '</i></span>'
-      +   '<span>deixou de gastar<i>' + vrg(l.watts) + ' W</i></span>'
+      +   '<span>lâmpadas trocadas<i>' + mil(l.lampadas, 0) + '</i></span>'
+      +   '<span>deixou de gastar<i>' + mil(l.watts, 0) + ' W</i></span>'
       +   '<span>' + (l.eventual ? 'horas por vez' : 'horas por dia')
       +     '<i>' + vrg(l.horas) + '</i></span>'
       +   '<span>' + (l.eventual ? 'vezes por mês' : 'dias no mês')
       +     '<i>' + vrg(l.dias) + '</i></span>'
       + '</div></div>'
       + '<div class="conta">'
-      + '<p class="formula">' + vrg(l.watts) + ' ÷ 1000 × ' + vrg(l.horas) + ' × '
+      + '<p class="formula">' + mil(l.watts, 0) + ' ÷ 1000 × ' + vrg(l.horas) + ' × '
       +   vrg(l.dias) + ' = kWh do mês &nbsp;·&nbsp; kWh × ' + vrg(r.tarifa)
       +   ' = reais do mês</p>'
       + '<div class="duas">'
@@ -2617,14 +2748,14 @@ function pintarLinhasConta() {
       +     '<input type="text" id="ck' + l.ordem + '" inputmode="decimal" '
       +     'autocomplete="off" value="' + (l.kwh != null ? vrg(l.kwh) : '') + '">'
       +     (l.certo_kwh != null ? '<span class="certo">o certo é '
-          + vrg(l.certo_kwh) + '</span>' : '') + '</div>'
+          + mil(l.certo_kwh, 3) + '</span>' : '') + '</div>'
       +   '<div class="campo"><label for="ce' + l.ordem + '">Economia no mês, em reais'
       +     marca(l.ok_economia) + '</label>'
       +     '<input type="text" id="ce' + l.ordem + '" inputmode="decimal" '
       +     'autocomplete="off" value="' + (l.economia != null ? vrg(l.economia) : '')
       +     '">'
-      +     (l.certo_economia != null ? '<span class="certo">o certo é R$ '
-          + vrg(l.certo_economia) + '</span>' : '') + '</div>'
+      +     (l.certo_economia != null ? '<span class="certo">o certo é '
+          + brl(+l.certo_economia) + '</span>' : '') + '</div>'
       + '</div>'
       + '<div style="margin-top:13px"><button class="btn peq sec env" data-f="'
       + esc(l.faixa) + '" data-o="' + l.ordem + '">'
@@ -2648,7 +2779,7 @@ function pintarBalanco() {
           + 'fecha quando a última entrar.'
         : 'Soma das ' + n + ' faixas que você enviou. Este é o número do projeto.')
     + '</p><div class="grade">'
-    + cel(r.meu_kwh != null ? vrg(arred(+r.meu_kwh, 2)) : '—',
+    + cel(r.meu_kwh != null ? mil(+r.meu_kwh, 2) : '—',
           'kWh evitados por mês, na escola inteira', r.meu_kwh == null)
     + cel(mes != null ? brl(mes) : '—', 'economia por mês', mes == null)
     + cel(desde != null ? brl(desde) : '—',
@@ -2656,8 +2787,8 @@ function pintarBalanco() {
     + '</div>'
     + (r.libera && r.certo_total_kwh != null
         ? '<p class="ajuda" style="margin:14px 0 0">O certo é '
-          + vrg(r.certo_total_kwh) + ' kWh por mês, ' + brl(r.certo_total_economia)
-          + ' por mês e ' + brl(r.certo_desde) + ' desde a troca.</p>'
+          + mil(r.certo_total_kwh, 3) + ' kWh por mês, ' + brl(+r.certo_total_economia)
+          + ' por mês e ' + brl(+r.certo_desde) + ' desde a troca.</p>'
         : '')
     + '</div>';
 }
@@ -2739,7 +2870,8 @@ async function carregarCalculo() {
   msg('avisoCalc','');
   let r, ra, ne;
   try {
-    r = await rpc('calculo_fichas', { p_token: EU.token });
+    r = await rpc('calculo_fichas', { p_token: EU.token,
+                                      p_aluno: SOU ? SOU.id : null });
     ra = await rpc('listar_alunos', { p_token: EU.token, p_grupo: null });
     ne = await rpc('economia', { p_token: EU.token });
   } catch (e) { return msg('avisoCalc', e.message, 'erro'); }
@@ -2752,11 +2884,16 @@ async function carregarCalculo() {
   // quanto cada pessoa da equipe já mandou da tabela por faixa
   ANDAMENTO = [];
   try {
-    const rc = await rpc('andamento_conta', { p_token: EU.token });
+    const rc = await rpc('andamento_conta', { p_token: EU.token,
+                                              p_aluno: SOU ? SOU.id : null });
     if (rc && rc.ok) ANDAMENTO = rc.gente || [];
   } catch (e) {}
+  // montar ficha, trocar nome, trocar grupo: isso é do professor. O aluno da
+  // equipe não vê nem a caixa nem a lista dos colegas.
+  PODE_MONTAR = !!r.pode_montar;
+  el('dobraNovaFicha').hidden = !PODE_MONTAR;
+  if (PODE_MONTAR) pintarFormFicha();
   pintarFichas();
-  pintarFormFicha();
   await carregarConta();
 }
 
@@ -2768,16 +2905,27 @@ function pintarFichas() {
   const fim = gente.filter(p => +p.faixas_total > 0
                              && +p.faixas_enviadas >= +p.faixas_total).length;
   el('barraCalc').style.width = tot ? (fim / tot * 100) + '%' : '0';
-  el('subCalc').textContent = tot
-    ? fim + ' de ' + tot + ' pessoa' + (tot === 1 ? '' : 's')
-      + ' da equipe já enviou a tabela inteira. Cada pessoa faz a conta da escola '
-      + 'toda; o grupo de campo abaixo diz quem confere quem.'
-    : 'Ninguém na equipe de cálculo ainda.';
+  // o aluno vê só a própria ficha, e sem barra de andamento dos colegas
+  el('barraCalc').parentElement.hidden = !PODE_MONTAR;
+  el('tituloFichas').textContent = PODE_MONTAR
+    ? 'Quem calcula e quem confere' : 'A sua ficha';
+  el('subCalc').textContent = !PODE_MONTAR
+    ? (FICHAS.length
+        ? 'Esta é a sua ficha. Quem monta e muda os nomes é o professor.'
+        : 'Você ainda não está em nenhuma ficha. Fale com o professor.')
+    : (tot
+        ? fim + ' de ' + tot + ' pessoa' + (tot === 1 ? '' : 's')
+          + ' da equipe já enviou a tabela inteira. Cada pessoa faz a conta da '
+          + 'escola toda; o grupo de campo diz quem confere quem.'
+        : 'Ninguém na equipe de cálculo ainda.');
 
-  const semFicha = GRUPOS_CAMPO.filter(g => !FICHAS.some(f => f.grupo === g.codigo));
+  const semFicha = PODE_MONTAR
+    ? GRUPOS_CAMPO.filter(g => !FICHAS.some(f => f.grupo === g.codigo)) : [];
   el('listaFichas').innerHTML = (FICHAS.length
     ? FICHAS.map(f => cartaoFicha(f)).join('')
-    : '<p class="ajuda">Nenhuma ficha aberta ainda. Abra a primeira na caixa abaixo.</p>')
+    : '<p class="ajuda">' + (PODE_MONTAR
+        ? 'Nenhuma ficha aberta ainda. Abra a primeira na caixa abaixo.'
+        : 'Sem ficha ainda.') + '</p>')
     + (semFicha.length
         ? '<p class="ajuda" style="margin-top:12px">Sem ficha: '
           + semFicha.map(g => esc(g.codigo)).join(', ') + '.</p>' : '');
