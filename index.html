@@ -117,10 +117,12 @@ main{padding-block:26px 90px}
   padding:22px;margin-bottom:16px;box-shadow:var(--sombra)}
 label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;
   letter-spacing:.07em;color:var(--tinta2);margin-bottom:6px}
-input[type=text],input[type=password],input[type=number],select{
+input[type=text],input[type=password],input[type=number],select,textarea{
   width:100%;padding:11px 13px;border:1px solid var(--linha2);border-radius:var(--r2);
   background:var(--papel);color:var(--tinta);transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus{outline:0;border-color:var(--azul);
+textarea{font:inherit;font-size:.95rem;line-height:1.45;resize:vertical;
+  min-height:76px;display:block}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
   box-shadow:0 0 0 3px var(--azul-sup)}
 .campo{margin-bottom:15px}
 /* Regra da casa para qualquer coisa que se toca: contorno que se enxerga e
@@ -300,13 +302,21 @@ input:focus,select:focus{outline:0;border-color:var(--azul);
 /* As duas razões: foram impedidos de entrar, ou o ambiente não existe.
    São casos diferentes para a escola, então o registro separa os dois. */
 .escolha-sa{display:grid;gap:9px;margin-bottom:14px}
+/* a opção é um <label>, e a regra geral de label põe caixa alta e letra
+   miúda: aqui isso vira texto corrido, que é o que se lê de relance */
 .op-sa{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
-  border:2px solid var(--linha2);border-radius:var(--r2);padding:11px 13px;
-  background:var(--sup);min-height:44px}
-.op-sa:has(input:checked){border-color:var(--acao);background:var(--sup2)}
-.op-sa input{width:21px;height:21px;margin:1px 0 0;accent-color:var(--acao);flex:0 0 auto}
-.op-sa b{display:block;font-size:.91rem;line-height:1.35;font-weight:700}
-.op-sa small{display:block;font-size:.78rem;color:var(--tinta2);line-height:1.4;margin-top:3px}
+  border:2px solid var(--tinta2);border-radius:var(--r2);padding:11px 13px;
+  background:var(--sup);min-height:44px;
+  text-transform:none;letter-spacing:normal;font-size:1rem;
+  font-weight:400;color:var(--tinta);margin-bottom:0}
+/* a marcada não troca de fundo: o texto continua com o mesmo contraste,
+   e o que muda é a moldura azul, que se vê de longe */
+.op-sa:has(input:checked){border-color:var(--azul);
+  box-shadow:inset 0 0 0 2px var(--azul)}
+.op-sa input{width:21px;height:21px;margin:1px 0 0;accent-color:var(--azul);flex:0 0 auto}
+.op-sa b{display:block;font-size:.91rem;line-height:1.35;font-weight:700;color:var(--tinta)}
+.op-sa small{display:block;font-size:.81rem;color:var(--tinta2);line-height:1.4;
+  margin-top:3px;text-transform:none;letter-spacing:normal}
 
 /* FOTO DO APARELHO
    Todo aparelho contado entra com foto. A foto é a prova de que aquele
