@@ -298,6 +298,12 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .trancado-cx b{display:block;font-family:var(--d);font-size:.69rem;font-weight:800;
   text-transform:uppercase;letter-spacing:.09em;color:var(--tinta2);margin-bottom:5px}
 .trancado-cx .mot{font-size:.92rem;line-height:1.45;margin:0 0 9px}
+/* o título da caixa é em caixa alta e em bloco; o negrito dentro da frase
+   não pode herdar isso, senão a frase quebra no meio */
+.trancado-cx .mot b{display:inline;font-family:inherit;font-size:1em;font-weight:800;
+  text-transform:none;letter-spacing:normal;color:inherit;margin:0}
+/* a caixa do agrupamento é a única azul: o ambiente foi resolvido, não barrado */
+.trancado-cx.junto{border-left-color:var(--azul)}
 .trancado-cx small{display:block;font-size:.8rem;color:var(--tinta2);line-height:1.45}
 /* As duas razões: foram impedidos de entrar, ou o ambiente não existe.
    São casos diferentes para a escola, então o registro separa os dois. */
@@ -817,6 +823,8 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
   border-radius:var(--r2);cursor:pointer;text-align:left;font:inherit;
   transition:background .15s}
 .lin:hover,.lin:focus-visible{background:var(--sup2)}
+.lin.so-leitura{cursor:default}
+.lin.so-leitura:hover{background:none}
 .lin:focus-visible{outline:2px solid var(--azul);outline-offset:1px}
 .lin .seta{font-size:1.15rem;color:var(--tinta3);line-height:1;
   transition:transform .18s;text-align:center}
@@ -836,20 +844,117 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
   padding:11px 13px;margin-bottom:8px;border-left:3px solid var(--linha2)}
 .amb-det.pronto{border-left-color:var(--verde)}
 .amb-det.andando{border-left-color:var(--ambar)}
+.amb-det.junto{border-left-color:var(--azul)}
 .amb-det.sem-acesso{border-left-color:var(--tinta3)}
 .amb-det.nao-existe{border-left-color:var(--tinta3);opacity:.75}
 .amb-det .cab{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
 .amb-det .cab b{font-family:var(--d);font-size:.92rem;font-weight:700;line-height:1.25}
-.amb-det small{display:block;font-family:var(--m);font-size:.71rem;color:var(--tinta3);
+.amb-det small{display:block;font-family:var(--m);font-size:.71rem;color:var(--tinta2);
   margin-top:3px;line-height:1.4}
 .amb-det p{margin:6px 0 0;font-size:.82rem;color:var(--tinta2);line-height:1.45}
 .amb-det .quem{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
 .amb-det .quem span{font-size:.75rem;background:var(--sup2);border-radius:var(--r2);
   padding:4px 8px;line-height:1.3}
-.amb-det .quem i{display:block;font-style:normal;font-family:var(--m);font-size:.65rem;
-  text-transform:uppercase;letter-spacing:.06em;color:var(--tinta3)}
+.amb-det .quem i{display:block;font-style:normal;font-family:var(--m);font-size:.66rem;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--tinta2)}
 .mini-tab{font-size:.82rem}
 .mini-tab th{font-size:.68rem}
+
+/* o código do grupo que não tem barra, mas abre a mesma janela */
+.elo-g{font:inherit;font-weight:800;font-family:var(--d);color:var(--azul);
+  background:none;border:0;border-bottom:1.5px solid var(--azul);padding:1px 2px;
+  margin:0;cursor:pointer;line-height:1.3}
+.elo-g:hover{background:var(--azul-sup)}
+.elo-g:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+/* ====== JANELA SUSPENSA DO GRUPO ======
+   Abre por cima da página quando se toca num grupo. Mostra quem é do grupo,
+   de que série é cada um, e o andamento ambiente por ambiente. */
+.jan{position:fixed;inset:0;z-index:95;display:flex;align-items:center;
+  justify-content:center;padding:16px}
+.jan-fundo{position:absolute;inset:0;background:rgba(9,12,20,.62);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.jan-cx{position:relative;width:100%;max-width:730px;max-height:calc(100vh - 32px);
+  max-height:calc(100dvh - 32px);display:flex;flex-direction:column;
+  background:var(--sup);border-radius:14px;overflow:hidden;
+  box-shadow:0 20px 56px rgba(0,0,0,.42), 0 2px 8px rgba(0,0,0,.2);
+  animation:jan-entra .22s cubic-bezier(.22,1,.36,1)}
+@keyframes jan-entra{from{opacity:0;transform:translateY(16px) scale(.985)}
+  to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.jan-cx{animation:none}}
+
+.jan-topo{flex:none;position:relative;padding:19px 21px 17px;
+  background:linear-gradient(135deg, var(--azul) 0%, var(--azul-forte) 100%)}
+.jan-topo .et{display:block;font-family:var(--m);font-size:.66rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.14em;color:var(--sobre);opacity:.74;
+  margin-bottom:5px}
+.jan-topo h3{margin:0;font-family:var(--d);font-size:1.4rem;font-weight:800;
+  line-height:1.1;letter-spacing:-.02em;color:var(--sobre);padding-right:48px}
+.jan-topo p{margin:7px 0 0;font-size:.84rem;line-height:1.45;color:var(--sobre);
+  opacity:.88;padding-right:48px}
+.jan-x{position:absolute;top:13px;right:13px;width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  /* a borda tem de ser a cor do texto: no tema escuro o azul do alto fica
+     claro, e uma borda branca sumiria */
+  line-height:1;font-family:var(--c);border:2px solid var(--sobre);
+  background:rgba(255,255,255,.14);color:var(--sobre);border-radius:9px;
+  cursor:pointer;transition:background .13s}
+.jan-x:hover{background:rgba(255,255,255,.3)}
+.jan-x:focus-visible{outline:3px solid var(--sobre);outline-offset:2px}
+
+/* as fichinhas do cabeçalho: série, quantos são, quanto já fecharam */
+.jan-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.jan-chips span{font-family:var(--m);font-size:.7rem;font-weight:700;
+  letter-spacing:.04em;color:var(--sobre);background:rgba(255,255,255,.17);
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:5px 11px;
+  line-height:1.25}
+
+.jan-corpo{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:17px 21px 4px;
+  background:var(--sup2)}
+.jan-corpo h5{margin:20px 0 10px;font-family:var(--d);font-size:.8rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--tinta)}
+.jan-corpo h5:first-child{margin-top:0}
+/* o fundo do corpo é o tom de papel: o cinza claro do texto de apoio não
+   leria bem em cima dele */
+.jan-corpo .ajuda{color:var(--tinta)}
+.jan-pe{flex:none;display:flex;justify-content:flex-end;gap:10px;
+  padding:13px 21px calc(13px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid var(--linha);background:var(--sup)}
+.jan-pe .fechar{min-height:44px;font-family:var(--c);font-size:.9rem;font-weight:700;
+  color:var(--verm);background:none;border:2px solid var(--verm);border-radius:9px;
+  padding:10px 22px;cursor:pointer;transition:background .13s}
+.jan-pe .fechar:hover{background:var(--verm-sup)}
+
+/* quem é do grupo: um cartão por pessoa, com a série bem visível */
+.gente-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:9px}
+.pes{display:flex;gap:11px;align-items:center;background:var(--sup);
+  border:1px solid var(--linha);border-radius:var(--r2);padding:10px 12px}
+.pes .ini{flex:none;width:38px;height:38px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-family:var(--d);font-size:.8rem;
+  font-weight:800;letter-spacing:-.02em;color:var(--sobre);background:var(--azul)}
+.pes.b .ini{background:var(--ambar)}
+.pes .tx{min-width:0;flex:1}
+.pes .nm{display:block;font-family:var(--d);font-size:.88rem;font-weight:700;
+  line-height:1.2;color:var(--tinta)}
+.pes .sr{display:inline-block;margin-top:5px;font-family:var(--m);font-size:.68rem;
+  font-weight:700;letter-spacing:.04em;color:var(--azul);background:var(--azul-sup);
+  border-radius:999px;padding:3px 9px;line-height:1.25}
+.pes.b .sr{color:var(--ambar);background:var(--ambar-sup)}
+/* quem ainda não tem turma registrada não ganha cor de série nenhuma */
+.pes.sem .ini{background:var(--linha2);color:var(--tinta)}
+.pes.sem .sr{color:var(--tinta2);background:var(--sup);
+  box-shadow:inset 0 0 0 1px var(--linha)}
+.pes .ex{display:block;margin-top:5px;font-family:var(--m);font-size:.68rem;
+  color:var(--tinta2);line-height:1.35}
+
+@media(max-width:560px){
+  .jan{padding:0}
+  .jan-cx{max-width:none;max-height:100vh;max-height:100dvh;height:100%;
+    border-radius:0}
+  .jan-topo{padding-top:calc(19px + env(safe-area-inset-top,0px))}
+  .jan-topo h3{font-size:1.2rem}
+  .gente-g{grid-template-columns:1fr}
+}
 .lin .cod{font-family:var(--d);font-weight:800;font-size:.88rem;color:var(--azul);
   letter-spacing:-.02em}
 .lin .trilho{height:11px;background:var(--papel);border-radius:999px;overflow:hidden;
@@ -1389,8 +1494,9 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <h2 style="font-size:1.15rem" id="tituloAmb"></h2>
     <p class="ajuda" id="subAmb"></p>
     <div id="avisoAmb"></div>
+    <div id="avisoJuntos"></div>
 
-    <div class="cx">
+    <div class="cx" id="caixaLancar">
       <p class="ajuda" id="quemLanca" style="margin:0 0 12px"></p>
       <label>Que equipamento você está lançando?</label>
       <div class="tipos" id="tipos"></div>
@@ -1461,12 +1567,12 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <button class="btn" id="btAdd">Lançar este equipamento</button>
     </div>
 
-    <h3 class="sec">Já lançado neste ambiente</h3>
+    <h3 class="sec" id="tLancado">Já lançado neste ambiente</h3>
     <div id="listaItens"></div>
 
-    <h3 class="sec">Quem fez cada função aqui</h3>
+    <h3 class="sec" id="tFuncoes">Quem fez cada função aqui</h3>
     <p class="ajuda" id="ajudaFuncoes"></p>
-    <div class="cx">
+    <div class="cx" id="caixaFuncoes">
       <div class="campo"><label for="fContador">Contador: contou em voz alta</label>
         <select id="fContador"></select></div>
       <div class="campo"><label for="fLeitor">Leitor: leu as potências</label>
@@ -1495,9 +1601,29 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     </div>
 
     <div id="faltaConcluir" style="margin-top:18px"></div>
-    <div><button class="btn ok" id="btConcluir"></button></div>
+    <div id="caixaConcluir"><button class="btn ok" id="btConcluir"></button></div>
 
+    <div id="juntoFeito"></div>
     <div id="semAcessoFeito"></div>
+
+    <!-- Dois espaços que na prática são um só: a equipe andou pelos dois e
+         lançou tudo de uma vez. As lâmpadas ficam onde foram lançadas. -->
+    <details class="trancar" id="caixaJuntar">
+      <summary>Foi contado junto com outro ambiente</summary>
+      <p class="ajuda">Use quando a equipe passou por este espaço e pelo outro de
+      uma vez só, sem divisão no meio, e lançou tudo num ambiente só. As lâmpadas
+      continuam onde foram lançadas e ninguém conta duas vezes. Este ambiente sai
+      da lista de pendências apontando para lá.</p>
+      <div id="avisoJuntar"></div>
+      <div class="campo"><label for="juntoAlvo">Em qual ambiente vocês lançaram tudo</label>
+        <select id="juntoAlvo"></select>
+        <p class="ajuda" id="dicaJuntar" style="margin:6px 0 0"></p></div>
+      <div class="campo"><label for="juntoNota">Alguma observação (pode deixar vazio)</label>
+        <input type="text" id="juntoNota" autocomplete="off"
+               placeholder="ex: o corredor e o hall são um espaço só, sem parede no meio"></div>
+      <button class="btn sec" id="btJuntar">Registrar que foi contado junto</button>
+    </details>
+
     <details class="trancar" id="caixaTrancar">
       <summary>Não deu para contar este ambiente</summary>
       <p class="ajuda">Um ambiente só fica pendente para sempre se ninguém explicar
@@ -1870,6 +1996,24 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <button type="button" class="fechar" id="lupaFechar">Fechar</button>
   </div>
   <div class="lupa-rol" id="lupaRol"></div>
+</div>
+
+<!-- janela suspensa: o que há dentro de um grupo -->
+<div class="jan" id="jan" hidden role="dialog" aria-modal="true" aria-labelledby="janTit">
+  <div class="jan-fundo" id="janFundo"></div>
+  <div class="jan-cx">
+    <div class="jan-topo">
+      <span class="et" id="janEt">Grupo</span>
+      <h3 id="janTit">Grupo</h3>
+      <p id="janSub"></p>
+      <div class="jan-chips" id="janChips"></div>
+      <button type="button" class="jan-x" id="janX" aria-label="Fechar a janela">&times;</button>
+    </div>
+    <div class="jan-corpo" id="janCorpo"></div>
+    <div class="jan-pe">
+      <button type="button" class="fechar" id="janFechar">Fechar</button>
+    </div>
+  </div>
 </div>
 <script>
 const API = "https://bcpmgwjatitovhlrjwjg.supabase.co";
@@ -2362,9 +2506,15 @@ async function carregarAmbientes() {
     // um ambiente sem acesso, ou que nem foi construído, não fica pendente
     // para sempre: ele é resolvido de outro jeito, com a explicação anexada
     const resolvidos = feitos + fechados;
+    // o contado junto já entra em 'feitos', mas na frase ele aparece à parte:
+    // não foi contado ali, foi contado dentro de outro ambiente
+    const juntos = lista.filter(a => a.junto_com).length;
+    const contados = feitos - juntos;
     el('tituloLista').textContent = 'Grupo ' + EU.codigo;
-    el('subLista').textContent = EU.resumo + ' · ' + feitos + ' de ' + lista.length +
-      ' ambiente' + (lista.length===1?'':'s') + ' concluído' + (feitos===1?'':'s') + '.'
+    el('subLista').textContent = EU.resumo + ' · ' + contados + ' de ' + lista.length +
+      ' ambiente' + (lista.length===1?'':'s') + ' contado' + (contados===1?'':'s') + '.'
+      + (juntos ? ' ' + juntos + ' contado' + (juntos===1?'':'s')
+         + ' junto com outro.' : '')
       + (barrados ? ' ' + barrados + ' sem acesso.' : '')
       + (nexiste ? ' ' + nexiste + ' não existe' + (nexiste===1?'':'m') + '.' : '');
     el('barraLista').style.width = lista.length ? (resolvidos/lista.length*100)+'%' : '0';
@@ -2373,8 +2523,11 @@ async function carregarAmbientes() {
       const cls = a.sem_acesso ? 'trancado'
                 : a.concluido ? 'feito' : (a.itens > 0 ? 'andando' : '');
       const ic  = a.sem_acesso ? (inex ? '—' : '⊘')
+                : a.junto_com ? '↳'
                 : a.concluido ? '✓' : (a.itens > 0 ? '•' : '');
-      const det = a.sem_acesso
+      const det = a.junto_com
+        ? 'contado junto com ' + esc(a.junto_nome || 'outro ambiente')
+        : a.sem_acesso
         ? (inex
             ? 'não existe · está na planta, mas não foi construído'
             : 'sem acesso · informado por ' + esc(a.sem_acesso_quem || ''))
@@ -3303,7 +3456,11 @@ async function abrirAmbiente(id, lista) {
   if (op) op.checked = true;
   pintarEscolhaSA();
   msg('avisoTrancar','');
+  el('caixaJuntar').open = false;
+  el('juntoNota').value = '';
+  msg('avisoJuntar','');
   pintarSemAcesso();
+  pintarJunto();
   montarTipos(); chipsPot(); pintarHorasBloco(); limparFotos();
   el('qtd').value = 1; el('pot').value = ''; el('obs').value = '';
   msg('avisoAmb','');
@@ -3315,7 +3472,7 @@ async function abrirAmbiente(id, lista) {
       + 'a mesma pessoa pode aparecer em duas.'
     : 'Cada um dos quatro exerceu uma função aqui.';
   telas('ambiente');
-  await Promise.all([carregarItens(), carregarFuncoes()]);
+  await Promise.all([carregarItens(), carregarFuncoes(), carregarOpcoesJuntar()]);
 }
 async function carregarFuncoes() {
   try {
@@ -3393,7 +3550,109 @@ function pintarSemAcesso() {
     cai.hidden = false;
     el('btConcluir').hidden = false;
   }
+  pintarJunto();
 }
+
+/* ====== CONTADO JUNTO COM OUTRO AMBIENTE ======
+   A equipe andou pelo corredor e pelo hall de uma vez e lançou tudo num
+   registro só. As lâmpadas ficam inteiras onde foram lançadas; este ambiente
+   aponta para lá e não aceita lançamento, senão a lâmpada entra duas vezes. */
+const PARTES_CONTAGEM = ['caixaLancar','tLancado','listaItens','tFuncoes',
+  'ajudaFuncoes','caixaFuncoes','faltaConcluir','caixaConcluir'];
+
+function pintarJunto() {
+  const cx = el('juntoFeito'), cai = el('caixaJuntar');
+  if (!AMB || !cx) return;
+  const junto = !!AMB.junto_com;
+  PARTES_CONTAGEM.forEach(function(k){ const n = el(k); if (n) n.hidden = junto; });
+  el('subAmb').textContent = junto
+    ? 'Este espaço foi contado dentro de outro ambiente, então aqui não se lança nada.'
+    : 'Lance um equipamento de cada vez. Lâmpada por lâmpada, contando as queimadas '
+      + 'também.';
+  if (junto) {
+    cx.innerHTML = '<div class="trancado-cx junto"><b>Contado junto com outro ambiente</b>'
+      + '<p class="mot">O que existe aqui foi contado e lançado em <b>'
+      + esc(AMB.junto_nome || 'outro ambiente') + '</b>. Por isso este ambiente não '
+      + 'recebe lançamento: a mesma lâmpada não pode entrar duas vezes na conta '
+      + 'da escola.</p>'
+      + (AMB.junto_nota ? '<small>' + esc(AMB.junto_nota) + '</small>' : '')
+      + '<div style="margin-top:12px"><button class="btn sec peq" id="btDesjuntar">'
+      + 'Na verdade foi contado separado, desfazer</button></div></div>';
+    el('btDesjuntar').addEventListener('click', function(){ juntar(null); });
+    cai.hidden = true;
+  } else {
+    cx.innerHTML = '';
+    // só faz sentido agrupar o que ainda não recebeu lançamento nenhum
+    cai.hidden = !!AMB.sem_acesso || ITENS_AQUI > 0 || !(OPCOES_JUNTAR || []).length;
+  }
+  // quem manda na caixa de "não deu para contar" é o sem acesso; aqui só se
+  // acrescenta que ela também some quando o ambiente está agrupado
+  el('caixaTrancar').hidden = junto || !!AMB.sem_acesso;
+  // no ambiente que recebeu a contagem, dizer o que está contado dentro dele
+  const dentro = (AMB.juntos_aqui || []);
+  const av = el('avisoJuntos');
+  if (av) av.innerHTML = dentro.length
+    ? '<div class="aviso info">Aqui também está contado: '
+      + dentro.map(function(x){ return '<b>' + esc(x.nome) + '</b>'; }).join(', ')
+      + '. Esse outro ambiente aponta para cá, então tudo o que for daquele espaço '
+      + 'tem de ser lançado aqui.</div>'
+    : '';
+}
+
+let OPCOES_JUNTAR = [];
+async function carregarOpcoesJuntar() {
+  OPCOES_JUNTAR = [];
+  const sel = el('juntoAlvo');
+  if (!sel || !AMB || !EU) return;
+  let r;
+  try { r = await rpc('juntar_opcoes', { p_token: EU.token, p_ambiente: AMB.id }); }
+  catch (e) { r = null; }
+  if (r && r.ok) OPCOES_JUNTAR = r.opcoes || [];
+  sel.innerHTML = '<option value="">escolha o ambiente</option>'
+    + OPCOES_JUNTAR.map(function(o){
+        return '<option value="' + o.id + '">' + esc(o.nome) + ' ('
+          + o.lampadas + (+o.lampadas === 1 ? ' lâmpada' : ' lâmpadas') + ')</option>';
+      }).join('');
+  el('dicaJuntar').textContent = OPCOES_JUNTAR.length
+    ? 'Aparecem só os ambientes do seu grupo que são do mesmo bloco deste e que já '
+      + 'têm lançamento. O bloco é o que diz quantas horas a luz fica acesa, por '
+      + 'isso não dá para juntar ambientes de blocos diferentes.'
+    : 'Nenhum ambiente do seu grupo serve: para agrupar, o outro precisa ser do '
+      + 'mesmo bloco deste e já ter equipamento lançado.';
+  pintarJunto();
+}
+
+async function juntar(alvo) {
+  const b = el(alvo ? 'btJuntar' : 'btDesjuntar');
+  if (b) b.disabled = true;
+  let r;
+  try {
+    r = await rpc('marcar_junto', { p_token: EU.token, p_ambiente: AMB.id,
+      p_alvo: alvo, p_aluno: SOU ? SOU.id : null,
+      p_nota: alvo ? el('juntoNota').value : null });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  if (b) b.disabled = false;
+  if (!r.ok) { msg(alvo ? 'avisoJuntar' : 'avisoAmb', r.erro, 'erro');
+               return aoAlcance(alvo ? 'avisoJuntar' : 'avisoAmb'); }
+  AMB.junto_com  = alvo;
+  AMB.junto_nome = alvo ? (r.junto_nome || '') : null;
+  AMB.junto_nota = alvo ? (el('juntoNota').value.trim() || null) : null;
+  msg('avisoJuntar','');
+  pintarJunto();
+  pintarFaltaConcluir();
+  msg('avisoAmb', alvo
+    ? 'Registrado. Este ambiente saiu das pendências apontando para ' + (r.junto_nome || 'o outro')
+      + '. As lâmpadas continuam lançadas lá, contadas uma vez só.'
+    : 'Desfeito. Este ambiente voltou a pedir a contagem dele.', 'bom');
+  aoAlcance('avisoAmb');
+  await carregarOpcoesJuntar();
+}
+el('btJuntar').addEventListener('click', function(){
+  const v = el('juntoAlvo').value;
+  if (!v) { msg('avisoJuntar', 'Escolha primeiro em qual ambiente vocês lançaram '
+    + 'tudo.', 'erro'); return aoAlcance('avisoJuntar'); }
+  juntar(+v);
+});
 async function trancar(valor) {
   const b = el(valor ? 'btTrancar' : 'btDestrancar');
   if (b) b.disabled = true;
@@ -3503,6 +3762,7 @@ async function carregarItens() {
     }).join('') : '<p class="ajuda">Nada lançado ainda.</p>';
     ITENS_AQUI = its.length;
     pintarFaltaConcluir();
+    pintarJunto();   // quem já lançou aqui não precisa da opção de agrupar
     document.querySelectorAll('#listaItens .vistas img').forEach(im =>
       im.addEventListener('click', async () => {
         im.style.opacity = '.5';
@@ -4324,53 +4584,155 @@ function pintarGrafGrupos(grupos) {
   // "0 de 0" numa barra cinza dava a impressão errada de grupo parado
   const comAmb = grupos.filter(function(g){ return +g.ambientes > 0; });
   const semAmb = grupos.filter(function(g){ return +g.ambientes === 0; });
+  // só o professor e a direção podem abrir o grupo por dentro. Para o aluno a
+  // barra é só de leitura: botão que dá "sem acesso" é botão que engana
+  const podeAbrir = !!(EU && (EU.papel === 'professor' || EU.papel === 'gestao'));
+  const codigo = function(g) {
+    return podeAbrir
+      ? '<button type="button" class="elo-g" data-g="' + esc(g.codigo)
+        + '" aria-haspopup="dialog">' + esc(g.codigo) + '</button>'
+      : '<b>' + esc(g.codigo) + '</b>';
+  };
   cx.innerHTML = '<h4>Avanço de cada grupo</h4>'
     + '<p class="sub">Ambientes concluídos sobre o total de cada grupo. '
-    + 'Cinza é grupo que ainda não começou; âmbar está no meio; verde fechou. '
-    + 'Toque num grupo para ver por dentro.</p>'
+    + 'Cinza é grupo que ainda não começou; âmbar está no meio; verde fechou.'
+    + (podeAbrir ? ' Toque num grupo para abrir a janela com os componentes, '
+        + 'a série de cada um e o andamento ambiente por ambiente.' : '') + '</p>'
     + '<div class="linhas">' + comAmb.map(function(g){
         const a = +g.ambientes, c = +g.concluidos,
               sa = +g.sem_acesso || 0, pct = a ? (c + sa) / a : 0;
         const est = (c + sa) === 0 ? 'parado' : ((c + sa) < a ? 'andando' : '');
-        return '<button type="button" class="lin ' + est + '" data-g="' + esc(g.codigo)
-          + '" aria-expanded="false"><span class="cod">' + esc(g.codigo) + '</span>'
+        return (podeAbrir ? '<button type="button"' : '<div')
+          + ' class="lin ' + est + (podeAbrir ? '' : ' so-leitura')
+          + '" data-g="' + esc(g.codigo) + '"'
+          + (podeAbrir ? ' aria-haspopup="dialog"' : '')
+          + '><span class="cod">' + esc(g.codigo) + '</span>'
           + '<span class="trilho"><i class="fita" data-pct="'
             + (pct * 100).toFixed(1) + '"></i></span>'
           + '<span class="vl">' + (c + sa) + ' de ' + a
           + (sa ? '<i>' + sa + ' sem acesso</i>' : '') + '</span>'
-          + '<span class="seta" aria-hidden="true">&rsaquo;</span></button>'
-          + '<div class="dentro" id="dentro-' + esc(g.codigo) + '" hidden></div>';
+          + (podeAbrir ? '<span class="seta" aria-hidden="true">&rsaquo;</span></button>'
+                       : '<span class="seta" aria-hidden="true"></span></div>');
       }).join('') + '</div>'
     + (semAmb.length
         ? '<p class="sub" style="margin:14px 0 0">Não entram nesta barra porque não '
-          + 'têm ambiente próprio: ' + semAmb.map(function(g){
-              return '<b>' + esc(g.codigo) + '</b>'; }).join(', ')
+          + 'têm ambiente próprio' + (podeAbrir ? ', mas também abrem' : '') + ': '
+          + semAmb.map(codigo).join(', ')
           + '. O trabalho deles aparece nas abas Mapa e Apresentação.</p>'
-        : '');
-  cx.querySelectorAll('.lin').forEach(function(b){
-    b.addEventListener('click', function(){ abrirDentro(b.dataset.g, b); });
+        : '')
+    + '<p class="sub" id="equipesExtras" style="margin:10px 0 0" hidden></p>';
+  cx.querySelectorAll('.lin, .elo-g').forEach(function(b){
+    if (!podeAbrir) return;
+    b.addEventListener('click', function(){ abrirGrupo(b.dataset.g, b); });
   });
+  if (podeAbrir) carregarEquipesExtras(codigo);
   animar(function(){
     const fitas = cx.querySelectorAll('.fita');
     for (let i = 0; i < fitas.length; i++) fitas[i].style.width = fitas[i].dataset.pct + '%';
   });
 }
 
-/* o que há dentro de um grupo: ambiente por ambiente e pessoa por pessoa */
-async function abrirDentro(cod, bt) {
-  const n = el('dentro-' + cod);
-  if (!n) return;
-  if (!n.hidden) { n.hidden = true; bt.setAttribute('aria-expanded','false'); return; }
-  // um aberto de cada vez, para a página não virar um rolo
-  document.querySelectorAll('#grafGrupos .dentro').forEach(function(x){ x.hidden = true; });
-  document.querySelectorAll('#grafGrupos .lin').forEach(function(x){
-    x.setAttribute('aria-expanded','false'); });
-  n.hidden = false; bt.setAttribute('aria-expanded','true');
-  n.innerHTML = '<p class="ajuda" style="margin:0">Carregando...</p>';
+/* As equipes que não são de campo (cálculo, preço) não entram no resumo das
+   barras, mas têm gente dentro. Elas abrem a mesma janela. */
+async function carregarEquipesExtras(codigo) {
+  const n = el('equipesExtras');
+  if (!n || !EU) return;
+  let r;
+  try { r = await rpc('equipes_extras', { p_token: EU.token }); } catch (e) { return; }
+  if (!r || !r.ok || !(r.equipes || []).length) return;
+  n.innerHTML = 'Equipes que não são de campo, mas também abrem: '
+    + r.equipes.map(function(g){
+        return codigo(g) + ' <i>(' + (+g.pessoas)
+          + (+g.pessoas === 1 ? ' aluno)' : ' alunos)') + '</i>'; }).join(', ') + '.';
+  n.hidden = false;
+  n.querySelectorAll('.elo-g').forEach(function(b){
+    b.addEventListener('click', function(){ abrirGrupo(b.dataset.g, b); });
+  });
+}
+
+/* ==================== a janela suspensa de um grupo ====================
+   Abre por cima da página. Mostra quem é do grupo e de que série é cada
+   um (1ª série A ou 1ª série B), e depois o andamento ambiente por ambiente. */
+let JAN_VOLTA = null;   // para onde o foco volta quando a janela fecha
+
+/* '1A' é o nome curto que está no banco; na tela tem de aparecer por extenso */
+function serieDe(t) {
+  const s = String(t == null ? '' : t).trim().toUpperCase();
+  if (s === '1A') return '1ª série A';
+  if (s === '1B') return '1ª série B';
+  return s ? String(t).trim() : 'sem turma';
+}
+function serieDoGrupo(t) {
+  const s = String(t == null ? '' : t).trim();
+  if (s === 'Turma A') return '1ª série A';
+  if (s === 'Turma B') return '1ª série B';
+  if (s === 'As duas turmas') return '1ª série A e 1ª série B';
+  return s;
+}
+/* duas letras para o círculo: primeira do primeiro nome e primeira do último */
+function iniciais(nome) {
+  const ps = String(nome == null ? '' : nome).trim().split(/\s+/)
+    .filter(function(x){ return x.length > 1 || /^[A-Za-zÀ-ÿ]$/.test(x); });
+  if (!ps.length) return '?';
+  const a = ps[0].charAt(0);
+  const b = ps.length > 1 ? ps[ps.length - 1].charAt(0) : '';
+  return (a + b).toUpperCase();
+}
+
+function focaveis() {
+  return Array.prototype.filter.call(
+    el('jan').querySelectorAll('button, [href], input, select, textarea, [tabindex]'),
+    function(x){ return !x.disabled && x.offsetParent !== null; });
+}
+function abrirJanela(volta) {
+  JAN_VOLTA = volta || null;
+  el('jan').hidden = false;
+  document.body.style.overflow = 'hidden';
+  el('janCorpo').scrollTop = 0;
+  el('janFechar').focus();
+}
+function fecharJanela() {
+  if (el('jan').hidden) return;
+  el('jan').hidden = true;
+  document.body.style.overflow = '';
+  el('janCorpo').innerHTML = '';
+  if (JAN_VOLTA && document.body.contains(JAN_VOLTA)) JAN_VOLTA.focus();
+  JAN_VOLTA = null;
+}
+el('janFechar').addEventListener('click', fecharJanela);
+el('janX').addEventListener('click', fecharJanela);
+el('janFundo').addEventListener('click', fecharJanela);
+document.addEventListener('keydown', function(e){
+  if (el('jan').hidden) return;
+  if (e.key === 'Escape') { fecharJanela(); return; }
+  // o tabular não deve sair da janela enquanto ela estiver aberta
+  if (e.key === 'Tab') {
+    const f = focaveis();
+    if (!f.length) return;
+    const pri = f[0], ult = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === pri) { e.preventDefault(); ult.focus(); }
+    else if (!e.shiftKey && document.activeElement === ult) { e.preventDefault(); pri.focus(); }
+  }
+});
+
+async function abrirGrupo(cod, bt) {
+  el('janEt').textContent = 'Grupo';
+  el('janTit').textContent = cod;
+  el('janSub').textContent = 'Carregando...';
+  el('janChips').innerHTML = '';
+  el('janCorpo').innerHTML = '<p class="ajuda" style="margin:0">Carregando...</p>';
+  abrirJanela(bt);
+  const n = el('janCorpo');
   let r;
   try { r = await rpc('detalhe_grupo', { p_token: EU.token, p_grupo: cod }); }
-  catch (e) { n.innerHTML = '<p class="ajuda">' + esc(e.message) + '</p>'; return; }
-  if (!r.ok) { n.innerHTML = '<p class="ajuda">' + esc(r.erro) + '</p>'; return; }
+  catch (e) {
+    el('janSub').textContent = '';
+    n.innerHTML = '<p class="ajuda">' + esc(e.message) + '</p>'; return;
+  }
+  if (!r.ok) {
+    el('janSub').textContent = '';
+    n.innerHTML = '<p class="ajuda">' + esc(r.erro) + '</p>'; return;
+  }
 
   const FUN = { contador:'contou', leitor:'leu a potência', anotador:'anotou',
                 conferente:'conferiu' };
@@ -4378,11 +4740,16 @@ async function abrirDentro(cod, bt) {
   const linhaAmb = function(a) {
     const inex = a.sem_acesso && a.sem_acesso_tipo === 'inexistente';
     const est = a.sem_acesso ? (inex ? 'nao-existe' : 'sem-acesso')
+              : a.junto_com ? 'junto'
               : a.concluido ? 'pronto' : (+a.itens > 0 ? 'andando' : 'parado');
     const sel = a.sem_acesso ? (inex ? 'não existe' : 'sem acesso')
+              : a.junto_com ? 'contado junto'
               : a.concluido ? 'concluído'
               : (+a.itens > 0 ? 'em andamento' : 'não começou');
-    const det = a.sem_acesso
+    const det = a.junto_com
+      ? 'contado junto com ' + esc(a.junto_nome || 'outro ambiente')
+        + (a.junto_nota ? ' · ' + esc(a.junto_nota) : '')
+      : a.sem_acesso
       ? esc(a.sem_acesso_motivo || '')
         + (a.sem_acesso_quem ? ' · informado por ' + esc(a.sem_acesso_quem) : '')
       : +a.itens > 0
@@ -4399,7 +4766,9 @@ async function abrirDentro(cod, bt) {
       : '';
     return '<div class="amb-det ' + est + '">'
       + '<div class="cab"><b>' + esc(a.nome) + '</b>'
-      + '<span class="pill ' + (est === 'pronto' ? 'c' : est === 'parado' ? 'erro' : 'am')
+      // 'am' não existe no estilo das pílulas: ficava sem cor nenhuma. É 'f'.
+      + '<span class="pill ' + (est === 'pronto' || est === 'junto' ? 'c'
+          : est === 'parado' ? 'erro' : 'f')
       + '">' + sel + '</span></div>'
       + '<small>' + esc(a.bloco || '') + '</small>'
       + '<p>' + det + '</p>'
@@ -4407,27 +4776,84 @@ async function abrirDentro(cod, bt) {
           + (a.acomp_funcao ? ', ' + esc(a.acomp_funcao) : '') + '</small>' : '')
       + quem + '</div>';
   };
-  const gente = (r.gente || []);
+  const gente = (r.gente || []).slice().sort(function(a, b){
+    const ta = String(a.turma || 'zz'), tb = String(b.turma || 'zz');
+    if (ta !== tb) return ta < tb ? -1 : 1;
+    return String(a.nome).localeCompare(String(b.nome), 'pt-BR');
+  });
   const f = r.ficha;
+  const deA = gente.filter(function(p){ return String(p.turma||'').toUpperCase() === '1A'; });
+  const deB = gente.filter(function(p){ return String(p.turma||'').toUpperCase() === '1B'; });
+  const outros = gente.filter(function(p){
+    const t = String(p.turma||'').toUpperCase(); return t !== '1A' && t !== '1B'; });
+
+  /* Cabeçalho da janela. A série vem de quem está no grupo, não do que está
+     escrito na ficha do grupo: o MAPA está registrado como "as duas turmas"
+     e os cinco alunos são todos da 1ª série B. */
+  const serieReal = gente.length
+    ? [deA.length ? '1ª série A' : '', deB.length ? '1ª série B' : '']
+        .filter(Boolean).join(' e ')
+      || 'sem turma registrada'
+    : (serieDoGrupo(r.turma) || 'Grupo');
+  el('janEt').textContent = serieReal;
+  el('janTit').textContent = r.codigo;
+  el('janSub').textContent = r.resumo || '';
+  const nAmb = ambs.length;
+  const nJunto = ambs.filter(function(a){ return a.junto_com; }).length;
+  // o contado junto entra como concluído no banco, mas na ficha ele é contado
+  // à parte: não foi contado ali, foi contado dentro de outro ambiente
+  const nPron = ambs.filter(function(a){ return a.concluido; }).length - nJunto;
+  const nSa = ambs.filter(function(a){ return a.sem_acesso; }).length;
+  const chips = [];
+  chips.push(gente.length + (gente.length === 1 ? ' componente' : ' componentes'));
+  if (deA.length) chips.push(deA.length + ' da 1ª série A');
+  if (deB.length) chips.push(deB.length + ' da 1ª série B');
+  if (outros.length) chips.push(outros.length + ' sem turma');
+  if (nAmb) chips.push(nPron + ' de ' + nAmb
+    + (nAmb === 1 ? ' ambiente contado' : ' ambientes contados'));
+  if (nJunto) chips.push(nJunto + ' contado' + (nJunto === 1 ? '' : 's') + ' junto');
+  if (nSa) chips.push(nSa + ' sem acesso');
+  el('janChips').innerHTML = chips.map(function(c){
+    return '<span>' + esc(c) + '</span>'; }).join('');
+
+  /* um cartão por pessoa, com a série escrita por extenso */
+  const cartao = function(p) {
+    const t = String(p.turma || '').toUpperCase();
+    const ex = [];
+    ex.push(p.funcoes + (+p.funcoes === 1 ? ' função' : ' funções'));
+    ex.push(p.lancou + (+p.lancou === 1 ? ' lançamento' : ' lançamentos'));
+    if (+p.colegas > 0) ex.push('avaliou ' + p.avaliou + ' de ' + p.colegas);
+    return '<div class="pes' + (t === '1B' ? ' b' : t === '1A' ? '' : ' sem') + '">'
+      + '<span class="ini" aria-hidden="true">' + esc(iniciais(p.nome)) + '</span>'
+      + '<span class="tx"><b class="nm">' + esc(p.nome) + '</b>'
+      + '<span class="sr">' + esc(serieDe(p.turma)) + '</span>'
+      + '<span class="ex">' + esc(ex.join(' · ')) + '</span></span></div>';
+  };
+  const bloco = function(lista, rotulo) {
+    if (!lista.length) return '';
+    const cab = rotulo
+      ? '<p class="ajuda" style="margin:0 0 7px"><b>' + esc(rotulo) + '</b> · '
+        + lista.length + (lista.length === 1 ? ' aluno' : ' alunos') + '</p>'
+      : '';
+    return cab + '<div class="gente-g" style="margin-bottom:12px">'
+      + lista.map(cartao).join('') + '</div>';
+  };
+  // só vale separar por série quando o grupo tem gente das duas
+  const misto = (deA.length > 0) + (deB.length > 0) + (outros.length > 0) > 1;
+
   n.innerHTML =
-    '<div class="dentro-cx">'
-    + '<p class="ajuda" style="margin:0 0 12px"><b>' + esc(r.codigo) + '</b> · '
-      + esc(r.turma || '') + ' · ' + esc(r.resumo || '') + '</p>'
+    '<h5>Quem é do grupo</h5>'
+    + (gente.length
+        ? (misto
+            ? bloco(deA, '1ª série A') + bloco(deB, '1ª série B')
+              + bloco(outros, 'Sem turma registrada')
+            : bloco(gente, ''))
+        : '<p class="ajuda">Ninguém neste grupo ainda. Monte o grupo na aba '
+          + '<b>Grupos</b>.</p>')
     + '<h5>Ambiente por ambiente</h5>'
     + (ambs.length ? ambs.map(linhaAmb).join('')
-        : '<p class="ajuda">Este grupo não tem ambiente atribuído.</p>')
-    + '<h5>Quem é do grupo</h5>'
-    + (gente.length ? '<div class="rol"><table class="mini-tab"><thead><tr>'
-        + '<th class="cresce">Nome</th><th>Turma</th><th>Funções</th>'
-        + '<th>Lançou</th><th>Avaliou</th></tr></thead><tbody>'
-        + gente.map(function(p){
-            return '<tr><td class="cresce">' + esc(p.nome) + '</td>'
-              + '<td data-r="Turma">' + esc(p.turma || '') + '</td>'
-              + '<td data-r="Funções">' + p.funcoes + '</td>'
-              + '<td data-r="Lançou">' + p.lancou + '</td>'
-              + '<td data-r="Avaliou">' + p.avaliou + ' de ' + p.colegas + '</td></tr>';
-          }).join('') + '</tbody></table></div>'
-        : '<p class="ajuda">Ninguém neste grupo ainda.</p>')
+        : '<p class="ajuda">Este grupo não tem ambiente atribuído. O trabalho dele '
+          + 'aparece nas abas Mapa e Apresentação.</p>')
     + (f ? '<h5>A conta deste grupo</h5>'
         + '<p class="ajuda" style="margin:0 0 9px">Faz a conta: <b>'
         + esc(f.calculista || 'ninguém') + '</b>'
@@ -4444,7 +4870,7 @@ async function abrirDentro(cod, bt) {
                 }).join('') + '</tbody></table></div>'
             : '')
         : '')
-    + '</div>';
+    + '<div style="height:12px"></div>';
 }
 
 /* linha do saldo: a matemática do projeto desenhada */
