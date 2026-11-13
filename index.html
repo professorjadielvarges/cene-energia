@@ -1847,6 +1847,13 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 
     <div class="pag" id="ab-aval" hidden>
       <p class="ajuda" id="ajudaAval"></p>
+
+      <!-- equipe por equipe: quem já respondeu a ficha e quem ainda falta -->
+      <h3 class="sec">Equipe por equipe</h3>
+      <p class="ajuda" id="resumoAvalGrupo"></p>
+      <div class="rol"><table id="tabAvalGrupo"></table></div>
+
+      <h3 class="sec">Aluno por aluno</h3>
       <div class="rol"><table id="tabAval"></table></div>
       <p class="ajuda">A nota de cada linha é a média do que os colegas de grupo
       responderam, de 0 a 15. Compare sempre com a aba Participação: lá estão os
@@ -3553,6 +3560,22 @@ function pintarSemAcesso() {
   pintarJunto();
 }
 
+/* A ordem das equipes em qualquer lista da tela: primeiro os grupos de campo,
+   na ordem do código, depois as equipes de apoio, e a de apresentação por
+   último, que é a que fecha o trabalho no dia da feira. */
+function porOrdemDeGrupo(lista) {
+  const peso = function(c) {
+    const cod = String(c == null ? '' : c).trim().toUpperCase();
+    if (cod === 'APRESENTA') return 3;          // sempre no fim
+    return /^[AB]\d+$/.test(cod) ? 1 : 2;       // campo, depois apoio
+  };
+  return (lista || []).slice().sort(function(x, y){
+    const a = peso(x.codigo), b = peso(y.codigo);
+    if (a !== b) return a - b;
+    return String(x.codigo).localeCompare(String(y.codigo), 'pt-BR');
+  });
+}
+
 /* ====== CONTADO JUNTO COM OUTRO AMBIENTE ======
    A equipe andou pelo corredor e pelo hall de uma vez e lançou tudo num
    registro só. As lâmpadas ficam inteiras onde foram lançadas; este ambiente
@@ -4149,7 +4172,8 @@ async function carregarProf() {
               +r.total_inexistentes || 0);
   pintarSemAcessoProf(r.sem_acesso || []);
   pintarMinis(r, P, C, lamp, precoMed, precos.length);
-  pintarGrafGrupos(r.grupos || []);
+  const GRUPOS_ORD = porOrdemDeGrupo(r.grupos || []);
+  pintarGrafGrupos(GRUPOS_ORD);
   pintarGrafSaldo(C, P, lamp);
 
   if (!(r.grupos || []).length) {
@@ -4159,7 +4183,7 @@ async function carregarProf() {
     el('tabGrupos').innerHTML =
     '<thead><tr><th class="nome">Grupo</th><th>Turma</th><th>Ambientes</th>' +
     '<th>Concluídos</th><th>Lâmpadas</th><th>Situação</th></tr></thead><tbody>' +
-    (r.grupos||[]).map(g => {
+    GRUPOS_ORD.map(g => {
       const c = +g.concluidos, a = +g.ambientes, pct = a ? c / a * 100 : 0;
       const est = a === 0 ? ['c','sem ambientes'] : (c === 0 ? ['c','não começou']
                 : (c < a ? ['a','em andamento'] : ['v','concluído']));
@@ -5224,6 +5248,69 @@ function pintarQuesitos() {
   tab.dataset.pronto = '1';
 }
 
+/* Equipe por equipe: a pergunta que o professor faz é "quais equipes já
+   responderam a ficha inteira", e não "quanto cada aluno mandou". Esta tabela
+   responde isso em uma olhada e nomeia quem está faltando. */
+function pintarAvalPorGrupo(alunos) {
+  const porGrupo = {};
+  alunos.forEach(function(a){
+    const g = a.grupo || '(sem grupo)';
+    if (!porGrupo[g]) porGrupo[g] = [];
+    porGrupo[g].push(a);
+  });
+  const linhas = porOrdemDeGrupo(Object.keys(porGrupo).map(function(g){
+    const gente = porGrupo[g];
+    const deve = gente.filter(function(a){ return +a.colegas > 0; });
+    const fez  = deve.filter(function(a){ return +a.enviadas >= +a.colegas; });
+    const falta = deve.filter(function(a){ return +a.enviadas < +a.colegas; });
+    return { codigo:g, alunos:gente.length, deve:deve.length, fez:fez.length,
+             falta:falta };
+  }));
+  const fechadas = linhas.filter(function(l){ return l.deve > 0 && !l.falta.length; }).length;
+  const comFicha = linhas.filter(function(l){ return l.deve > 0; }).length;
+  el('resumoAvalGrupo').textContent = comFicha
+    ? fechadas + ' de ' + comFicha + ' equipe' + (comFicha === 1 ? '' : 's')
+      + ' respondeu a ficha inteira'
+      + (fechadas === comFicha ? '. Pode fechar a nota.'
+         : '. Nas outras ainda falta gente responder, e os nomes estão na coluna '
+           + 'de quem falta.')
+    : 'Nenhuma equipe tem gente suficiente para a ficha: ela só faz sentido com '
+      + 'dois alunos ou mais no grupo.';
+  el('tabAvalGrupo').innerHTML =
+    '<thead><tr><th class="cresce">Equipe</th><th>Alunos</th><th>Responderam</th>'
+    + '<th class="cresce">Quem ainda falta</th><th>Situação</th></tr></thead><tbody>'
+    + linhas.map(function(l){
+        const pct = l.deve ? l.fez / l.deve * 100 : 0;
+        const est = !l.deve ? ['c','não se aplica']
+                  : !l.fez ? ['c','ninguém respondeu']
+                  : l.falta.length ? ['a','faltam ' + l.falta.length]
+                  : ['v','ficha completa'];
+        return '<tr' + (l.deve && l.falta.length ? ' class="alerta"' : '') + '>'
+          + '<td class="cresce"><b>' + esc(l.codigo) + '</b></td>'
+          + '<td class="n" data-r="Alunos" data-v="' + l.alunos + '">' + l.alunos + '</td>'
+          + '<td class="n" data-r="Responderam" data-v="' + pct.toFixed(2) + '">'
+            + l.fez + ' de ' + l.deve
+            + dbar(pct, est[0] === 'v' ? '' : (est[0] === 'a' ? 'am' : 'cz')) + '</td>'
+          + '<td class="cresce" data-r="Quem ainda falta">'
+            + (l.deve
+                ? (l.falta.length
+                    // a lista inteira de uma equipe grande vira um paredão:
+                    // mostra os primeiros e conta o resto
+                    ? l.falta.slice(0, 6).map(function(a){
+                        return esc(a.nome) + ' <i>(' + a.enviadas + ' de ' + a.colegas
+                          + ')</i>'; }).join('<br>')
+                      + (l.falta.length > 6
+                          ? '<br><i>e mais ' + (l.falta.length - 6) + '</i>' : '')
+                    : '<span class="nd">ninguém</span>')
+                : '<span class="nd">sozinho no grupo, não há colega para avaliar</span>')
+            + '</td>'
+          + '<td data-r="Situação" data-v="' + pct.toFixed(2) + '">'
+            + '<span class="tag ' + est[0] + '">' + est[1] + '</span></td></tr>';
+      }).join('') + '</tbody>';
+  ordenavel('tabAvalGrupo');
+  encherBarras();
+}
+
 /* =================== o professor lê as avaliações =================== */
 async function carregarAvaliacao() {
   if (EU.papel !== 'professor') return;
@@ -5242,8 +5329,10 @@ async function carregarAvaliacao() {
                        : 'Todos já avaliaram os colegas.'));
   if (!al.length) {
     el('tabAval').innerHTML = '<tbody><tr><td class="nd">Sem alunos em grupo.</td></tr></tbody>';
+    el('tabAvalGrupo').innerHTML = '<tbody><tr><td class="nd">Sem alunos em grupo.</td></tr></tbody>';
     return;
   }
+  pintarAvalPorGrupo(al);
   const n1 = v => (v === null || v === undefined) ? '-' : String(v).replace('.', ',');
   el('tabAval').innerHTML =
     '<thead><tr><th class="cresce">Aluno</th><th>Grupo</th><th>Recebidas</th>'
@@ -7053,7 +7142,7 @@ async function carregarSenhas() {
   onde.innerHTML = '<div class="rol"><table id="tabSenhas">'
     + '<thead><tr><th class="cresce">Grupo</th><th>Senha</th><th>Turma</th>'
     + '<th></th></tr></thead><tbody>'
-    + r.grupos.map(g =>
+    + porOrdemDeGrupo(r.grupos).map(g =>
         '<tr><td class="cresce"><b>' + esc(g.codigo) + '</b>'
         + '<small style="display:block;font-family:var(--c);font-size:.76rem;'
         + 'color:var(--tinta2);white-space:normal;margin-top:2px">'
