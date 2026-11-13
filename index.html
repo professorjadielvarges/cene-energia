@@ -2739,7 +2739,10 @@ function pintarFormFichaProf() {
 /* GUARDA_FICHA existe por um motivo: ao salvar, a tela se repinta, e a repintura
    chamava esta função, que apagava o "Ficha salva" antes de alguém ler. O
    professor clicava, não via nada mudar e concluía que o sistema não deixava. */
-let GUARDA_FICHA = '', GUARDA_ERRO = false;
+/* RELOGIO_FICHA guarda o apagador do aviso de sucesso. Sem guardar, o apagador
+   de um salvamento antigo apagava o aviso de erro de um salvamento novo feito
+   poucos segundos depois, e o professor ficava achando que tinha dado certo. */
+let GUARDA_FICHA = '', GUARDA_ERRO = false, RELOGIO_FICHA = null;
 function encaixarFichaProf() {
   const f = FICHAS_PROF.find(x => x.grupo === el('pfGrupo').value);
   el('pfHoras').value = f && f.horas != null ? vrg(f.horas) : '6';
@@ -2764,6 +2767,7 @@ el('btSalvarFichaProf').addEventListener('click', async () => {
   const n = v => el(v).value ? parseInt(el(v).value, 10) : null;
   const b = el('btSalvarFichaProf');
   const grupo = el('pfGrupo').value;
+  clearTimeout(RELOGIO_FICHA);
   b.disabled = true;
   let r;
   try {
@@ -2791,7 +2795,8 @@ el('btSalvarFichaProf').addEventListener('click', async () => {
   await carregarFichasProf();
   msg('avisoFichaProf', GUARDA_FICHA, 'bom');
   aoAlcance('avisoFichaProf');
-  setTimeout(() => { GUARDA_FICHA = ''; msg('avisoFichaProf',''); }, 6000);
+  RELOGIO_FICHA = setTimeout(() => {
+    GUARDA_FICHA = ''; msg('avisoFichaProf',''); }, 6000);
 });
 
 /* o professor vê as fichas por inteiro, inclusive o que cada um digitou */
