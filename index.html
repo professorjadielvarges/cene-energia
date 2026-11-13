@@ -845,6 +845,18 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
 .amb-det.pronto{border-left-color:var(--verde)}
 .amb-det.andando{border-left-color:var(--ambar)}
 .amb-det.junto{border-left-color:var(--azul)}
+/* um aparelho lançado, com a foto ao lado, na lista de conferência */
+.inv-it{display:flex;gap:10px;align-items:center;justify-content:space-between;
+  padding:8px 0;border-top:1px solid var(--linha)}
+.inv-tx{min-width:0;flex:1}
+.inv-tx b{font-family:var(--d);font-size:.86rem}
+.inv-tx i{font-family:var(--m);font-size:.78rem;font-style:normal;color:var(--azul);
+  font-weight:700;margin-left:6px}
+.inv-tx small{display:block;font-family:var(--m);font-size:.68rem;color:var(--tinta2);
+  margin-top:2px;line-height:1.35}
+.inv-sem{flex:none;font-family:var(--m);font-size:.66rem;color:var(--tinta2);
+  background:var(--sup2);border:1px solid var(--linha);border-radius:999px;
+  padding:3px 9px}
 .amb-det.sem-acesso{border-left-color:var(--tinta3)}
 .amb-det.nao-existe{border-left-color:var(--tinta3);opacity:.75}
 .amb-det .cab{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
@@ -1390,6 +1402,17 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <ol class="passos-folha" id="exemploFaixa"></ol>
     </details>
 
+    <!-- A equipe de cálculo precisa poder conferir a potência digitada contra a
+         etiqueta fotografada pela equipe de campo, antes de usar o número. -->
+    <details class="dobra" id="dobraConferir">
+      <summary>Conferir os lançamentos e as fotos</summary>
+      <p class="ajuda">Aqui está o que cada equipe contou, ambiente por ambiente,
+      com as fotos que elas tiraram. Toque na foto para ver grande e ler a
+      etiqueta. Se a potência digitada não bater com a foto, avise o professor:
+      daqui não dá para alterar nada.</p>
+      <div id="inventarioCalc"></div>
+    </details>
+
     <!-- PASSO 1: o treino com uma lâmpada, oito linhas de horas. As horas aqui
          são hipotéticas, de propósito: a pessoa aprende o caminho da conta sem
          depender do que já foi contado na escola. Só depois vem a tabela das
@@ -1400,6 +1423,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <small id="subTreino">Oito linhas de horas por dia. A de 4 horas já vem
       resolvida, como exemplo. Faça as outras sete.</small></div>
     </div>
+    <p class="ajuda" id="fontePreco" style="margin:-6px 0 14px"></p>
     <div id="avisoFolha"></div>
     <div id="linhasFolha"></div>
 
@@ -1836,6 +1860,10 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div id="potPendentes"></div>
       <h3 class="sec">Preços pesquisados</h3>
       <div class="rol"><table id="tabPrecos"></table></div>
+      <h3 class="sec">Lançamento por lançamento, com as fotos</h3>
+      <p class="ajuda">Tudo o que as equipes contaram, com a foto que elas
+      tiraram de cada aparelho. Toque na foto para ver grande.</p>
+      <div id="inventarioProf"></div>
       <p class="ajuda" id="espacoFotos" style="margin-top:16px"></p>
     </div>
 
@@ -2779,6 +2807,9 @@ async function carregarConta() {
   if (el('fonteTarifa')) el('fonteTarifa').textContent = r.fonte_tarifa
     ? 'A tarifa vem de: ' + r.fonte_tarifa + '. É a mesma que o relatório da escola usa.'
     : '';
+  // a coluna "tempo para se pagar" depende do preço da lâmpada, e esse preço é
+  // estimado: quem preenche precisa saber disso enquanto preenche
+  pintarFontePreco();
   pintarExemploFaixa();
   pintarLinhasConta();
   pintarBalanco();
@@ -2801,6 +2832,7 @@ async function carregarTreino() {
   catch (e) { return; }
   if (!r || !r.ok) { el('linhasFolha').innerHTML = ''; return; }
   TREINO = r;
+  pintarFontePreco();
   const ls = r.linhas || [];
   const feitas = ls.filter(l => !l.exemplo && l.em).length;
   const certas = ls.filter(l => !l.exemplo && l.tudo_certo).length;
@@ -3560,6 +3592,106 @@ function pintarSemAcesso() {
   pintarJunto();
 }
 
+/* De onde saiu o preço da lâmpada, escrito por extenso em todo lugar que o
+   preço vira conclusão. A escola não tem a nota fiscal de 2023, então tudo o
+   que depende do preço é estimativa, e o relatório tem de dizer isso com
+   todas as letras: um número sem origem não se defende diante da banca. */
+/* a nota embaixo do Passo 1, para quem está preenchendo a coluna do retorno */
+function pintarFontePreco() {
+  const n = el('fontePreco');
+  if (!n) return;
+  const f = TREINO || ECO;
+  if (!f || !f.preco_fonte) { n.textContent = ''; return; }
+  const p = +(f.preco_led != null ? f.preco_led : f.preco_led_medio);
+  n.textContent = (p > 0 ? 'A coluna "tempo para se pagar" usa o preço de '
+      + brl(p) + ' por lâmpada. ' : '') + origemDoPreco(f);
+}
+
+function origemDoPreco(E) {
+  const fonte = (E && E.preco_fonte) ? String(E.preco_fonte).trim() : '';
+  const pesquisado = !!(E && E.preco_pesquisado);
+  const quantos = +(E && E.precos_quantos) || 0;
+  return 'Atenção: este é um valor estimado, não medido. '
+    + (pesquisado
+        ? 'O preço vem da pesquisa de ' + quantos + ' loja(s) feita pelos estudantes '
+          + 'em 2026. '
+        : '')
+    + (fonte ? fonte + ' ' : '')
+    + 'Como o valor pago na troca de 2023 não é conhecido, qualquer conta de '
+    + 'tempo de retorno aqui é uma aproximação feita com o preço de hoje, e não '
+    + 'o retorno real da compra que a escola fez.';
+}
+
+/* ====== O INVENTÁRIO COM AS FOTOS ======
+   A mesma lista serve a duas pessoas: o professor, que quer ver o que foi
+   fotografado, e a equipe de cálculo, que precisa conferir se a potência
+   digitada bate com a etiqueta da foto antes de usar o número. Nos dois casos
+   é só leitura: nada daqui altera lançamento. */
+async function carregarInventarioFotos(onde) {
+  const n = el(onde);
+  if (!n || !EU) return;
+  if (n.dataset.pronto === '1') return;       // não recarrega a cada abertura
+  n.innerHTML = '<p class="ajuda">Carregando...</p>';
+  let r;
+  try { r = await rpc('inventario_fotos', { p_token: EU.token }); }
+  catch (e) { n.innerHTML = '<p class="ajuda">' + esc(e.message) + '</p>'; return; }
+  if (!r || !r.ok) {
+    n.innerHTML = '<p class="ajuda">' + esc((r && r.erro) || 'Não deu para carregar.')
+      + '</p>'; return;
+  }
+  const ambs = r.ambientes || [];
+  if (!ambs.length) {
+    n.innerHTML = '<p class="ajuda">Nenhum lançamento ainda.</p>'; return;
+  }
+  const comFoto = ambs.reduce(function(s, a){
+    return s + (a.itens || []).filter(function(i){ return (i.fotos||[]).length; }).length; }, 0);
+  const totalIt = ambs.reduce(function(s, a){ return s + (a.itens || []).length; }, 0);
+
+  n.innerHTML = '<p class="ajuda">' + ambs.length + ' ambiente'
+    + (ambs.length === 1 ? '' : 's') + ' com lançamento, ' + totalIt + ' aparelho'
+    + (totalIt === 1 ? '' : 's') + ', ' + comFoto + ' com foto.</p>'
+    + ambs.map(function(a){
+        const horas = a.bloco_sempre ? '24 h por dia'
+          : (a.bloco_horas ? vrg(mil(+a.bloco_horas, 2)) + ' h por dia'
+                           : 'sem horário definido');
+        return '<div class="amb-det pronto"><div class="lin1">'
+          + '<b>' + esc(a.nome) + '</b>'
+          + '<span class="pill c">' + esc(a.grupo) + '</span></div>'
+          + '<small>' + esc(a.bloco || 'sem bloco') + ' · ' + esc(horas) + '</small>'
+          + (a.itens || []).map(function(i){
+              const pot = i.potencia_w != null
+                ? vrg(mil(+i.potencia_w, 2)) + ' W'
+                : (i.sem_potencia ? 'sem potência lida' : 'potência não informada');
+              return '<div class="inv-it">'
+                + '<span class="inv-tx"><b>' + i.quantidade + '× ' + esc(i.tipo)
+                + '</b> <i>' + esc(pot) + '</i>'
+                + '<small>' + (i.lancado_nome ? 'lançou: ' + esc(i.lancado_nome) : '')
+                + (i.obs ? ' · ' + esc(i.obs) : '')
+                + (i.motivo_sem_potencia ? ' · ' + esc(i.motivo_sem_potencia) : '')
+                + '</small></span>'
+                + ((i.fotos || []).length
+                    ? '<span class="vistas">' + i.fotos.map(function(f){
+                        return '<img src="data:image/jpeg;base64,' + f.mini
+                          + '" alt="Foto do aparelho" data-f="' + f.id + '">'; }).join('')
+                      + '</span>'
+                    : '<span class="inv-sem">sem foto</span>')
+                + '</div>';
+            }).join('')
+          + '</div>';
+      }).join('');
+  n.dataset.pronto = '1';
+  n.querySelectorAll('.vistas img').forEach(function(im){
+    im.addEventListener('click', async function(){
+      im.style.opacity = '.5';
+      try {
+        const rf = await rpc('foto', { p_token: EU.token, p_foto: +im.dataset.f });
+        if (rf.ok) abrirLupaFoto('data:image/jpeg;base64,' + rf.cheia, 'Foto do aparelho');
+      } catch (e) {}
+      im.style.opacity = '';
+    });
+  });
+}
+
 /* A ordem das equipes em qualquer lista da tela: primeiro os grupos de campo,
    na ordem do código, depois as equipes de apoio, e a de apresentação por
    último, que é a que fecha o trabalho no dia da feira. */
@@ -3670,6 +3802,10 @@ async function juntar(alvo) {
   aoAlcance('avisoAmb');
   await carregarOpcoesJuntar();
 }
+el('dobraConferir').addEventListener('toggle', function(){
+  if (el('dobraConferir').open) carregarInventarioFotos('inventarioCalc');
+});
+
 el('btJuntar').addEventListener('click', function(){
   const v = el('juntoAlvo').value;
   if (!v) { msg('avisoJuntar', 'Escolha primeiro em qual ambiente vocês lançaram '
@@ -3919,6 +4055,8 @@ function abrirAba(qual) {
   window.scrollTo(0, 0);
   if (qual === 'grupos') abrirMontar(TURMA);
   if (qual === 'compara') abrirCompara('caixaCompara');
+  // as fotos são pesadas: só carregam quando a aba é aberta
+  if (qual === 'dados') carregarInventarioFotos('inventarioProf');
 }
 el('btT1A').addEventListener('click', () => abrirMontar('1A'));
 el('btT1B').addEventListener('click', () => abrirMontar('1B'));
@@ -4694,14 +4832,7 @@ function serieDoGrupo(t) {
   return s;
 }
 /* duas letras para o círculo: primeira do primeiro nome e primeira do último */
-function iniciais(nome) {
-  const ps = String(nome == null ? '' : nome).trim().split(/\s+/)
-    .filter(function(x){ return x.length > 1 || /^[A-Za-zÀ-ÿ]$/.test(x); });
-  if (!ps.length) return '?';
-  const a = ps[0].charAt(0);
-  const b = ps.length > 1 ? ps[ps.length - 1].charAt(0) : '';
-  return (a + b).toUpperCase();
-}
+/* iniciais() é definida uma vez só, mais abaixo, e serve às duas telas */
 
 function focaveis() {
   return Array.prototype.filter.call(
@@ -5097,9 +5228,13 @@ function escolherQuestoes() {
   QUESTOES = QUESTOES_POR_TAREFA[tarefaDoGrupo()] || QUESTOES_POR_TAREFA.inventario;
 }
 
+/* duas letras para o círculo: a primeira do primeiro nome e a do último */
 function iniciais(nome) {
-  const p = String(nome).trim().split(/\s+/);
-  return ((p[0] || '')[0] || '') + ((p.length > 1 ? p[p.length - 1] : '')[0] || '');
+  const p = String(nome == null ? '' : nome).trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '?';
+  const a = (p[0] || '')[0] || '';
+  const b = p.length > 1 ? ((p[p.length - 1] || '')[0] || '') : '';
+  return (a + b).toUpperCase() || '?';
 }
 function recado(texto) {
   let no = el('recado');
@@ -5305,10 +5440,94 @@ function pintarAvalPorGrupo(alunos) {
                 : '<span class="nd">sozinho no grupo, não há colega para avaliar</span>')
             + '</td>'
           + '<td data-r="Situação" data-v="' + pct.toFixed(2) + '">'
-            + '<span class="tag ' + est[0] + '">' + est[1] + '</span></td></tr>';
+            + '<span class="tag ' + est[0] + '">' + est[1] + '</span>'
+            + (l.deve ? ' <button type="button" class="elo-g ver-aval" data-g="'
+                + esc(l.codigo) + '" aria-haspopup="dialog">ver respostas</button>' : '')
+            + '</td></tr>';
       }).join('') + '</tbody>';
   ordenavel('tabAvalGrupo');
   encherBarras();
+  el('tabAvalGrupo').querySelectorAll('.ver-aval').forEach(function(b){
+    b.addEventListener('click', function(){ abrirFichaDoGrupo(b.dataset.g, b); });
+  });
+}
+
+/* O que cada um respondeu sobre cada colega. Abre na mesma janela suspensa
+   dos grupos. Só o professor chega aqui, e o servidor confere de novo. */
+async function abrirFichaDoGrupo(cod, bt) {
+  el('janEt').textContent = 'Ficha de avaliação';
+  el('janTit').textContent = cod;
+  el('janSub').textContent = 'Carregando...';
+  el('janChips').innerHTML = '';
+  el('janCorpo').innerHTML = '<p class="ajuda" style="margin:0">Carregando...</p>';
+  abrirJanela(bt);
+  const n = el('janCorpo');
+  let r;
+  try { r = await rpc('avaliacao_do_grupo', { p_token: EU.token, p_grupo: cod }); }
+  catch (e) { el('janSub').textContent = '';
+              n.innerHTML = '<p class="ajuda">' + esc(e.message) + '</p>'; return; }
+  if (!r.ok) { el('janSub').textContent = '';
+               n.innerHTML = '<p class="ajuda">' + esc(r.erro) + '</p>'; return; }
+
+  const gente = r.gente || [], resp = r.respostas || [];
+  el('janSub').textContent = r.resumo || '';
+  const deve = gente.filter(function(a){ return +a.colegas > 0; });
+  const fez  = deve.filter(function(a){ return +a.enviadas >= +a.colegas; });
+  const chips = [fez.length + ' de ' + deve.length + ' responderam',
+                 resp.length + (resp.length === 1 ? ' resposta' : ' respostas')];
+  el('janChips').innerHTML = chips.map(function(c){
+    return '<span>' + esc(c) + '</span>'; }).join('');
+
+  // agrupa por quem respondeu: a pergunta é "o que o fulano respondeu"
+  const porAutor = {};
+  resp.forEach(function(v){
+    if (!porAutor[v.autor]) porAutor[v.autor] = { nome:v.autor_nome, linhas:[] };
+    porAutor[v.autor].linhas.push(v);
+  });
+  const autores = Object.keys(porAutor).map(function(k){ return porAutor[k]; })
+    .sort(function(a, b){ return a.nome.localeCompare(b.nome, 'pt-BR'); });
+
+  const bloco = function(a) {
+    return '<div class="amb-det pronto"><div class="lin1"><b>' + esc(a.nome)
+      + '</b><span class="pill c">' + a.linhas.length
+      + (a.linhas.length === 1 ? ' colega' : ' colegas') + '</span></div>'
+      + '<div class="rol"><table class="mini-tab"><thead><tr>'
+      + '<th class="cresce">Avaliou</th>'
+      + MEDIDAS.map(function(d){ return '<th>' + d[0] + '</th>'; }).join('')
+      + '<th>Soma</th><th>Quando</th></tr></thead><tbody>'
+      + a.linhas.slice().sort(function(x, y){
+            return x.alvo_nome.localeCompare(y.alvo_nome, 'pt-BR'); })
+          .map(function(v){
+            return '<tr><td class="cresce">' + esc(v.alvo_nome) + '</td>'
+              + MEDIDAS.map(function(d){
+                  return '<td data-r="' + d[0] + '">' + v[d[1]] + '</td>'; }).join('')
+              + '<td data-r="Soma"><b>' + v.soma + ' de 15</b></td>'
+              + '<td data-r="Quando">' + esc(v.quando || '') + '</td></tr>';
+          }).join('')
+      + '</tbody></table></div></div>';
+  };
+
+  const faltam = deve.filter(function(a){ return +a.enviadas < +a.colegas; });
+  n.innerHTML =
+    '<div class="aviso info">Cada nota vai de 0 a 3 em cinco medidas, somando no '
+    + 'máximo 15. Esta tela mostra quem deu qual nota a quem, então não abra com a '
+    + 'projeção ligada.</div>'
+    + '<h5>O que cada um respondeu</h5>'
+    + (autores.length ? autores.map(bloco).join('')
+        : '<p class="ajuda">Ninguém deste grupo respondeu a ficha ainda.</p>')
+    + (faltam.length
+        ? '<h5>Ainda não responderam</h5><div class="gente-g">'
+          + faltam.map(function(a){
+              return '<div class="pes' + (String(a.turma||'').toUpperCase() === '1B'
+                  ? ' b' : '') + '">'
+                + '<span class="ini" aria-hidden="true">' + esc(iniciais(a.nome))
+                + '</span><span class="tx"><b class="nm">' + esc(a.nome) + '</b>'
+                + '<span class="sr">' + esc(serieDe(a.turma)) + '</span>'
+                + '<span class="ex">' + a.enviadas + ' de ' + a.colegas
+                + ' · recebeu ' + a.recebidas + '</span></span></div>';
+            }).join('') + '</div>'
+        : '')
+    + '<div style="height:12px"></div>';
 }
 
 /* =================== o professor lê as avaliações =================== */
@@ -6261,8 +6480,8 @@ function blocoEquivalencias(E) {
     itens.push([(total / conjunto).toLocaleString('pt-BR',
         { maximumFractionDigits: 1 }) + ' vezes',
       'é quantas vezes a economia já pagou o <em>conjunto completo de lâmpadas</em> da '
-      + 'escola. As ' + lamp + ' lâmpadas, ao preço médio de ' + brl(preco)
-      + ' que o grupo de preço pesquisou, custariam ' + brl(conjunto) + '.']);
+      + 'escola. As ' + lamp + ' lâmpadas, a ' + brl(preco) + ' cada uma, custariam '
+      + brl(conjunto) + '. <b>' + origemDoPreco(E) + '</b>']);
   }
   itens.push([Math.round(+E.kwh_total).toLocaleString('pt-BR') + ' kWh',
     'é a energia que deixou de ser gerada e transmitida até a escola nesses '
@@ -7070,13 +7289,13 @@ function montarParecer(r, P, lamp, precoMed, feitos, tot, qtdPrecos) {
     if (+E.preco_led_medio > 0) {
       const custo = +E.preco_led_medio * +E.lampadas_ainda_antigas;
       const meses = +E.economia_mes_a_ganhar > 0 ? custo / +E.economia_mes_a_ganhar : null;
-      pt.push('Ao preço médio de ' + brl(+E.preco_led_medio) + ' por lâmpada, pesquisado '
-        + 'pelos estudantes em ' + n(E.precos_quantos) + ' loja(s), essa troca custaria '
+      pt.push('A ' + brl(+E.preco_led_medio) + ' por lâmpada, essa troca custaria '
         + brl(custo) + '.'
         + (meses !== null && meses < 600
             ? ' A economia que ela mesma gera cobre esse custo em '
               + Math.ceil(meses) + ' mês(es).'
-            : ''));
+            : '')
+        + ' ' + origemDoPreco(E));
     }
   } else {
     pt.push('Não foi encontrada nenhuma lâmpada fora do padrão LED nos ambientes já '
