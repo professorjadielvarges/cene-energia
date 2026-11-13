@@ -1269,11 +1269,18 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
               <option value="B2">B2 · Laboratórios, biblioteca e sala multiuso</option>
               <option value="B3">B3 · Quadra, vestiários, auditório e campo</option>
             </optgroup>
+            <!-- A primeira e a segunda conferência são portas para o mesmo
+                 ambiente do CÁLCULO: quem foi nomeado conferente procura o
+                 nome do posto dele aqui, não a palavra "cálculo". As três
+                 entram com o código e a senha do CÁLCULO, e lá dentro a
+                 pessoa diz quem é e o sistema abre só a parte dela. -->
             <optgroup label="Comuns às duas turmas">
               <option value="MAPA">MAPA · a planta da escola e os horários</option>
-              <option value="APRESENTA">APRESENTA · os 5 minutos da feira</option>
+              <option value="CALCULO|conf1">1ª CONFERÊNCIA · confere o trabalho de campo</option>
+              <option value="CALCULO">CÁLCULO · refaz a conta de cada grupo</option>
+              <option value="CALCULO|conf2">2ª CONFERÊNCIA · confere a conta do calculista</option>
               <option value="PRECO">PREÇO · pesquisa de preço do LED</option>
-              <option value="CALCULO">CÁLCULO · refaz e confere a conta de cada grupo</option>
+              <option value="APRESENTA">APRESENTA · os 5 minutos da feira</option>
             </optgroup>
           </select>
           <input type="text" id="codigoOutro" hidden autocomplete="off"
@@ -1444,6 +1451,8 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       </div>
     </div>
     <div id="avisoCalc"></div>
+    <!-- aviso de quem entrou pela porta de conferência sem ter o posto -->
+    <div id="avisoPorta"></div>
 
     <div class="numeros-conta" id="numerosConta"></div>
     <p class="ajuda" id="fonteTarifa" style="margin:-4px 0 18px"></p>
@@ -2462,9 +2471,16 @@ el('btOutroCodigo').addEventListener('click', () => trocarEntrada(!CODIGO_DIGITA
 // escolheu o grupo, já cai na senha: um toque a menos
 el('codigo').addEventListener('change', () => { if (el('codigo').value) el('senha').focus(); });
 
+/* Porta pela qual a pessoa entrou na lista: null, 'conf1' ou 'conf2'. */
+let PORTA = null;
 el('formEntrar').addEventListener('submit', async e => {
   e.preventDefault();
-  const codigo = (CODIGO_DIGITADO ? el('codigoOutro').value : el('codigo').value).trim();
+  const escolhido = (CODIGO_DIGITADO ? el('codigoOutro').value : el('codigo').value).trim();
+  /* A lista tem três portas para o cálculo: CALCULO, CALCULO|conf1 e
+     CALCULO|conf2. O que vai para o servidor é só o código; o pedaço depois da
+     barra diz qual tela abrir primeiro lá dentro. */
+  const codigo = escolhido.split('|')[0];
+  PORTA = escolhido.indexOf('|') > 0 ? escolhido.split('|')[1] : null;
   if (!codigo) return msg('erroLogin', CODIGO_DIGITADO
     ? 'Digite o código.' : 'Escolha o seu grupo na lista.', 'erro');
   const b = el('btEntrar'); b.disabled = true; b.textContent = 'Entrando...';
@@ -2913,6 +2929,7 @@ async function carregarPapeis() {
   if (!r || !r.ok) return;
   PAPEIS = { calculista: r.calculista || [], primeira: r.primeira || [],
              segunda: r.segunda || [] };
+  pintarCapaSub();
   const d1 = el('dobraConferir'), d2 = el('dobraConf2');
   if (d1) {
     d1.hidden = !PAPEIS.primeira.length;
@@ -2927,6 +2944,52 @@ async function carregarPapeis() {
     d2.hidden = !PAPEIS.segunda.length;
     if (PAPEIS.segunda.length) carregarConf2(PAPEIS.segunda[0]);
   }
+  /* Quem entrou pela porta "1ª CONFERÊNCIA" ou "2ª CONFERÊNCIA" cai direto na
+     parte dele, aberta e com a tela rolada até lá. Sem isso a pessoa entra e
+     tem de caçar a dobra no meio da tela do cálculo. */
+  if (PORTA === 'conf1' || PORTA === 'conf2') {
+    const d = PORTA === 'conf1' ? d1 : d2;
+    const tem = PORTA === 'conf1' ? PAPEIS.primeira.length : PAPEIS.segunda.length;
+    const avisoPorta = el('avisoPorta');
+    if (d && tem) {
+      d.open = true;
+      if (avisoPorta) avisoPorta.innerHTML = '';
+      setTimeout(function(){ try { d.scrollIntoView({ block:'start' }); } catch(e){} }, 150);
+    } else if (avisoPorta) {
+      /* a pessoa escolheu a porta errada na lista: o professor não a nomeou
+         nesse posto. Melhor dizer isso do que deixar a tela vazia. */
+      avisoPorta.innerHTML = '<div class="aviso erro">Você entrou pela '
+        + (PORTA === 'conf1' ? 'primeira' : 'segunda') + ' conferência, mas o '
+        + 'professor não te nomeou nesse posto. Veja abaixo o que é seu, ou fale '
+        + 'com o professor.</div>';
+    }
+    PORTA = null;
+  }
+}
+
+/* A linha de cima da tela do cálculo. O servidor manda "serve", que é o grupo da
+   ficha, mas quem é conferente não faz a conta daquele grupo: confere. Então a
+   frase é montada dos postos de verdade, e não do "serve", senão a tela dizia
+   "faz a conta do grupo A1" para quem só confere o A1. Os dois lugares que
+   escrevem aqui chamam esta mesma função, em qualquer ordem que terminem. */
+function fraseDosPostos() {
+  const p = [];
+  const liga = l => l.join(' e o ');
+  if ((PAPEIS.calculista || []).length)
+    p.push('faz a conta do grupo ' + liga(PAPEIS.calculista));
+  if ((PAPEIS.primeira || []).length)
+    p.push('primeira conferência do ' + liga(PAPEIS.primeira));
+  if ((PAPEIS.segunda || []).length)
+    p.push('segunda conferência do ' + liga(PAPEIS.segunda));
+  return p.join(' · ');
+}
+function pintarCapaSub() {
+  if (!el('capaSub')) return;
+  const nome = (CONTA && CONTA.nome) || (SOU && SOU.nome) || '';
+  const posto = fraseDosPostos();
+  el('capaSub').textContent = nome + (posto ? ' · ' + posto : '')
+    + ' · cada linha é um horário da escola. Some as linhas e você tem a resposta '
+    + 'do projeto.';
 }
 
 async function carregarConta() {
@@ -2937,9 +3000,7 @@ async function carregarConta() {
   catch (e) { return msg('avisoCalc', e.message, 'erro'); }
   if (!r.ok) return msg('avisoCalc', r.erro, 'erro');
   CONTA = r;
-  el('capaSub').textContent = r.nome + (r.serve ? ' · faz a conta do grupo ' + r.serve : '')
-    + ' · cada linha é um horário da escola. Some as linhas e você tem a resposta '
-    + 'do projeto.';
+  pintarCapaSub();
   el('numerosConta').innerHTML = [
     [vrg(r.pot_antes) + ' W', 'lâmpada de antes'],
     [vrg(r.pot_led) + ' W', 'LED que entrou'],
@@ -4963,6 +5024,16 @@ async function carregarMontar() {
                  || !!(g.tipo && g.tipo !== 'inventario');
   // grupo onde todo mundo faz a mesma coisa, então não se escolhe função
   const semFuncao = g => comum(g);
+  /* A ordem que o professor pediu: primeiro os grupos de campo, depois o mapa,
+     a primeira conferência, o cálculo, a segunda conferência, o preço, e a
+     apresentação por último. É a ordem em que o trabalho acontece. */
+  const ordemCard = g => g.posto === 'conf1' ? 2
+                       : g.posto === 'calculista' ? 3
+                       : g.posto === 'conf2' ? 4
+                       : g.tipo === 'mapa' ? 1
+                       : g.papel === 'preco' ? 5
+                       : g.tipo === 'apresentacao' ? 6
+                       : 0;
   const gs = (r.grupos || [])
     .filter(g => daTurma.indexOf(g.codigo) >= 0 || comum(g))
     .sort((x, y) => (comum(x) - comum(y))
@@ -4976,6 +5047,10 @@ async function carregarMontar() {
      ficha, não no aluno. Quem monta os grupos procura o vínculo aqui, no nome,
      então ele aparece aqui também, só para ler, com o caminho de onde se muda. */
   const POSTO = { calculista:'faz a conta', conf1:'1º conferente', conf2:'2º conferente' };
+  /* PORPOSTO separa a equipe de cálculo em três: quem faz a conta, quem faz a
+     primeira conferência e quem faz a segunda. É o que vira três cards na tela,
+     porque "equipe de cálculo" com treze nomes juntos não diz quem faz o quê. */
+  const PORPOSTO = { calculista:{}, conf1:{}, conf2:{} };
   let vinculo = {}, quemCalcula = {}, semFicha = 0;
   try {
     const rf = await rpc('calculo_fichas', { p_token: EU.token });
@@ -4986,6 +5061,7 @@ async function carregarMontar() {
          ['conf2', f.conf2, f.conf2_nome]]
           .forEach(([posto, id, nome]) => { if (id) {
             (vinculo[id] = vinculo[id] || []).push(f.grupo + ' · ' + POSTO[posto]);
+            (PORPOSTO[posto][id] = PORPOSTO[posto][id] || []).push(f.grupo);
             (quemCalcula[f.grupo] = quemCalcula[f.grupo] || [])
               .push({ nome: nome, posto: POSTO[posto] });
           } }));
@@ -4994,10 +5070,38 @@ async function carregarMontar() {
     }
   } catch (e) {}
 
+  /* A equipe de cálculo vira três cards, na ordem do trabalho. Quem tem dois
+     postos aparece em dois cards, que é justamente o que o professor precisa ver
+     para avisar cada um da tarefa certa. */
+  const TITULO = { conf1:'1ª CONFERÊNCIA', calculista:'CÁLCULO',
+                   conf2:'2ª CONFERÊNCIA' };
+  const RESUMO = {
+    conf1:'Confere o trabalho de campo: foto legível, potência informada e '
+        + 'potência igual à da etiqueta, aparelho por aparelho.',
+    calculista:'Refaz a conta da escola com as lâmpadas que a equipe de campo contou.',
+    conf2:'Confere a conta que o calculista lançou, faixa por faixa.' };
+  const COMO = { calculista:'faz a conta do ', conf1:'confere o campo do ',
+                 conf2:'confere a conta do ' };
+  const cards = [];
+  gs.forEach(g => {
+    if (g.papel !== 'calculo') { cards.push(g); return; }
+    ['conf1','calculista','conf2'].forEach(posto => cards.push(
+      Object.assign({}, g, { codigo: TITULO[posto], posto: posto,
+                             base: g.codigo, resumo: RESUMO[posto] })));
+  });
+  cards.sort((x, y) => (ordemCard(x) - ordemCard(y))
+                    || String(x.codigo).localeCompare(String(y.codigo), 'pt-BR'));
+
   // um card por grupo, com os integrantes e a função de cada um
-  el('cards').innerHTML = '<div class="cards">' + gs.map(g => {
-    const gente = todos.filter(a => a.grupo === g.codigo)
-                       .sort((a,b) => (a.numero||0)-(b.numero||0));
+  el('cards').innerHTML = '<div class="cards">' + cards.map(g => {
+    const porNumero = (a, b) => (a.numero||0) - (b.numero||0);
+    /* no card de um posto, os integrantes são os que ocupam aquele posto; no
+       card do cálculo entram também os que ainda não receberam posto nenhum */
+    const gente = g.posto
+      ? todos.filter(a => (PORPOSTO[g.posto][a.id] || []).length
+          || (g.posto === 'calculista' && a.grupo === g.base && !vinculo[a.id]))
+             .sort(porNumero)
+      : todos.filter(a => a.grupo === g.codigo).sort(porNumero);
     const doisTurnos = comum(g);        // grupo que vale para as duas turmas
     const cls = (gente.length === 0 ? ' vazio'
                  : (!doisTurnos && +g.campo === 0 ? ' semcampo' : ''))
@@ -5008,10 +5112,10 @@ async function carregarMontar() {
             '<span class="nm" title="' + a.nome + '">' + a.nome +
               (doisTurnos ? ' <i style="font-style:normal;font-family:var(--m);font-size:.72rem;'
                  + 'color:var(--tinta3)">' + a.turma + '</i>' : '') +
-              (g.papel === 'calculo'
-                ? '<small class="vinc">' + (vinculo[a.id]
-                    ? esc(vinculo[a.id].join(' · '))
-                    : 'sem grupo ainda') + '</small>' : '') + '</span>' +
+              (g.posto
+                ? '<small class="vinc">' + ((PORPOSTO[g.posto][a.id] || []).length
+                    ? esc(COMO[g.posto] + PORPOSTO[g.posto][a.id].join(' e o '))
+                    : 'sem posto ainda') + '</small>' : '') + '</span>' +
             // no mapa e na apresentação todo mundo faz a mesma coisa: pedir uma
             // função ali só dá trabalho e não quer dizer nada
             // num grupo de campo a escolha vale: marcar cálculo ou conferência
@@ -5024,13 +5128,20 @@ async function carregarMontar() {
                 '<option value="' + p + '"' + (a.equipe === p ? ' selected' : '') + '>' +
                 PAP[p] + '</option>').join('') +
             '</select>') +
-            '<button class="x" data-tirar="' + a.id + '" title="tirar do grupo">✕</button>' +
+            /* no card de um posto o ✕ não tira do posto, tira do grupo inteiro,
+               e o servidor recusa enquanto a pessoa estiver numa ficha. Então
+               ele só aparece para quem ainda não tem posto nenhum. */
+            (g.posto && (PORPOSTO[g.posto][a.id] || []).length ? '' :
+            '<button class="x" data-tirar="' + a.id + '" title="tirar do grupo">✕</button>') +
           '</li>').join('') + '</ul>'
-      : '<div class="nada">Ninguém neste grupo ainda.</div>';
+      : '<div class="nada">' + (g.posto ? 'Ninguém neste posto ainda.'
+                                        : 'Ninguém neste grupo ainda.') + '</div>';
     const pe = doisTurnos
       ? (gente.length ? '<span class="pill k">' + gente.length
-            + (g.papel === 'preco' ? ' na pesquisa de preço'
-               : g.papel === 'calculo' ? ' na equipe de cálculo'
+            + (g.posto === 'conf1' ? ' na primeira conferência'
+               : g.posto === 'conf2' ? ' na segunda conferência'
+               : g.posto === 'calculista' ? ' fazendo a conta'
+               : g.papel === 'preco' ? ' na pesquisa de preço'
                : g.tipo === 'mapa' ? ' na planta' : ' na apresentação') + '</span>'
                       : '<span class="pill erro">vazio</span>')
       : gente.length
@@ -5058,10 +5169,15 @@ async function carregarMontar() {
         : g.ambientes + ' ambientes') + '</span></div>' +
       '<div class="res">' + g.resumo + '</div></div>' +
       corpo
-      + (g.papel === 'calculo'
-          ? '<p class="ondemuda">Cada um aqui faz a conta de um grupo de campo. '
-            + 'Para mudar, marque a pessoa como <b>faz a conta deste grupo</b> no '
-            + 'card do grupo, ou use a aba <b>Conferência</b>.'
+      + (g.posto
+          ? '<p class="ondemuda">'
+            + (g.posto === 'calculista'
+                ? 'Cada um aqui faz a conta de um grupo de campo.'
+                : g.posto === 'conf1'
+                ? 'Cada um aqui confere o trabalho de campo de um grupo: foto, '
+                  + 'potência informada e potência igual à da etiqueta.'
+                : 'Cada um aqui confere a conta que o calculista de um grupo lançou.')
+            + ' Para mudar quem ocupa este posto, use a aba <b>Conferência</b>.'
             + (semFicha ? ' Faltam ' + semFicha + ' grupo(s) sem ficha.' : '')
             + '</p>'
           : rodapeCalc)
