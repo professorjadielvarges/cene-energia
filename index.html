@@ -141,6 +141,11 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .btn.ok{background:var(--verde);border-color:var(--verde)}
 .btn.ok:hover{filter:brightness(1.1)}
 .btn.peq{width:auto;min-height:44px;padding:10px 17px;font-size:.88rem}
+/* dois botões lado a lado; no celular podem cair um embaixo do outro */
+.bt-par{display:flex;gap:7px;flex-wrap:wrap}
+.bt-par .btn{flex:0 0 auto}
+/* na tabela larga eles ficam na mesma linha, senão a linha vira um bloco alto */
+@media(min-width:701px){ td>.bt-par{flex-wrap:nowrap} }
 .aviso{border-radius:var(--r2);padding:12px 15px;margin-bottom:15px;font-size:.9rem;
   border:1px solid;display:flex;gap:9px;align-items:flex-start;line-height:1.45}
 .aviso::before{font-weight:700;flex:none}
@@ -2734,7 +2739,7 @@ function pintarFormFichaProf() {
 /* GUARDA_FICHA existe por um motivo: ao salvar, a tela se repinta, e a repintura
    chamava esta função, que apagava o "Ficha salva" antes de alguém ler. O
    professor clicava, não via nada mudar e concluía que o sistema não deixava. */
-let GUARDA_FICHA = '';
+let GUARDA_FICHA = '', GUARDA_ERRO = false;
 function encaixarFichaProf() {
   const f = FICHAS_PROF.find(x => x.grupo === el('pfGrupo').value);
   el('pfHoras').value = f && f.horas != null ? vrg(f.horas) : '6';
@@ -2750,9 +2755,10 @@ function encaixarFichaProf() {
       'Esta ficha já teve envio. Para mexer nela, os envios teriam de ser apagados.',
       'info');
   else if (!GUARDA_FICHA) msg('avisoFichaProf', '');
+  else msg('avisoFichaProf', GUARDA_FICHA, GUARDA_ERRO ? 'erro' : 'bom');
 }
 el('pfGrupo').addEventListener('change', () => {
-  GUARDA_FICHA = ''; encaixarFichaProf();
+  GUARDA_FICHA = ''; GUARDA_ERRO = false; encaixarFichaProf();
 });
 el('btSalvarFichaProf').addEventListener('click', async () => {
   const n = v => el(v).value ? parseInt(el(v).value, 10) : null;
@@ -2766,8 +2772,15 @@ el('btSalvarFichaProf').addEventListener('click', async () => {
       p_conf1: n('pfC1'), p_conf2: n('pfC2'), p_quem: null });
   } catch (e) { r = { ok:false, erro:e.message }; }
   b.disabled = false;
-  if (!r.ok) { GUARDA_FICHA = ''; msg('avisoFichaProf', r.erro, 'erro');
+  /* o aviso de erro fica guardado como o de sucesso: a tela se recarrega
+     sozinha a cada 30 segundos, e sem isso o professor clicava em salvar,
+     a mensagem sumia na recarga e ele não ficava sabendo que falhou */
+  if (!r.ok) { GUARDA_FICHA = r.erro
+                 || 'Não deu para salvar agora. Tente de novo em instantes.';
+               GUARDA_ERRO = true;
+               msg('avisoFichaProf', GUARDA_FICHA, 'erro');
                return aoAlcance('avisoFichaProf'); }
+  GUARDA_ERRO = false;
   const nomes = ['pfCalc','pfC1','pfC2'].map(i => {
     const o = el(i).selectedOptions[0];
     return o && o.value ? o.textContent : null;
@@ -2827,7 +2840,10 @@ async function carregarFichasProf() {
             + (i === 0 ? '<td data-r="Grupo"><b>' + esc(f.grupo) + '</b></td>'
                        + '<td class="n" data-r="Horas">' + vrg(f.horas) + '</td>'
                        : '<td></td><td></td>')
-            + '<td class="cresce">' + esc(x[2] || '') + '</td>'
+            + '<td class="cresce"><b>' + esc(x[2] || '') + '</b> '
+            + '<button type="button" class="elo-g zap-posto" data-g="' + esc(f.grupo)
+            + '" data-n="' + esc(x[2] || '') + '" data-p="' + x[0]
+            + '">avisar no WhatsApp</button></td>'
             + '<td data-r="Posto">' + NOME_POSTO[x[0]] + '</td>'
             + (e ? '<td class="n" data-r="kWh">' + v('kwh') + ' ' + marca(e.ok_kwh) + '</td>'
                  + '<td class="n" data-r="Mês">' + v('economia') + ' ' + marca(e.ok_economia) + '</td>'
@@ -2842,6 +2858,14 @@ async function carregarFichasProf() {
                 : '') + '</td></tr>';
         }).join('');
       }).join('') + '</tbody>';
+  /* a senha vem antes do clique: se fosse buscada no clique, o navegador
+     bloquearia a janela do WhatsApp por não ter sido aberta pelo toque */
+  await senhaDoCalculo();
+  el('tabFichasProf').querySelectorAll('.zap-posto').forEach(function(b){
+    b.addEventListener('click', function(){
+      mandarNoZap(recadoDoPosto(b.dataset.g, b.dataset.n, b.dataset.p, SENHA_CALC));
+    });
+  });
 }
 
 /* =================== A EQUIPE DE CÁLCULO ===================
@@ -3829,6 +3853,109 @@ const LIMITES_W = {
 // 127 e 220 são as voltagens da tomada: quem lê a etiqueta com pressa anota
 // esse número no lugar do consumo
 const VOLTAGENS = [110, 115, 120, 127, 220, 240, 380];
+
+/* ---------------- recados prontos para o WhatsApp ----------------
+   O professor avisa as equipes pelo WhatsApp, então o sistema escreve o recado
+   inteiro e abre o WhatsApp com ele pronto. Quem escolhe o destinatário é o
+   professor, na tela do próprio WhatsApp: o sistema não guarda telefone de
+   aluno nenhum, de propósito. wa.me serve no celular e no WhatsApp Web. */
+function ondeEstamos() { return location.href.split('#')[0]; }
+function mandarNoZap(texto) {
+  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener');
+}
+function recadoDoGrupo(cod, senha, turma) {
+  const fim = cod === 'CALCULO'
+    ? 'Depois de entrar, diga quem é você na lista. O sistema abre só o que é seu: '
+      + 'a conta da sua ficha e as conferências em que você foi nomeado.'
+    : 'Abra o endereço, escolha ' + cod + ' na lista e digite a senha.';
+  return 'CENE · Feira de Ciências 2026'
+    + '\nEquipe ' + cod + (turma ? ' · ' + turma : '')
+    + '\n\nEndereço: ' + ondeEstamos()
+    + '\nCódigo: ' + cod
+    + '\nSenha: ' + senha
+    + '\n\n' + fim
+    + '\n\nEsta senha é só da sua equipe. Não passe para outra equipe.';
+}
+/* O recado de quem foi nomeado para um posto da ficha de cálculo. O professor
+   dispara um por pessoa, então o texto já diz a equipe, o posto e o que fazer. */
+let SENHA_CALC = null;
+async function senhaDoCalculo() {
+  if (SENHA_CALC !== null) return SENHA_CALC;
+  SENHA_CALC = '';
+  if (!EU || EU.papel !== 'professor') return SENHA_CALC;
+  try {
+    const r = await rpc('senhas', { p_token: EU.token });
+    const g = r && r.ok ? (r.grupos || []).filter(function(x){
+      return x.codigo === 'CALCULO'; })[0] : null;
+    if (g) SENHA_CALC = g.senha || '';
+  } catch (e) {}
+  return SENHA_CALC;
+}
+function recadoDoPosto(grupo, nome, posto, senha) {
+  const entrar = '\n\nEndereço: ' + ondeEstamos()
+    + '\nCódigo: CALCULO' + (senha ? '\nSenha: ' + senha : '')
+    + '\n\nAo entrar, diga quem é você na lista. O sistema abre só a sua parte.';
+  const voce = 'CENE · Feira de Ciências 2026\n' + (nome ? nome + ', você' : 'Você');
+  if (posto === 'calculista') {
+    return voce + ' faz a conta da equipe ' + grupo + '.'
+      + '\n\nSua parte: com as lâmpadas que a equipe ' + grupo + ' contou, calcular '
+      + 'quanto de energia a escola deixou de gastar depois da troca. A ficha abre '
+      + 'na sua tela, faixa por faixa. Faça a conta no rascunho e lance o resultado.'
+      + entrar;
+  }
+  if (posto === 'conf1') {
+    return voce + ' é a primeira conferência da equipe ' + grupo + '.'
+      + '\n\nSua parte: conferir o trabalho de campo da equipe ' + grupo + ', aparelho '
+      + 'por aparelho. Em cada um você responde três perguntas, e a seguinte só abre '
+      + 'se a anterior for sim:'
+      + '\n1) A foto dá para ler?'
+      + '\n2) A etiqueta mostra a potência, o número com W?'
+      + '\n3) A etiqueta diz a mesma potência que foi lançada?'
+      + '\n\nSe não conferir, você escreve o número que está na foto. Se a foto não '
+      + 'der para ler, o sistema avisa a equipe para tirar outra. Tem também um '
+      + 'campo de observação, que você preenche só se quiser.'
+      + '\n\nVocê não corrige o lançamento: quem corrige é quem lançou. A sua parte '
+      + 'é dizer o que viu.'
+      + entrar;
+  }
+  return voce + ' é a segunda conferência da equipe ' + grupo + '.'
+    + '\n\nSua parte: conferir a conta do calculista da equipe ' + grupo + '. O sistema '
+    + 'mostra o que ele lançou, faixa por faixa. Refaça a conta no seu rascunho e diga '
+    + 'se confere ou não. O sistema não te dá a resposta pronta: quem julga é você.'
+    + '\n\nSe não conferir, escreva o valor que deu na sua conta. Tem também um campo '
+    + 'de observação, que você preenche só se quiser.'
+    + entrar;
+}
+function recadoDoAlerta(a) {
+  if (!a) return '';
+  if (!a.amb) {
+    return 'CENE · Feira de Ciências 2026'
+      + '\nConferir as potências das lâmpadas'
+      + '\n\n' + a.titulo + '.'
+      + '\n' + a.texto
+      + '\n\nEntrem no sistema e confiram a etiqueta pela foto: '
+      + ondeEstamos();
+  }
+  const i = a.item || {};
+  const temFoto = (i.fotos || []).length > 0;
+  return 'CENE · Feira de Ciências 2026'
+    + '\nEquipe ' + a.amb.grupo + ' · ' + a.amb.nome
+    + '\n\nLançamento para corrigir: ' + i.quantidade + '× ' + i.tipo
+    + ', lançado com ' + (i.potencia_w != null ? mil(+i.potencia_w, 2) + ' W'
+                                               : 'potência em branco') + '.'
+    + (i.lancado_nome ? '\nQuem lançou foi ' + i.lancado_nome + '.' : '')
+    + '\n\nO que está errado: ' + a.titulo + '.'
+    + '\n' + a.texto
+    + '\n\nO que fazer: ' + (temFoto
+        ? 'confiram a foto da etiqueta no sistema. Se o número for outro, '
+          + 'corrijam o lançamento no próprio ambiente. Se a foto não der para '
+          + 'ler, voltem no ambiente e tirem outra.'
+        : 'este lançamento está sem foto, então só dá para resolver indo ao '
+          + 'ambiente. Levem o celular e fotografem a etiqueta.')
+    + '\n\nQuem corrige é quem lançou, no sistema: ' + ondeEstamos()
+    + '\n\nCorrigir não tira ponto de ninguém. Deixar errado, sim.';
+}
+
 let ALERTAS = [];
 
 function varrerLancamentos(ambs) {
@@ -3960,8 +4087,16 @@ async function abrirAlerta(k, bt) {
           + 'Daqui nada é alterado: quem lançou é quem corrige.</p>'
         : '<h5>O que fazer</h5><p class="ajuda">Abra a aba <b>Lançamentos</b> para ver '
           + 'ambiente por ambiente quais lâmpadas têm essa potência, com as fotos.</p>')
+    + '<div class="bt-par" style="margin-top:14px;align-items:center">'
+      + '<button type="button" class="btn peq zap" id="btZapAlerta">'
+      + 'Mandar no WhatsApp</button>'
+      + '<span class="ajuda" style="margin:0;flex:1 1 11rem">Abre o WhatsApp com o '
+      + 'recado já escrito. Você escolhe para quem mandar.</span></div>'
     + '<div style="height:12px"></div>';
   abrirJanela(bt);
+  el('btZapAlerta').addEventListener('click', function(){
+    mandarNoZap(recadoDoAlerta(a));
+  });
   el('janCorpo').querySelectorAll('.vistas img').forEach(function(im){
     im.addEventListener('click', async function(){
       im.style.opacity = '.5';
@@ -6146,10 +6281,17 @@ function pintarAvalPorGrupo(alunos, lideres) {
     // quem responde a ficha é só o líder nomeado pelo professor
     const lid = gente.filter(function(a){ return a.e_lider; })[0] || null;
     const falta = (lid && +lid.enviadas < +lid.colegas) ? [lid] : [];
-    return { codigo:g, alunos:gente.length, gente:gente, lider:lid,
-             fez: lid && !falta.length ? 1 : 0,
-             deve: lid ? 1 : 0, falta:falta,
-             podeTerLider: gente.length > 1 };
+    /* Equipe que o servidor não devolve na lista de líderes é equipe de trabalho
+       individual: o cálculo e as duas conferências, onde cada um tem a sua
+       tarefa e quem avalia é o professor, pelo que a pessoa fez. Essas não têm
+       ficha entre colegas e não podem ser cobradas por falta de líder. */
+    const temPosto = (lideres || []).some(function(x){ return x.grupo === g; });
+    return { codigo:g, alunos:gente.length, gente:gente,
+             lider: temPosto ? lid : null,
+             fez: temPosto && lid && !falta.length ? 1 : 0,
+             deve: temPosto && lid ? 1 : 0, falta: temPosto ? falta : [],
+             individual: !temPosto,
+             podeTerLider: gente.length > 1 && temPosto };
   }));
   const comLider = linhas.filter(function(l){ return l.lider; });
   const semLider = linhas.filter(function(l){ return !l.lider && l.podeTerLider; });
@@ -6159,10 +6301,13 @@ function pintarAvalPorGrupo(alunos, lideres) {
       + (comLider.length === 1 ? '' : 's') + ' com líder nomeado já teve a ficha '
       + 'respondida' + (fechadas === comLider.length && !semLider.length
           ? '. Pode fechar a nota.' : '.')
-    : 'Nenhuma equipe tem líder nomeado ainda, então ninguém pode responder a ficha.';
+    : 'Nenhuma equipe de campo tem líder nomeado ainda, então a ficha não abre para '
+      + 'ninguém. As outras equipes não têm ficha entre colegas: cada um tem a sua '
+      + 'parte e a nota sai do que a pessoa fez.';
   el('avisoLider').innerHTML = semLider.length
     ? '<div class="aviso erro">' + semLider.length + ' equipe'
-      + (semLider.length === 1 ? ' está' : 's estão') + ' sem líder nomeado: '
+      + (semLider.length === 1 ? ' de campo está' : 's de campo estão')
+      + ' sem líder nomeado: '
       + semLider.map(function(l){ return '<b>' + esc(l.codigo) + '</b>'; }).join(', ')
       + '. Enquanto não houver líder, a ficha de avaliação não abre para ninguém '
       + 'dessa equipe. Escolha na coluna <b>Líder</b>.</div>'
@@ -6175,7 +6320,8 @@ function pintarAvalPorGrupo(alunos, lideres) {
     + linhas.map(function(l){
         const pct = l.lider && +l.colegas !== 0
           ? (+l.lider.colegas ? +l.lider.enviadas / +l.lider.colegas * 100 : 0) : 0;
-        const est = !l.podeTerLider ? ['c','não se aplica']
+        const est = l.individual ? ['c','cada um tem a sua parte']
+                  : !l.podeTerLider ? ['c','não se aplica']
                   : !l.lider ? ['erro','sem líder']
                   : !+l.lider.enviadas ? ['a','não respondeu']
                   : l.falta.length ? ['a','pela metade']
@@ -6192,7 +6338,10 @@ function pintarAvalPorGrupo(alunos, lideres) {
                       return '<option value="' + a.id + '"'
                         + (a.e_lider ? ' selected' : '') + '>' + esc(a.nome)
                         + '</option>'; }).join('') + '</select>'
-                : '<span class="nd">sozinho no grupo</span>')
+                : l.individual
+                  ? '<span class="nd">sem ficha entre colegas: a nota sai do que '
+                    + 'cada um fez, e quem dá é você</span>'
+                  : '<span class="nd">sozinho no grupo</span>')
             + '</td>'
           + '<td class="n" data-r="Respondeu sobre" data-v="' + pct.toFixed(2) + '">'
             + (l.lider ? l.lider.enviadas + ' de ' + l.lider.colegas
@@ -8166,8 +8315,13 @@ async function carregarSenhas() {
         + esc(g.resumo || '') + '</small></td>'
         + '<td data-r="Senha"><b class="sn">' + esc(g.senha) + '</b></td>'
         + '<td data-r="Turma">' + esc(g.turma || '') + '</td>'
-        + '<td><button class="btn peq sec cp" data-cod="' + esc(g.codigo)
-        + '" data-sn="' + esc(g.senha) + '">copiar</button></td></tr>').join('')
+        + '<td><div class="bt-par">'
+        + '<button class="btn peq zap" data-cod="' + esc(g.codigo)
+        + '" data-sn="' + esc(g.senha) + '" data-tu="' + esc(g.turma || '')
+        + '">WhatsApp</button>'
+        + '<button class="btn peq sec cp" data-cod="' + esc(g.codigo)
+        + '" data-sn="' + esc(g.senha) + '" data-tu="' + esc(g.turma || '')
+        + '">copiar</button></div></td></tr>').join('')
     + '</tbody></table></div>';
   onde.insertAdjacentHTML('beforeend',
     '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
@@ -8200,12 +8354,16 @@ async function carregarSenhas() {
   }
 
   onde.querySelectorAll('.cp').forEach(b => b.addEventListener('click', async () => {
-    const t = 'Grupo ' + b.dataset.cod + ' · senha ' + b.dataset.sn
-      + '\nEntre em ' + location.href.split('#')[0]
-      + '\nEscolha o grupo na lista e digite a senha.';
+    const t = recadoDoGrupo(b.dataset.cod, b.dataset.sn, b.dataset.tu);
     try { await navigator.clipboard.writeText(t); b.textContent = 'copiado'; }
     catch (e) { b.textContent = 'não deu'; }
     setTimeout(() => b.textContent = 'copiar', 2200);
+  }));
+  /* Abre o WhatsApp já com o recado escrito; quem escolhe o destinatário é o
+     professor, na tela do próprio WhatsApp. Serve no celular e no WhatsApp Web. */
+  onde.querySelectorAll('.zap').forEach(b => b.addEventListener('click', () => {
+    const t = recadoDoGrupo(b.dataset.cod, b.dataset.sn, b.dataset.tu);
+    window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener');
   }));
 }
 el('caixaSenhas').addEventListener('toggle', () => {
