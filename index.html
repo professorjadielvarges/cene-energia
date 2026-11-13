@@ -253,7 +253,9 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
   font-weight:600;border-top:1px solid var(--linha);background:var(--azul-sup);
   text-align:center;font-family:var(--c)}
 .planta:hover span{background:var(--azul);color:var(--sobre)}
-.lupa{position:fixed;inset:0;z-index:90;background:#0B1220;display:flex;
+/* a foto ampliada fica por cima de tudo, inclusive da janela suspensa: ela é
+   aberta de dentro da janela e, mais embaixo, o Fechar dela não se alcança */
+.lupa{position:fixed;inset:0;z-index:120;background:#0B1220;display:flex;
   flex-direction:column}
 .lupa-topo{flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;background:#111B2E}
@@ -854,6 +856,19 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
   font-weight:700;margin-left:6px}
 .inv-tx small{display:block;font-family:var(--m);font-size:.68rem;color:var(--tinta2);
   margin-top:2px;line-height:1.35}
+/* a lista do que parece errado, no alto do painel */
+.alerta-lista{display:grid;gap:7px;margin:10px 0 18px}
+.alerta-l{display:flex;gap:11px;align-items:center;justify-content:space-between;
+  background:var(--sup);border:1px solid var(--linha);border-left:3px solid var(--ambar);
+  border-radius:var(--r2);padding:10px 13px}
+.alerta-l.erro{border-left-color:var(--verm)}
+.alerta-l .tx{min-width:0;flex:1}
+.alerta-l .tx b{display:block;font-family:var(--d);font-size:.88rem;font-weight:700;
+  line-height:1.3;color:var(--tinta)}
+.alerta-l .tx small{display:block;font-family:var(--m);font-size:.68rem;
+  color:var(--tinta2);margin-top:3px}
+.alerta-l .ver-alerta{flex:none}
+
 .inv-sem{flex:none;font-family:var(--m);font-size:.66rem;color:var(--tinta2);
   background:var(--sup2);border:1px solid var(--linha);border-radius:999px;
   padding:3px 9px}
@@ -1633,13 +1648,15 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <!-- Dois espaços que na prática são um só: a equipe andou pelos dois e
          lançou tudo de uma vez. As lâmpadas ficam onde foram lançadas. -->
     <details class="trancar" id="caixaJuntar">
-      <summary>Foi contado junto com outro ambiente</summary>
-      <p class="ajuda">Use quando a equipe passou por este espaço e pelo outro de
-      uma vez só, sem divisão no meio, e lançou tudo num ambiente só. As lâmpadas
-      continuam onde foram lançadas e ninguém conta duas vezes. Este ambiente sai
-      da lista de pendências apontando para lá.</p>
+      <summary>Isto já foi contado em outro lugar</summary>
+      <p class="ajuda">Use em dois casos. Primeiro: a sua equipe passou por este
+      espaço e pelo outro de uma vez só, sem divisão no meio, e lançou tudo num
+      ambiente só. Segundo: outra equipe varreu a área inteira e já lançou esta
+      parte, e o professor pediu para vocês não contarem de novo. Nos dois casos
+      as lâmpadas continuam onde foram lançadas, ninguém conta duas vezes, e este
+      ambiente sai da lista de pendências apontando para lá.</p>
       <div id="avisoJuntar"></div>
-      <div class="campo"><label for="juntoAlvo">Em qual ambiente vocês lançaram tudo</label>
+      <div class="campo"><label for="juntoAlvo">Em qual ambiente isto já foi lançado</label>
         <select id="juntoAlvo"></select>
         <p class="ajuda" id="dicaJuntar" style="margin:6px 0 0"></p></div>
       <div class="campo"><label for="juntoNota">Alguma observação (pode deixar vazio)</label>
@@ -1819,6 +1836,9 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div id="avisoProf"></div>
 
     <div class="pag" id="ab-geral">
+      <!-- O que parece errado nos lançamentos, logo no alto, com link para
+           abrir e ver a foto sem sair daqui. -->
+      <div id="alertas"></div>
       <div id="heroi"></div>
       <div class="minis" id="minis"></div>
       <div class="graf" id="grafGrupos"></div>
@@ -2561,7 +2581,10 @@ async function carregarAmbientes() {
                 : a.junto_com ? '↳'
                 : a.concluido ? '✓' : (a.itens > 0 ? '•' : '');
       const det = a.junto_com
-        ? 'contado junto com ' + esc(a.junto_nome || 'outro ambiente')
+        ? (a.junto_grupo && a.junto_grupo !== a.grupo
+            ? 'contado pela equipe ' + esc(a.junto_grupo) + ', em '
+              + esc(a.junto_nome || 'outro ambiente')
+            : 'contado junto com ' + esc(a.junto_nome || 'outro ambiente'))
         : a.sem_acesso
         ? (inex
             ? 'não existe · está na planta, mas não foi construído'
@@ -3622,6 +3645,168 @@ function origemDoPreco(E) {
     + 'o retorno real da compra que a escola fez.';
 }
 
+/* ====== O QUE PARECE ERRADO NOS LANÇAMENTOS ======
+   A varredura roda sobre o que as equipes lançaram e aponta o que não fecha:
+   potência fora de qualquer medida possível, voltagem anotada no lugar da
+   potência, quantidade fora da curva. Não altera nada: só mostra, e abre a
+   foto para o professor decidir. */
+const LIMITES_W = {
+  'Lâmpada':         { min: 3,   max: 200,  tipico: '9 a 40 W' },
+  'Ventilador':      { min: 20,  max: 400,  tipico: '60 a 150 W' },
+  'Ar-condicionado': { min: 500, max: 6000, tipico: '900 a 3.500 W' },
+  'Geladeira':       { min: 40,  max: 900,  tipico: '80 a 400 W' },
+  'Freezer':         { min: 40,  max: 900,  tipico: '100 a 500 W' },
+  'Computador':      { min: 30,  max: 900,  tipico: '60 a 300 W' },
+  'Televisão':       { min: 20,  max: 600,  tipico: '50 a 200 W' }
+};
+// 127 e 220 são as voltagens da tomada: quem lê a etiqueta com pressa anota
+// esse número no lugar do consumo
+const VOLTAGENS = [110, 115, 120, 127, 220, 240, 380];
+let ALERTAS = [];
+
+function varrerLancamentos(ambs) {
+  const achados = [];
+  const porPotencia = {};
+  (ambs || []).forEach(function(a){
+    (a.itens || []).forEach(function(i){
+      const base = { amb: a, item: i };
+      const p = i.potencia_w == null ? null : +i.potencia_w;
+      const q = +i.quantidade || 0;
+      const lim = LIMITES_W[i.tipo];
+
+      if (i.tipo === 'Lâmpada' && p != null) {
+        porPotencia[p] = (porPotencia[p] || 0) + q;
+      }
+      if (p != null && VOLTAGENS.indexOf(p) >= 0 && i.tipo !== 'Lâmpada') {
+        achados.push(Object.assign({ nivel:'erro',
+          titulo: p + ' W parece ser a voltagem, não a potência',
+          texto: 'Na etiqueta, ' + p + ' costuma ser a tensão da tomada (' + p
+            + ' V). A potência é o número seguido de W.'
+            + (lim ? ' Em ' + i.tipo.toLowerCase() + ' o normal é '
+                   + lim.tipico + '.' : '') }, base));
+        return;
+      }
+      if (lim && p != null && p > lim.max) {
+        achados.push(Object.assign({ nivel:'erro',
+          titulo: p + ' W é alto demais para ' + i.tipo.toLowerCase(),
+          texto: 'O normal é ' + lim.tipico + '. Pode ter sobrado um zero, ou o '
+            + 'número lido pode ser o lúmen, que mede a luz e não o consumo.' }, base));
+        return;
+      }
+      if (lim && p != null && p > 0 && p < lim.min) {
+        achados.push(Object.assign({ nivel:'conferir',
+          titulo: p + ' W é baixo demais para ' + i.tipo.toLowerCase(),
+          texto: 'O normal é ' + lim.tipico + '. Vale olhar a foto da etiqueta.' }, base));
+        return;
+      }
+      if (i.tipo === 'Lâmpada' && q > 80) {
+        achados.push(Object.assign({ nivel:'conferir',
+          titulo: q + ' lâmpadas num ambiente só',
+          texto: 'É muita coisa para um lançamento. Confira se não é a soma de '
+            + 'vários espaços, que deveriam entrar separados.' }, base));
+      }
+    });
+  });
+
+  // as potências de lâmpada que destoam das demais
+  const chaves = Object.keys(porPotencia).map(Number).sort(function(x, y){
+    return porPotencia[y] - porPotencia[x]; });
+  if (chaves.length > 1) {
+    const maior = porPotencia[chaves[0]];
+    chaves.slice(1).forEach(function(p){
+      if (porPotencia[p] >= maior) return;
+      achados.push({ nivel:'conferir', potencia: p,
+        titulo: porPotencia[p] + ' lâmpadas de ' + mil(p, 2) + ' W, contra '
+          + maior + ' de ' + mil(chaves[0], 2) + ' W',
+        texto: 'Potência diferente da maioria. Pode ser real, pode ser leitura '
+          + 'errada. Como o sistema trata ' + mil(chaves[0], 2) + ' W como a '
+          + 'medida do LED, estas estão entrando na conta como se fossem antigas.' });
+    });
+  }
+  const ordem = { erro: 0, conferir: 1 };
+  return achados.sort(function(x, y){ return ordem[x.nivel] - ordem[y.nivel]; });
+}
+
+function pintarAlertas() {
+  const n = el('alertas');
+  if (!n) return;
+  if (!ALERTAS.length) { n.innerHTML = ''; return; }
+  const erros = ALERTAS.filter(function(a){ return a.nivel === 'erro'; }).length;
+  n.innerHTML = '<div class="aviso ' + (erros ? 'erro' : 'info') + '">'
+    + '<b>' + ALERTAS.length + (ALERTAS.length === 1 ? ' lançamento para conferir'
+        : ' lançamentos para conferir') + '</b>'
+    + (erros ? ', sendo ' + erros + ' que quase certamente estão errados' : '')
+    + '. Toque em <b>ver</b> para abrir o lançamento e a foto.</div>'
+    + '<div class="alerta-lista">'
+    + ALERTAS.map(function(a, k){
+        return '<div class="alerta-l ' + a.nivel + '">'
+          + '<span class="tx"><b>' + esc(a.titulo) + '</b>'
+          + '<small>' + (a.amb ? esc(a.amb.nome) + ' · equipe ' + esc(a.amb.grupo)
+                               : 'em vários ambientes') + '</small></span>'
+          + '<button type="button" class="elo-g ver-alerta" data-k="' + k + '"'
+          + (a.amb ? ' aria-haspopup="dialog"' : '') + '>ver</button></div>';
+      }).join('') + '</div>';
+  n.querySelectorAll('.ver-alerta').forEach(function(b){
+    b.addEventListener('click', function(){ abrirAlerta(+b.dataset.k, b); });
+  });
+}
+
+async function abrirAlerta(k, bt) {
+  const a = ALERTAS[k];
+  if (!a) return;
+  el('janEt').textContent = a.nivel === 'erro' ? 'Provável erro de leitura'
+                                               : 'Vale conferir';
+  el('janTit').textContent = a.amb ? a.amb.nome : 'Potências das lâmpadas';
+  el('janSub').textContent = a.titulo;
+  el('janChips').innerHTML = a.amb
+    ? ['equipe ' + a.amb.grupo, a.amb.bloco || 'sem bloco']
+        .map(function(c){ return '<span>' + esc(c) + '</span>'; }).join('')
+    : '';
+  const i = a.item;
+  el('janCorpo').innerHTML =
+    '<div class="aviso ' + (a.nivel === 'erro' ? 'erro' : 'info') + '">'
+      + esc(a.texto) + '</div>'
+    + (i
+        ? '<h5>O que foi lançado</h5>'
+          + '<div class="amb-det ' + (a.nivel === 'erro' ? 'parado' : 'pronto') + '">'
+          + '<div class="lin1"><b>' + i.quantidade + '× ' + esc(i.tipo) + '</b>'
+          + '<span class="pill ' + (a.nivel === 'erro' ? 'erro' : 'f') + '">'
+          + (i.potencia_w != null ? mil(+i.potencia_w, 2) + ' W'
+                                  : 'sem potência') + '</span></div>'
+          + '<small>' + (i.lancado_nome ? 'lançou: ' + esc(i.lancado_nome) : 'sem autor')
+          + (i.obs ? ' · ' + esc(i.obs) : '') + '</small>'
+          + ((i.fotos || []).length
+              ? '<div class="inv-it"><span class="inv-tx"><b>Foto da etiqueta</b>'
+                + '<small>toque para ver grande e ler o número</small></span>'
+                + '<span class="vistas">' + i.fotos.map(function(f){
+                    return '<img src="data:image/jpeg;base64,' + f.mini
+                      + '" alt="Foto do aparelho" data-f="' + f.id + '">'; }).join('')
+                + '</span></div>'
+              : '<div class="inv-it"><span class="inv-tx"><b>Sem foto</b>'
+                + '<small>não dá para conferir a etiqueta daqui; só indo ao '
+                + 'ambiente</small></span></div>')
+          + '</div>'
+          + '<h5>O que fazer</h5>'
+          + '<p class="ajuda">Se a foto mostrar outro número, peça à equipe <b>'
+          + esc(a.amb.grupo) + '</b> que corrija o lançamento no próprio ambiente. '
+          + 'Se a foto estiver ilegível ou não houver foto, peça que voltem lá. '
+          + 'Daqui nada é alterado: quem lançou é quem corrige.</p>'
+        : '<h5>O que fazer</h5><p class="ajuda">Abra a aba <b>Lançamentos</b> para ver '
+          + 'ambiente por ambiente quais lâmpadas têm essa potência, com as fotos.</p>')
+    + '<div style="height:12px"></div>';
+  abrirJanela(bt);
+  el('janCorpo').querySelectorAll('.vistas img').forEach(function(im){
+    im.addEventListener('click', async function(){
+      im.style.opacity = '.5';
+      try {
+        const rf = await rpc('foto', { p_token: EU.token, p_foto: +im.dataset.f });
+        if (rf.ok) abrirLupaFoto('data:image/jpeg;base64,' + rf.cheia, 'Foto do aparelho');
+      } catch (e) {}
+      im.style.opacity = '';
+    });
+  });
+}
+
 /* ====== O INVENTÁRIO COM AS FOTOS ======
    A mesma lista serve a duas pessoas: o professor, que quer ver o que foi
    fotografado, e a equipe de cálculo, que precisa conferir se a potência
@@ -3652,7 +3837,7 @@ async function carregarInventarioFotos(onde) {
     + (totalIt === 1 ? '' : 's') + ', ' + comFoto + ' com foto.</p>'
     + ambs.map(function(a){
         const horas = a.bloco_sempre ? '24 h por dia'
-          : (a.bloco_horas ? vrg(mil(+a.bloco_horas, 2)) + ' h por dia'
+          : (a.bloco_horas ? mil(+a.bloco_horas, 2) + ' h por dia'
                            : 'sem horário definido');
         return '<div class="amb-det pronto"><div class="lin1">'
           + '<b>' + esc(a.nome) + '</b>'
@@ -3660,7 +3845,7 @@ async function carregarInventarioFotos(onde) {
           + '<small>' + esc(a.bloco || 'sem bloco') + ' · ' + esc(horas) + '</small>'
           + (a.itens || []).map(function(i){
               const pot = i.potencia_w != null
-                ? vrg(mil(+i.potencia_w, 2)) + ' W'
+                ? mil(+i.potencia_w, 2) + ' W'
                 : (i.sem_potencia ? 'sem potência lida' : 'potência não informada');
               return '<div class="inv-it">'
                 + '<span class="inv-tx"><b>' + i.quantidade + '× ' + esc(i.tipo)
@@ -3680,6 +3865,8 @@ async function carregarInventarioFotos(onde) {
           + '</div>';
       }).join('');
   n.dataset.pronto = '1';
+  ALERTAS = varrerLancamentos(ambs);
+  pintarAlertas();
   n.querySelectorAll('.vistas img').forEach(function(im){
     im.addEventListener('click', async function(){
       im.style.opacity = '.5';
@@ -3724,10 +3911,17 @@ function pintarJunto() {
     ? 'Este espaço foi contado dentro de outro ambiente, então aqui não se lança nada.'
     : 'Lance um equipamento de cada vez. Lâmpada por lâmpada, contando as queimadas '
       + 'também.';
+  // pode ter sido contado num ambiente da própria equipe ou por outra equipe,
+  // que varreu a área inteira de uma vez
+  const outra = junto && AMB.junto_grupo && AMB.junto_grupo !== AMB.grupo;
   if (junto) {
-    cx.innerHTML = '<div class="trancado-cx junto"><b>Contado junto com outro ambiente</b>'
+    cx.innerHTML = '<div class="trancado-cx junto"><b>'
+      + (outra ? 'Contado pela equipe ' + esc(AMB.junto_grupo)
+               : 'Contado junto com outro ambiente') + '</b>'
       + '<p class="mot">O que existe aqui foi contado e lançado em <b>'
-      + esc(AMB.junto_nome || 'outro ambiente') + '</b>. Por isso este ambiente não '
+      + esc(AMB.junto_nome || 'outro ambiente') + '</b>'
+      + (outra ? ', pela equipe <b>' + esc(AMB.junto_grupo) + '</b>' : '')
+      + '. Por isso este ambiente não '
       + 'recebe lançamento: a mesma lâmpada não pode entrar duas vezes na conta '
       + 'da escola.</p>'
       + (AMB.junto_nota ? '<small>' + esc(AMB.junto_nota) + '</small>' : '')
@@ -3748,7 +3942,10 @@ function pintarJunto() {
   const av = el('avisoJuntos');
   if (av) av.innerHTML = dentro.length
     ? '<div class="aviso info">Aqui também está contado: '
-      + dentro.map(function(x){ return '<b>' + esc(x.nome) + '</b>'; }).join(', ')
+      + dentro.map(function(x){
+          return '<b>' + esc(x.nome) + '</b>'
+            + (x.grupo && x.grupo !== AMB.grupo ? ' (equipe ' + esc(x.grupo) + ')' : '');
+        }).join(', ')
       + '. Esse outro ambiente aponta para cá, então tudo o que for daquele espaço '
       + 'tem de ser lançado aqui.</div>'
     : '';
@@ -3763,17 +3960,23 @@ async function carregarOpcoesJuntar() {
   try { r = await rpc('juntar_opcoes', { p_token: EU.token, p_ambiente: AMB.id }); }
   catch (e) { r = null; }
   if (r && r.ok) OPCOES_JUNTAR = r.opcoes || [];
+  const deOutra = OPCOES_JUNTAR.some(function(o){
+    return o.grupo && o.grupo !== AMB.grupo; });
   sel.innerHTML = '<option value="">escolha o ambiente</option>'
     + OPCOES_JUNTAR.map(function(o){
-        return '<option value="' + o.id + '">' + esc(o.nome) + ' ('
+        // quando o ambiente é de outra equipe, o código dela vem na frente
+        const quem = (o.grupo && o.grupo !== AMB.grupo) ? o.grupo + ' · ' : '';
+        return '<option value="' + o.id + '">' + esc(quem) + esc(o.nome) + ' ('
           + o.lampadas + (+o.lampadas === 1 ? ' lâmpada' : ' lâmpadas') + ')</option>';
       }).join('');
   el('dicaJuntar').textContent = OPCOES_JUNTAR.length
-    ? 'Aparecem só os ambientes do seu grupo que são do mesmo bloco deste e que já '
-      + 'têm lançamento. O bloco é o que diz quantas horas a luz fica acesa, por '
-      + 'isso não dá para juntar ambientes de blocos diferentes.'
-    : 'Nenhum ambiente do seu grupo serve: para agrupar, o outro precisa ser do '
-      + 'mesmo bloco deste e já ter equipamento lançado.';
+    ? 'Aparecem os ambientes do mesmo bloco deste que já têm lançamento'
+      + (deOutra ? ', inclusive os de outras equipes, quando foi outra equipe que '
+          + 'varreu a área inteira' : '')
+      + '. O bloco é o que diz quantas horas a luz fica acesa, por isso não dá para '
+      + 'juntar ambientes de blocos diferentes.'
+    : 'Nenhum ambiente serve para agrupar: o outro precisa ser do mesmo bloco deste '
+      + 'e já ter equipamento lançado.';
   pintarJunto();
 }
 
@@ -3791,6 +3994,7 @@ async function juntar(alvo) {
                return aoAlcance(alvo ? 'avisoJuntar' : 'avisoAmb'); }
   AMB.junto_com  = alvo;
   AMB.junto_nome = alvo ? (r.junto_nome || '') : null;
+  AMB.junto_grupo = alvo ? (r.junto_grupo || null) : null;
   AMB.junto_nota = alvo ? (el('juntoNota').value.trim() || null) : null;
   msg('avisoJuntar','');
   pintarJunto();
@@ -4384,6 +4588,9 @@ async function carregarProf() {
   if (EU.papel === 'professor') { carregarParticipacao(); carregarAvaliacao(); carregarNotas(); carregarConferencia(); }
   carregarFichasProf();
   carregarEspacoFotos();
+  // a varredura dos lançamentos sai do mesmo inventário das fotos. Vem depois
+  // do painel pintado, para não atrasar o que o professor vê primeiro.
+  setTimeout(function(){ carregarInventarioFotos('inventarioProf'); }, 60);
   carregarMapaProf(); carregarPalcoProf();
 }
 
@@ -4898,11 +5105,15 @@ async function abrirGrupo(cod, bt) {
               : a.junto_com ? 'junto'
               : a.concluido ? 'pronto' : (+a.itens > 0 ? 'andando' : 'parado');
     const sel = a.sem_acesso ? (inex ? 'não existe' : 'sem acesso')
-              : a.junto_com ? 'contado junto'
+              : a.junto_com ? (a.junto_grupo && a.junto_grupo !== r.codigo
+                  ? 'contado pela ' + a.junto_grupo : 'contado junto')
               : a.concluido ? 'concluído'
               : (+a.itens > 0 ? 'em andamento' : 'não começou');
     const det = a.junto_com
-      ? 'contado junto com ' + esc(a.junto_nome || 'outro ambiente')
+      ? (a.junto_grupo && a.junto_grupo !== r.codigo
+          ? 'contado pela equipe ' + esc(a.junto_grupo) + ', em '
+            + esc(a.junto_nome || 'outro ambiente')
+          : 'contado junto com ' + esc(a.junto_nome || 'outro ambiente'))
         + (a.junto_nota ? ' · ' + esc(a.junto_nota) : '')
       : a.sem_acesso
       ? esc(a.sem_acesso_motivo || '')
@@ -5432,8 +5643,8 @@ function pintarAvalPorGrupo(alunos) {
                     // a lista inteira de uma equipe grande vira um paredão:
                     // mostra os primeiros e conta o resto
                     ? l.falta.slice(0, 6).map(function(a){
-                        return esc(a.nome) + ' <i>(' + a.enviadas + ' de ' + a.colegas
-                          + ')</i>'; }).join('<br>')
+                        return esc(a.nome) + ' <i>(respondeu sobre ' + a.enviadas
+                          + ' de ' + a.colegas + ')</i>'; }).join('<br>')
                       + (l.falta.length > 6
                           ? '<br><i>e mais ' + (l.falta.length - 6) + '</i>' : '')
                     : '<span class="nd">ninguém</span>')
@@ -5523,8 +5734,12 @@ async function abrirFichaDoGrupo(cod, bt) {
                 + '<span class="ini" aria-hidden="true">' + esc(iniciais(a.nome))
                 + '</span><span class="tx"><b class="nm">' + esc(a.nome) + '</b>'
                 + '<span class="sr">' + esc(serieDe(a.turma)) + '</span>'
-                + '<span class="ex">' + a.enviadas + ' de ' + a.colegas
-                + ' · recebeu ' + a.recebidas + '</span></span></div>';
+                // por extenso: "0 de 5" sozinho não diz se é o que mandou ou
+                // o que recebeu
+                + '<span class="ex">respondeu sobre ' + a.enviadas + ' de '
+                + a.colegas + ' colega' + (+a.colegas === 1 ? '' : 's')
+                + ' · foi avaliado por ' + a.recebidas
+                + (+a.recebidas === 1 ? ' colega' : ' colegas') + '</span></span></div>';
             }).join('') + '</div>'
         : '')
     + '<div style="height:12px"></div>';
