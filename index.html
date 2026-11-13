@@ -869,6 +869,36 @@ h3.sec{font-size:1.02rem;font-weight:700;margin:30px 0 12px;padding-bottom:9px;
   color:var(--tinta2);margin-top:3px}
 .alerta-l .ver-alerta{flex:none}
 
+/* as três perguntas da conferência, embaixo de cada lançamento */
+.cf{margin:8px 0 2px;padding:10px 12px;background:var(--sup2);
+  border:1px solid var(--linha);border-left:3px solid var(--ambar);
+  border-radius:var(--r2)}
+.cf.feita{border-left-color:var(--verde)}
+.cf-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.cf-top b{font-family:var(--d);font-size:.74rem;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tinta)}
+.cf-top i{font-family:var(--m);font-size:.66rem;font-style:normal;color:var(--tinta2)}
+.cf-p{display:flex;gap:10px;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;padding:5px 0}
+.cf-q{font-size:.84rem;line-height:1.35;color:var(--tinta);flex:1;min-width:11rem}
+.cf-op{display:flex;gap:7px;align-items:center;flex:none;flex-wrap:wrap}
+/* a observação e o número da etiqueta ocupam a linha inteira: lado a lado com
+   o rótulo eles estouram a largura do celular */
+.cf-p.cf-extra{flex-direction:column;align-items:stretch;gap:6px}
+.cf-extra .cf-op{width:100%}
+.cf-obs{flex:1 1 10rem;min-width:0;min-height:44px}
+.cf-b{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  min-width:62px;min-height:44px;padding:0 14px;font-family:var(--c);font-size:.86rem;
+  font-weight:700;color:var(--tinta);background:var(--sup);
+  border:2px solid var(--linha2);border-radius:9px;cursor:pointer;
+  text-transform:none;letter-spacing:normal;margin:0}
+.cf-b input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.cf-b.on{border-color:var(--azul);background:var(--azul-sup);color:var(--azul)}
+.cf-b:focus-within{outline:3px solid var(--azul);outline-offset:2px}
+.cf-pot{width:7.5rem;min-height:44px}
+.cf-aviso{font-family:var(--m);font-size:.72rem;color:var(--tinta2);line-height:1.4;
+  margin-top:6px}
+
 .inv-sem{flex:none;font-family:var(--m);font-size:.66rem;color:var(--tinta2);
   background:var(--sup2);border:1px solid var(--linha);border-radius:999px;
   padding:3px 9px}
@@ -1289,6 +1319,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div id="avisoLista"></div>
     <h2 style="font-size:1.15rem" id="tituloLista">Meus ambientes</h2>
     <p class="ajuda" id="subLista"></p>
+    <div id="pendLista"></div>
     <div class="barra" style="margin-bottom:16px"><i id="barraLista"></i></div>
     <div id="listaAmbientes"></div>
     <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
@@ -1419,13 +1450,23 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
 
     <!-- A equipe de cálculo precisa poder conferir a potência digitada contra a
          etiqueta fotografada pela equipe de campo, antes de usar o número. -->
-    <details class="dobra" id="dobraConferir">
-      <summary>Conferir os lançamentos e as fotos</summary>
-      <p class="ajuda">Aqui está o que cada equipe contou, ambiente por ambiente,
-      com as fotos que elas tiraram. Toque na foto para ver grande e ler a
-      etiqueta. Se a potência digitada não bater com a foto, avise o professor:
-      daqui não dá para alterar nada.</p>
+    <details class="dobra" id="dobraConferir" hidden>
+      <summary>Primeira conferência: o trabalho de campo</summary>
+      <p class="ajuda" id="ajudaConf1">Aqui está o que a equipe contou, ambiente por
+      ambiente, com as fotos que ela tirou. Toque na foto para ver grande e ler a
+      etiqueta. Depois responda as perguntas de cada lançamento. Daqui você não
+      altera nada: quem corrige é a equipe que lançou.</p>
       <div id="inventarioCalc"></div>
+    </details>
+
+    <!-- Segunda conferência: olhar a conta que o calculista lançou -->
+    <details class="dobra" id="dobraConf2" hidden>
+      <summary>Segunda conferência: a conta do calculista</summary>
+      <div class="conf2">
+        <p class="ajuda conf2-ajuda"></p>
+        <div class="conf2-aviso"></div>
+        <div class="conf2-faixas"></div>
+      </div>
     </details>
 
     <!-- PASSO 1: o treino com uma lâmpada, oito linhas de horas. As horas aqui
@@ -1534,6 +1575,7 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <p class="ajuda" id="subAmb"></p>
     <div id="avisoAmb"></div>
     <div id="avisoJuntos"></div>
+    <div id="pendFoto"></div>
 
     <div class="cx" id="caixaLancar">
       <p class="ajuda" id="quemLanca" style="margin:0 0 12px"></p>
@@ -1880,6 +1922,17 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div id="potPendentes"></div>
       <h3 class="sec">Preços pesquisados</h3>
       <div class="rol"><table id="tabPrecos"></table></div>
+      <h3 class="sec">Conferência das equipes</h3>
+      <p class="ajuda" id="subConferencia"></p>
+      <div class="rol"><table id="tabConferencia"></table></div>
+      <div id="caixaConf2Prof" style="margin-top:14px"></div>
+
+      <h3 class="sec">Quando cada equipe entregou</h3>
+      <p class="ajuda" id="subEntregas"></p>
+      <div class="rol"><table id="tabEntregas"></table></div>
+      <h3 class="sec">A equipe de cálculo</h3>
+      <div class="rol"><table id="tabEntregasCalc"></table></div>
+
       <h3 class="sec">Lançamento por lançamento, com as fotos</h3>
       <p class="ajuda">Tudo o que as equipes contaram, com a foto que elas
       tiraram de cada aparelho. Toque na foto para ver grande.</p>
@@ -1899,13 +1952,15 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <!-- equipe por equipe: quem já respondeu a ficha e quem ainda falta -->
       <h3 class="sec">Equipe por equipe</h3>
       <p class="ajuda" id="resumoAvalGrupo"></p>
+      <div id="avisoLider"></div>
       <div class="rol"><table id="tabAvalGrupo"></table></div>
 
       <h3 class="sec">Aluno por aluno</h3>
       <div class="rol"><table id="tabAval"></table></div>
-      <p class="ajuda">A nota de cada linha é a média do que os colegas de grupo
-      responderam, de 0 a 15. Compare sempre com a aba Participação: lá estão os
-      números que o sistema mediu sozinho, sem opinião de ninguém.</p>
+      <p class="ajuda">A nota de cada linha, de 0 a 15, é o que o líder da equipe
+      respondeu sobre aquele aluno. Vem de um avaliador só, sem segunda opinião para
+      comparar. Confira sempre com a aba Participação: lá estão os números que o
+      sistema mediu sozinho, sem opinião de ninguém.</p>
       <details class="dobra" id="quesitosAval">
         <summary>As cinco medidas e a pergunta que cada grupo respondeu</summary>
         <p class="ajuda" style="margin:0 0 10px">As cinco colunas são as mesmas para
@@ -2566,6 +2621,7 @@ async function carregarAmbientes() {
     const juntos = lista.filter(a => a.junto_com).length;
     const contados = feitos - juntos;
     el('tituloLista').textContent = 'Grupo ' + EU.codigo;
+    carregarPendencias();
     el('subLista').textContent = EU.resumo + ' · ' + contados + ' de ' + lista.length +
       ' ambiente' + (lista.length===1?'':'s') + ' contado' + (contados===1?'':'s') + '.'
       + (juntos ? ' ' + juntos + ' contado' + (juntos===1?'':'s')
@@ -2811,8 +2867,36 @@ let CONTA = null;
    tolerância de sempre, e a economia é julgada contra o kWh que ela mesma
    escreveu, para um erro não ser contado duas vezes. */
 function arred(v, n) { const p = Math.pow(10, n); return Math.round(v * p) / p; }
+/* Cada pessoa do cálculo pode ter três papéis, e acumular: fazer a conta,
+   fazer a primeira conferência (o campo) e fazer a segunda (a conta de outro).
+   A tela só mostra o que a pessoa tem para fazer. */
+async function carregarPapeis() {
+  if (!EU || !SOU) return;
+  let r;
+  try { r = await rpc('meus_papeis', { p_token: EU.token, p_aluno: SOU.id }); }
+  catch (e) { return; }
+  if (!r || !r.ok) return;
+  PAPEIS = { calculista: r.calculista || [], primeira: r.primeira || [],
+             segunda: r.segunda || [] };
+  const d1 = el('dobraConferir'), d2 = el('dobraConf2');
+  if (d1) {
+    d1.hidden = !PAPEIS.primeira.length;
+    if (PAPEIS.primeira.length && el('ajudaConf1'))
+      el('ajudaConf1').textContent = 'Você é o primeiro conferente da equipe '
+        + PAPEIS.primeira.join(' e ') + '. Aqui está o que ela contou, ambiente por '
+        + 'ambiente, com as fotos. Toque na foto para ver grande e ler a etiqueta, '
+        + 'e responda as perguntas de cada lançamento. Daqui você não altera nada: '
+        + 'quem corrige é a equipe que lançou.';
+  }
+  if (d2) {
+    d2.hidden = !PAPEIS.segunda.length;
+    if (PAPEIS.segunda.length) carregarConf2(PAPEIS.segunda[0]);
+  }
+}
+
 async function carregarConta() {
   if (!SOU || !el('linhasConta')) return;
+  carregarPapeis();
   let r;
   try { r = await rpc('conta_minha', { p_token: EU.token, p_aluno: SOU.id }); }
   catch (e) { return msg('avisoCalc', e.message, 'erro'); }
@@ -3645,6 +3729,89 @@ function origemDoPreco(E) {
     + 'o retorno real da compra que a escola fez.';
 }
 
+/* ====== QUANDO CADA EQUIPE ENTREGOU ======
+   O sistema guarda a hora de cada lançamento e de cada ambiente fechado. Esta
+   tabela junta isso por equipe, para o professor comparar com os prazos que
+   ele tem anotados. O sistema não sabe os prazos: ele só diz quando foi. */
+function dataHora(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  const p = n => String(n).padStart(2, '0');
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + ' às ' + p(d.getHours())
+    + 'h' + p(d.getMinutes());
+}
+
+async function carregarEntregas() {
+  const n = el('tabEntregas');
+  if (!n || !EU) return;
+  let r;
+  try { r = await rpc('entregas', { p_token: EU.token }); } catch (e) { return; }
+  if (!r || !r.ok) return;
+
+  const campo = porOrdemDeGrupo(r.campo || []);
+  const fechadas = campo.filter(function(g){
+    return +g.ambientes > 0 && +g.resolvidos >= +g.ambientes; }).length;
+  const comAmb = campo.filter(function(g){ return +g.ambientes > 0; }).length;
+  el('subEntregas').textContent = comAmb
+    ? fechadas + ' de ' + comAmb + ' equipes de campo fecharam todos os ambientes. '
+      + 'As datas são as que o sistema registrou sozinho, na hora em que cada '
+      + 'coisa foi feita. Compare com os seus prazos.'
+    : 'Nenhuma equipe tem ambiente atribuído.';
+
+  n.innerHTML = '<thead><tr><th class="nome">Equipe</th><th>Ambientes</th>'
+    + '<th>Lançamentos</th><th>Primeiro lançamento</th><th>Último lançamento</th>'
+    + '<th>Fechou tudo em</th></tr></thead><tbody>'
+    + campo.map(function(g){
+        const amb = +g.ambientes, ok = +g.resolvidos;
+        const completou = amb > 0 && ok >= amb;
+        const fim = dataHora(g.ultima_resolucao);
+        return '<tr' + (amb > 0 && !completou ? ' class="alerta"' : '') + '>'
+          + '<td class="nome"><b>' + esc(g.codigo) + '</b></td>'
+          + '<td class="n" data-r="Ambientes" data-v="' + amb + '">'
+            + ok + ' de ' + amb + '</td>'
+          + '<td class="n" data-r="Lançamentos" data-v="' + (+g.lancamentos) + '">'
+            + (+g.lancamentos) + '</td>'
+          + '<td data-r="Primeiro lançamento" data-v="' + (g.primeiro || '') + '">'
+            + (dataHora(g.primeiro) || '<span class="nd">nada lançado</span>') + '</td>'
+          + '<td data-r="Último lançamento" data-v="' + (g.ultimo || '') + '">'
+            + (dataHora(g.ultimo) || '<span class="nd">—</span>') + '</td>'
+          + '<td data-r="Fechou tudo em" data-v="' + (completou ? (g.ultima_resolucao||'') : '') + '">'
+            + (amb === 0 ? '<span class="nd">sem ambientes</span>'
+               : completou ? '<b>' + fim + '</b>'
+               : '<span class="tag a">faltam ' + (amb - ok) + '</span>'
+                 + (fim ? '<small style="display:block">última atividade em '
+                     + fim + '</small>' : ''))
+          + '</td></tr>';
+      }).join('') + '</tbody>';
+  ordenavel('tabEntregas');
+
+  const calc = (r.calculo || []).slice();
+  const tot = +r.faixas_total || 0;
+  el('tabEntregasCalc').innerHTML = calc.length
+    ? '<thead><tr><th class="nome">Aluno</th><th>Treino (8 linhas)</th>'
+      + '<th>Terminou o treino em</th><th>Faixas da conta</th>'
+      + '<th>Última faixa em</th></tr></thead><tbody>'
+      + calc.map(function(a){
+          const fl = +a.folha_linhas, fc = +a.folha_certas;
+          const fx = +a.faixas, fxc = +a.faixas_certas;
+          return '<tr' + (!fl && !fx ? ' class="alerta"' : '') + '>'
+            + '<td class="nome">' + esc(a.nome) + '</td>'
+            + '<td class="n" data-r="Treino" data-v="' + fl + '">'
+              + (fl ? fc + ' certas de ' + fl : '<span class="nd">não começou</span>')
+              + '</td>'
+            + '<td data-r="Terminou o treino em" data-v="' + (a.folha_em || '') + '">'
+              + (dataHora(a.folha_em) || '<span class="nd">—</span>') + '</td>'
+            + '<td class="n" data-r="Faixas" data-v="' + fx + '">'
+              + (fx ? fxc + ' certas de ' + fx + (tot ? ' (de ' + tot + ')' : '')
+                   : '<span class="nd">não começou</span>') + '</td>'
+            + '<td data-r="Última faixa em" data-v="' + (a.faixas_em || '') + '">'
+              + (dataHora(a.faixas_em) || '<span class="nd">—</span>') + '</td></tr>';
+        }).join('') + '</tbody>'
+    : '<tbody><tr><td class="nd">Ninguém na equipe de cálculo.</td></tr></tbody>';
+  ordenavel('tabEntregasCalc');
+}
+
 /* ====== O QUE PARECE ERRADO NOS LANÇAMENTOS ======
    A varredura roda sobre o que as equipes lançaram e aponta o que não fecha:
    potência fora de qualquer medida possível, voltagem anotada no lugar da
@@ -3807,6 +3974,367 @@ async function abrirAlerta(k, bt) {
   });
 }
 
+/* ====== FOTO PARA REFAZER ======
+   Quando a conferência diz que a foto não dá para ler, a equipe que lançou
+   recebe o pedido de refazer, em vez de simplesmente perder ponto. Assim que
+   ela manda foto nova, a pendência vira "refeita" e volta para o conferente. */
+async function carregarPendencias() {
+  const n = el('pendLista');
+  if (!n || !EU) return;
+  let r;
+  try { r = await rpc('pendencias_foto', { p_token: EU.token,
+          p_aluno: SOU ? SOU.id : null }); }
+  catch (e) { return; }
+  if (!r || !r.ok) { n.innerHTML = ''; return; }
+  const ps = (r.pendencias || []).filter(function(x){ return !x.refeita; });
+  const refeitas = (r.pendencias || []).filter(function(x){ return x.refeita; });
+  if (!ps.length && !refeitas.length) { n.innerHTML = ''; return; }
+  n.innerHTML = (ps.length
+    ? '<div class="aviso erro"><b>A conferência pediu foto nova de ' + ps.length
+      + ' aparelho' + (ps.length === 1 ? '' : 's') + '.</b> Abra o ambiente, '
+      + 'apague o lançamento e lance de novo com uma foto em que dê para ler a '
+      + 'etiqueta. Isso não tira ponto de ninguém: a nota olha quem corrigiu, não '
+      + 'quem errou.<br>'
+      + ps.map(function(x){
+          return '• <b>' + esc(x.ambiente) + '</b>: ' + x.quantidade + '× '
+            + esc(x.tipo) + ' <i>(' + esc(x.motivo) + ')</i>'; }).join('<br>')
+      + '</div>'
+    : '')
+    + (refeitas.length
+        ? '<div class="aviso info">' + refeitas.length + ' foto'
+          + (refeitas.length === 1 ? ' refeita, esperando' : 's refeitas, esperando')
+          + ' o conferente olhar de novo.</div>'
+        : '');
+}
+
+/* O painel do professor: como anda a conferência de cada equipe, e o botão de
+   assumir quando ninguém fez. */
+async function carregarRelatorioConferencia() {
+  const n = el('tabConferencia');
+  if (!n || !EU) return;
+  let r;
+  try { r = await rpc('relatorio_conferencia', { p_token: EU.token }); }
+  catch (e) { return; }
+  if (!r || !r.ok) return;
+  const g = porOrdemDeGrupo(r.por_grupo || []);
+  const achados = (r.achados || []).length;
+  el('subConferencia').textContent = (+r.itens_conferidos || 0) + ' de '
+    + (+r.itens_total || 0) + ' lançamentos já passaram pela primeira conferência'
+    + (achados ? ', e ela apontou ' + achados + ' problema'
+        + (achados === 1 ? '' : 's') + '.' : '.')
+    + ' Onde não houver conferente, ou o prazo tiver passado, você assume pelo '
+    + 'botão da linha e fica registrado que foi você.';
+
+  n.innerHTML = '<thead><tr><th class="nome">Equipe</th>'
+    + '<th class="cresce">1ª conferência (campo)</th><th>Lançamentos</th>'
+    + '<th class="cresce">2ª conferência (conta)</th><th>Faixas</th>'
+    + '<th>Assumir</th></tr></thead><tbody>'
+    + g.map(function(x){
+        const it = +x.itens, itc = +x.itens_conferidos, itp = +x.itens_pelo_professor;
+        const fx = +x.faixas, fxc = +x.faixas_conferidas, fxp = +x.faixas_pelo_professor;
+        const falta1 = it > 0 && itc < it, falta2 = fxc < fx;
+        return '<tr' + (falta1 || falta2 ? ' class="alerta"' : '') + '>'
+          + '<td class="nome"><b>' + esc(x.grupo) + '</b></td>'
+          + '<td class="cresce" data-r="1ª conferência">'
+            + (x.primeiro ? esc(x.primeiro) : '<span class="tag erro">sem conferente</span>')
+            + (itp ? '<small style="display:block">' + itp + ' feito'
+                + (itp === 1 ? '' : 's') + ' por você</small>' : '') + '</td>'
+          + '<td class="n" data-r="Lançamentos" data-v="' + (it ? itc / it : 0) + '">'
+            + itc + ' de ' + it
+            + (+x.achados ? '<small style="display:block">' + x.achados
+                + ' problema' + (+x.achados === 1 ? '' : 's') + '</small>' : '')
+            + '</td>'
+          + '<td class="cresce" data-r="2ª conferência">'
+            + (x.segundo ? esc(x.segundo) : '<span class="tag erro">sem conferente</span>')
+            + (fxp ? '<small style="display:block">' + fxp + ' feita'
+                + (fxp === 1 ? '' : 's') + ' por você</small>' : '')
+            + (+x.passou_erro ? '<small style="display:block">deixou passar '
+                + x.passou_erro + ' faixa com erro</small>' : '') + '</td>'
+          + '<td class="n" data-r="Faixas" data-v="' + (fx ? fxc / fx : 0) + '">'
+            + fxc + ' de ' + fx
+            + (+x.faixas_recusadas ? '<small style="display:block">'
+                + x.faixas_recusadas + ' recusada'
+                + (+x.faixas_recusadas === 1 ? '' : 's') + '</small>' : '')
+            + '</td>'
+          + '<td data-r="Assumir">'
+            + '<button type="button" class="elo-g assumir-c2" data-g="' + esc(x.grupo)
+            + '">conferir a conta</button></td></tr>';
+      }).join('') + '</tbody>';
+  ordenavel('tabConferencia');
+  encherBarras();
+  n.querySelectorAll('.assumir-c2').forEach(function(b){
+    b.addEventListener('click', function(){ assumirConf2(b.dataset.g); });
+  });
+}
+
+async function assumirConf2(grupo) {
+  const cx = el('caixaConf2Prof');
+  if (!cx) return;
+  cx.innerHTML = '<div class="cx conf2"><h4>Segunda conferência da equipe '
+    + esc(grupo) + '</h4><p class="ajuda conf2-ajuda"></p>'
+    + '<div class="conf2-aviso"></div><div class="conf2-faixas"></div></div>';
+  await carregarConf2(grupo, cx.querySelector('.conf2'));
+  aoAlcance('caixaConf2Prof');
+}
+
+/* ====== SEGUNDA CONFERÊNCIA: A CONTA DO CALCULISTA ======
+   O conferente vê o que o calculista lançou em cada faixa e responde se
+   confere. Ele não vê se o sistema considerou certo: o juízo tem de ser dele,
+   senão a conferência vira carimbo. O relatório do professor cruza as duas
+   coisas depois e mostra quem deixou erro passar. */
+/* A mesma caixa serve ao aluno e ao professor, em lugares diferentes da
+   página. Por isso ela é achada por classe dentro de uma raiz, e não por
+   identificador: dois elementos com o mesmo id fariam a tela do professor
+   pintar dentro da caixa escondida do aluno. */
+let CONF2 = null;
+async function carregarConf2(grupo, raiz) {
+  const cx = raiz || document.querySelector('.conf2');
+  if (!cx || !EU) return;
+  const n = cx.querySelector('.conf2-faixas');
+  if (!n) return;
+  if (el('dobraConf2') && !raiz) el('dobraConf2').hidden = false;
+  n.innerHTML = '<p class="ajuda">Carregando...</p>';
+  let r;
+  try {
+    r = await rpc('conta_para_conferir', { p_token: EU.token, p_grupo: grupo,
+      p_aluno: SOU ? SOU.id : null });
+  } catch (e) { n.innerHTML = '<p class="ajuda">' + esc(e.message) + '</p>'; return; }
+  if (!r || !r.ok) {
+    n.innerHTML = '<p class="ajuda">' + esc((r && r.erro) || 'Não deu.') + '</p>'; return;
+  }
+  r.raiz = cx;
+  CONF2 = r;
+  cx.querySelector('.conf2-ajuda').textContent = 'A conta da equipe ' + r.grupo
+    + ', lançada por ' + (r.calculista || 'ninguém ainda') + '. Faça a conta você '
+    + 'mesmo, no rascunho, e compare com o que está escrito aqui. Responda se '
+    + 'confere. O sistema não te diz a resposta: quem julga é você.';
+  pintarConf2();
+}
+
+function pintarConf2() {
+  const r = CONF2;
+  if (!r || !r.raiz) return;
+  const n = r.raiz.querySelector('.conf2-faixas');
+  if (!n) return;
+  const fx = r.faixas || [];
+  if (!fx.length) { n.innerHTML = '<p class="ajuda">Sem faixas.</p>'; return; }
+  n.innerHTML = fx.map(function(f){
+    const lancou = f.kwh != null || f.economia != null;
+    const m = f.minha || null;
+    const h = mil(+f.horas, 0);
+    return '<div class="cf' + (m ? ' feita' : '') + '" data-fx="' + esc(f.faixa) + '">'
+      + '<div class="cf-top"><b>' + h + ' horas por dia</b>'
+      + (m ? '<span class="tag ' + (m.confere ? 'v' : 'erro') + '">'
+             + (m.confere ? 'confere' : 'não confere') + '</span>' : '')
+      + (m && m.por_professor ? '<i>feita pelo professor</i>' : '') + '</div>'
+      + (lancou
+          ? '<div class="rol"><table class="mini-tab"><tbody>'
+            // duas casas sempre: o conferente compara com a conta dele, e
+            // "620,4" ao lado de "620,40" gera dúvida à toa
+            + '<tr><td class="cresce">kWh por mês</td><td><b>'
+              + (f.kwh != null && !isNaN(+f.kwh)
+                  ? (+f.kwh).toLocaleString('pt-BR', { minimumFractionDigits:2,
+                      maximumFractionDigits:2 }) : '—') + '</b></td></tr>'
+            + '<tr><td class="cresce">Economia em reais por mês</td><td><b>'
+              + (f.economia != null && !isNaN(+f.economia)
+                  ? brl(+f.economia) : '—') + '</b></td></tr>'
+            + '</tbody></table></div>'
+            + '<div class="cf-p"><span class="cf-q">Esses dois números conferem '
+            + 'com a sua conta?</span><span class="cf-op">'
+            + ['sim','nao'].map(function(v){
+                const on = m && m.confere === (v === 'sim');
+                return '<label class="cf-b' + (on ? ' on' : '') + '">'
+                  + '<input type="radio" name="c2-' + esc(f.faixa) + '" value="' + v
+                  + '" data-fx="' + esc(f.faixa) + '"' + (on ? ' checked' : '') + '>'
+                  + (v === 'sim' ? 'sim' : 'não') + '</label>';
+              }).join('') + '</span></div>'
+            + (m && m.confere === false
+                ? '<div class="cf-p"><span class="cf-q">O que você encontrou?</span>'
+                  + '<span class="cf-op"><input type="text" class="c2-obs" data-fx="'
+                  + esc(f.faixa) + '" placeholder="ex: deu 812,50 na minha conta" value="'
+                  + esc(m.obs || '') + '">'
+                  + '<button type="button" class="btn sec peq c2-salva" data-fx="'
+                  + esc(f.faixa) + '">Guardar</button></span></div>'
+                : '')
+          : '<div class="cf-aviso">O calculista ainda não lançou esta faixa. '
+            + 'Não há o que conferir por enquanto.</div>')
+      + '</div>';
+  }).join('');
+  n.querySelectorAll('input[type="radio"]').forEach(function(x){
+    x.addEventListener('change', function(){
+      enviarConf2(x.dataset.fx, x.value === 'sim', null);
+    });
+  });
+  n.querySelectorAll('.c2-salva').forEach(function(b){
+    b.addEventListener('click', function(){
+      const cx = n.querySelector('.c2-obs[data-fx="' + b.dataset.fx + '"]');
+      enviarConf2(b.dataset.fx, false, cx ? cx.value : null);
+    });
+  });
+}
+
+async function enviarConf2(faixa, confere, obs) {
+  if (!CONF2) return;
+  const f = (CONF2.faixas || []).filter(function(x){ return x.faixa === faixa; })[0];
+  if (!f) return;
+  if (obs === null && f.minha) obs = f.minha.obs;
+  f.minha = { confere: confere, obs: obs || null, por_professor: !!CONF2.sou_professor };
+  pintarConf2();
+  let r;
+  try {
+    r = await rpc('conferir_faixa', { p_token: EU.token, p_grupo: CONF2.grupo,
+      p_faixa: faixa, p_aluno: SOU ? SOU.id : null, p_confere: confere, p_obs: obs });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  const av = CONF2.raiz ? CONF2.raiz.querySelector('.conf2-aviso') : null;
+  if (av) av.innerHTML = r.ok ? ''
+    : '<div class="aviso erro">' + esc(r.erro) + '</div>';
+}
+
+/* ====== A CONFERÊNCIA DE CADA LANÇAMENTO ======
+   Três perguntas encadeadas. A seguinte só aparece se a anterior for "sim",
+   porque depois de um "não" as outras deixam de fazer sentido: se a foto não
+   dá para ler, não há como dizer se a etiqueta mostra a potência. */
+/* O professor confere sem ser aluno: ele assume quando ninguém do grupo fez. */
+function podeConferir() {
+  if (!EU) return false;
+  if (EU.papel === 'professor' || EU.papel === 'gestao') return true;
+  return !!(SOU && EU.papel === 'calculo' && (PAPEIS.primeira || []).length);
+}
+let PAPEIS = { calculista:[], primeira:[], segunda:[] };
+
+function parSimNao(item, campo, rotulo, valor) {
+  const nome = 'cf-' + campo + '-' + item;
+  return '<div class="cf-p"><span class="cf-q">' + rotulo + '</span>'
+    + '<span class="cf-op">'
+    + ['sim','nao'].map(function(v){
+        const marcado = valor === (v === 'sim');
+        return '<label class="cf-b' + (marcado ? ' on' : '') + '">'
+          + '<input type="radio" name="' + nome + '" value="' + v + '"'
+          + ' data-item="' + item + '" data-campo="' + campo + '"'
+          + (marcado ? ' checked' : '') + '>'
+          + (v === 'sim' ? 'sim' : 'não') + '</label>';
+      }).join('')
+    + '</span></div>';
+}
+
+function blocoConferencia(i) {
+  if (!podeConferir()) return '';
+  const m = i.minha || null;
+  const temFoto = (i.fotos || []).length > 0;
+  const pot = i.potencia_w != null ? mil(+i.potencia_w, 2) + ' W' : 'sem potência lançada';
+  if (!temFoto) {
+    return '<div class="cf" data-i="' + i.id + '">'
+      + '<div class="cf-aviso">Este lançamento não tem foto, então não há o que '
+      + 'conferir aqui. Anote para o professor pedir à equipe que volte ao ambiente.</div>'
+      + '</div>';
+  }
+  // a cascata: cada resposta "sim" abre a próxima pergunta
+  let h = parSimNao(i.id, 'foto', 'A foto dá para ler?', m ? m.foto_ok : null);
+  if (m && m.foto_ok === true) {
+    h += parSimNao(i.id, 'inf', 'A etiqueta mostra a potência, o número com W?',
+                   m.pot_informada === null || m.pot_informada === undefined
+                     ? null : m.pot_informada);
+    if (m.pot_informada === true) {
+      h += parSimNao(i.id, 'cor', 'A etiqueta diz ' + pot + ', igual ao lançado?',
+                     m.pot_correta === null || m.pot_correta === undefined
+                       ? null : m.pot_correta);
+      if (m.pot_correta === false) {
+        h += '<div class="cf-p"><span class="cf-q">Qual potência está na etiqueta?</span>'
+          + '<span class="cf-op"><input type="number" step="0.01" min="0" class="cf-pot" '
+          + 'data-item="' + i.id + '" placeholder="ex: 20" value="'
+          + (m.pot_na_foto != null ? esc(String(m.pot_na_foto)) : '') + '"></span></div>';
+      }
+    }
+  }
+  // observação livre, nunca obrigatória
+  if (m) {
+    h += '<div class="cf-p cf-extra"><span class="cf-q">Observação, se quiser escrever alguma '
+      + '<i>(não é obrigatório)</i></span>'
+      + '<span class="cf-op"><input type="text" class="cf-obs" data-item="' + i.id
+      + '" placeholder="o que você notou" value="' + esc(m.obs || '') + '">'
+      + '<button type="button" class="btn sec peq cf-salva" data-item="' + i.id
+      + '">Guardar</button></span></div>';
+  }
+  const pronto = m && (m.foto_ok === false || m.pot_informada === false
+                       || m.pot_correta === true || m.pot_correta === false);
+  const sinal = !m ? ''
+    : m.foto_ok === false ? '<span class="tag erro">foto ilegível</span>'
+    : m.pot_informada === false ? '<span class="tag erro">etiqueta sem potência</span>'
+    : m.pot_correta === false ? '<span class="tag erro">potência diferente</span>'
+    : m.pot_correta === true ? '<span class="tag v">conferido, bate</span>' : '';
+  return '<div class="cf' + (pronto ? ' feita' : '') + '" data-i="' + i.id + '">'
+    + '<div class="cf-top"><b>Conferência</b>' + sinal
+    + (+i.conferencias > 1 ? '<i>' + i.conferencias + ' pessoas conferiram</i>' : '')
+    + '</div>' + h + '</div>';
+}
+
+function ligarConferencia(raiz) {
+  raiz.querySelectorAll('.cf input[type="radio"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      enviarConferencia(+r.dataset.item, r.dataset.campo, r.value === 'sim');
+    });
+  });
+  raiz.querySelectorAll('.cf-salva').forEach(function(b){
+    b.addEventListener('click', function(){
+      enviarConferencia(+b.dataset.item, 'pot', null);
+    });
+  });
+}
+
+/* Guarda o estado de cada item na tela, para a cascata ser montada de novo
+   sem precisar recarregar o inventário inteiro a cada toque. */
+let INVENTARIO = [];
+function acharItem(id) {
+  for (let a = 0; a < INVENTARIO.length; a++) {
+    const its = INVENTARIO[a].itens || [];
+    for (let k = 0; k < its.length; k++) if (+its[k].id === +id) return its[k];
+  }
+  return null;
+}
+
+async function enviarConferencia(itemId, campo, valor) {
+  const it = acharItem(itemId);
+  if (!it || !podeConferir()) return;
+  const m = it.minha || { foto_ok:null, pot_informada:null, pot_correta:null,
+                          pot_na_foto:null };
+  if (campo === 'foto') {
+    m.foto_ok = valor;
+    if (!valor) { m.pot_informada = null; m.pot_correta = null; m.pot_na_foto = null; }
+  } else if (campo === 'inf') {
+    m.pot_informada = valor;
+    if (!valor) { m.pot_correta = null; m.pot_na_foto = null; }
+  } else if (campo === 'cor') {
+    m.pot_correta = valor;
+    if (valor) m.pot_na_foto = null;
+  } else if (campo === 'pot') {
+    const cx = document.querySelector('.cf[data-i="' + itemId + '"] .cf-pot');
+    m.pot_na_foto = cx && cx.value !== '' ? +String(cx.value).replace(',', '.') : null;
+    const ob = document.querySelector('.cf[data-i="' + itemId + '"] .cf-obs');
+    m.obs = ob && ob.value.trim() !== '' ? ob.value.trim() : null;
+  }
+  it.minha = m;
+  // repinta só este bloco, para o aluno não perder o lugar na lista
+  const alvo = document.querySelector('.cf[data-i="' + itemId + '"]');
+  if (alvo) {
+    const novo = document.createElement('div');
+    novo.innerHTML = blocoConferencia(it);
+    const sub = novo.firstChild;
+    alvo.parentNode.replaceChild(sub, alvo);
+    ligarConferencia(sub.parentNode);
+  }
+  let r;
+  try {
+    r = await rpc('conferir_item', { p_token: EU.token, p_item: itemId,
+      p_aluno: SOU ? SOU.id : null, p_foto_ok: m.foto_ok, p_pot_informada: m.pot_informada,
+      p_pot_correta: m.pot_correta, p_pot_na_foto: m.pot_na_foto, p_obs: m.obs });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  if (!r.ok) {
+    const n2 = document.querySelector('.cf[data-i="' + itemId + '"]');
+    if (n2) n2.insertAdjacentHTML('beforeend',
+      '<div class="cf-aviso">' + esc(r.erro) + '</div>');
+  }
+}
+
 /* ====== O INVENTÁRIO COM AS FOTOS ======
    A mesma lista serve a duas pessoas: o professor, que quer ver o que foi
    fotografado, e a equipe de cálculo, que precisa conferir se a potência
@@ -3818,13 +4346,15 @@ async function carregarInventarioFotos(onde) {
   if (n.dataset.pronto === '1') return;       // não recarrega a cada abertura
   n.innerHTML = '<p class="ajuda">Carregando...</p>';
   let r;
-  try { r = await rpc('inventario_fotos', { p_token: EU.token }); }
+  try { r = await rpc('inventario_fotos', { p_token: EU.token,
+          p_aluno: SOU ? SOU.id : null }); }
   catch (e) { n.innerHTML = '<p class="ajuda">' + esc(e.message) + '</p>'; return; }
   if (!r || !r.ok) {
     n.innerHTML = '<p class="ajuda">' + esc((r && r.erro) || 'Não deu para carregar.')
       + '</p>'; return;
   }
   const ambs = r.ambientes || [];
+  INVENTARIO = ambs;
   if (!ambs.length) {
     n.innerHTML = '<p class="ajuda">Nenhum lançamento ainda.</p>'; return;
   }
@@ -3860,13 +4390,15 @@ async function carregarInventarioFotos(onde) {
                           + '" alt="Foto do aparelho" data-f="' + f.id + '">'; }).join('')
                       + '</span>'
                     : '<span class="inv-sem">sem foto</span>')
-                + '</div>';
+                + '</div>'
+                + blocoConferencia(i);
             }).join('')
           + '</div>';
       }).join('');
   n.dataset.pronto = '1';
   ALERTAS = varrerLancamentos(ambs);
   pintarAlertas();
+  ligarConferencia(n);
   n.querySelectorAll('.vistas img').forEach(function(im){
     im.addEventListener('click', async function(){
       im.style.opacity = '.5';
@@ -4260,7 +4792,8 @@ function abrirAba(qual) {
   if (qual === 'grupos') abrirMontar(TURMA);
   if (qual === 'compara') abrirCompara('caixaCompara');
   // as fotos são pesadas: só carregam quando a aba é aberta
-  if (qual === 'dados') carregarInventarioFotos('inventarioProf');
+  if (qual === 'dados') { carregarInventarioFotos('inventarioProf'); carregarEntregas();
+    carregarRelatorioConferencia(); }
 }
 el('btT1A').addEventListener('click', () => abrirMontar('1A'));
 el('btT1B').addEventListener('click', () => abrirMontar('1B'));
@@ -5597,7 +6130,10 @@ function pintarQuesitos() {
 /* Equipe por equipe: a pergunta que o professor faz é "quais equipes já
    responderam a ficha inteira", e não "quanto cada aluno mandou". Esta tabela
    responde isso em uma olhada e nomeia quem está faltando. */
-function pintarAvalPorGrupo(alunos) {
+let LIDERES = {};
+function pintarAvalPorGrupo(alunos, lideres) {
+  LIDERES = {};
+  (lideres || []).forEach(function(x){ LIDERES[x.grupo] = x; });
   const porGrupo = {};
   alunos.forEach(function(a){
     const g = a.grupo || '(sem grupo)';
@@ -5605,54 +6141,68 @@ function pintarAvalPorGrupo(alunos) {
     porGrupo[g].push(a);
   });
   const linhas = porOrdemDeGrupo(Object.keys(porGrupo).map(function(g){
-    const gente = porGrupo[g];
-    const deve = gente.filter(function(a){ return +a.colegas > 0; });
-    const fez  = deve.filter(function(a){ return +a.enviadas >= +a.colegas; });
-    const falta = deve.filter(function(a){ return +a.enviadas < +a.colegas; });
-    return { codigo:g, alunos:gente.length, deve:deve.length, fez:fez.length,
-             falta:falta };
+    const gente = porGrupo[g].slice().sort(function(a, b){
+      return String(a.nome).localeCompare(String(b.nome), 'pt-BR'); });
+    // quem responde a ficha é só o líder nomeado pelo professor
+    const lid = gente.filter(function(a){ return a.e_lider; })[0] || null;
+    const falta = (lid && +lid.enviadas < +lid.colegas) ? [lid] : [];
+    return { codigo:g, alunos:gente.length, gente:gente, lider:lid,
+             fez: lid && !falta.length ? 1 : 0,
+             deve: lid ? 1 : 0, falta:falta,
+             podeTerLider: gente.length > 1 };
   }));
-  const fechadas = linhas.filter(function(l){ return l.deve > 0 && !l.falta.length; }).length;
-  const comFicha = linhas.filter(function(l){ return l.deve > 0; }).length;
-  el('resumoAvalGrupo').textContent = comFicha
-    ? fechadas + ' de ' + comFicha + ' equipe' + (comFicha === 1 ? '' : 's')
-      + ' respondeu a ficha inteira'
-      + (fechadas === comFicha ? '. Pode fechar a nota.'
-         : '. Nas outras ainda falta gente responder, e os nomes estão na coluna '
-           + 'de quem falta.')
-    : 'Nenhuma equipe tem gente suficiente para a ficha: ela só faz sentido com '
-      + 'dois alunos ou mais no grupo.';
+  const comLider = linhas.filter(function(l){ return l.lider; });
+  const semLider = linhas.filter(function(l){ return !l.lider && l.podeTerLider; });
+  const fechadas = comLider.filter(function(l){ return !l.falta.length; }).length;
+  el('resumoAvalGrupo').textContent = comLider.length
+    ? fechadas + ' de ' + comLider.length + ' equipe'
+      + (comLider.length === 1 ? '' : 's') + ' com líder nomeado já teve a ficha '
+      + 'respondida' + (fechadas === comLider.length && !semLider.length
+          ? '. Pode fechar a nota.' : '.')
+    : 'Nenhuma equipe tem líder nomeado ainda, então ninguém pode responder a ficha.';
+  el('avisoLider').innerHTML = semLider.length
+    ? '<div class="aviso erro">' + semLider.length + ' equipe'
+      + (semLider.length === 1 ? ' está' : 's estão') + ' sem líder nomeado: '
+      + semLider.map(function(l){ return '<b>' + esc(l.codigo) + '</b>'; }).join(', ')
+      + '. Enquanto não houver líder, a ficha de avaliação não abre para ninguém '
+      + 'dessa equipe. Escolha na coluna <b>Líder</b>.</div>'
+    : '';
+
   el('tabAvalGrupo').innerHTML =
-    '<thead><tr><th class="cresce">Equipe</th><th>Alunos</th><th>Responderam</th>'
-    + '<th class="cresce">Quem ainda falta</th><th>Situação</th></tr></thead><tbody>'
+    '<thead><tr><th class="cresce">Equipe</th><th>Alunos</th>'
+    + '<th class="cresce">Líder que responde a ficha</th>'
+    + '<th>Respondeu sobre</th><th>Situação</th></tr></thead><tbody>'
     + linhas.map(function(l){
-        const pct = l.deve ? l.fez / l.deve * 100 : 0;
-        const est = !l.deve ? ['c','não se aplica']
-                  : !l.fez ? ['c','ninguém respondeu']
-                  : l.falta.length ? ['a','faltam ' + l.falta.length]
+        const pct = l.lider && +l.colegas !== 0
+          ? (+l.lider.colegas ? +l.lider.enviadas / +l.lider.colegas * 100 : 0) : 0;
+        const est = !l.podeTerLider ? ['c','não se aplica']
+                  : !l.lider ? ['erro','sem líder']
+                  : !+l.lider.enviadas ? ['a','não respondeu']
+                  : l.falta.length ? ['a','pela metade']
                   : ['v','ficha completa'];
-        return '<tr' + (l.deve && l.falta.length ? ' class="alerta"' : '') + '>'
+        return '<tr' + (l.podeTerLider && (!l.lider || l.falta.length)
+                        ? ' class="alerta"' : '') + '>'
           + '<td class="cresce"><b>' + esc(l.codigo) + '</b></td>'
           + '<td class="n" data-r="Alunos" data-v="' + l.alunos + '">' + l.alunos + '</td>'
-          + '<td class="n" data-r="Responderam" data-v="' + pct.toFixed(2) + '">'
-            + l.fez + ' de ' + l.deve
-            + dbar(pct, est[0] === 'v' ? '' : (est[0] === 'a' ? 'am' : 'cz')) + '</td>'
-          + '<td class="cresce" data-r="Quem ainda falta">'
-            + (l.deve
-                ? (l.falta.length
-                    // a lista inteira de uma equipe grande vira um paredão:
-                    // mostra os primeiros e conta o resto
-                    ? l.falta.slice(0, 6).map(function(a){
-                        return esc(a.nome) + ' <i>(respondeu sobre ' + a.enviadas
-                          + ' de ' + a.colegas + ')</i>'; }).join('<br>')
-                      + (l.falta.length > 6
-                          ? '<br><i>e mais ' + (l.falta.length - 6) + '</i>' : '')
-                    : '<span class="nd">ninguém</span>')
-                : '<span class="nd">sozinho no grupo, não há colega para avaliar</span>')
+          + '<td class="cresce" data-r="Líder">'
+            + (l.podeTerLider
+                ? '<select class="sel-lider" data-g="' + esc(l.codigo) + '">'
+                  + '<option value="">ninguém nomeado</option>'
+                  + l.gente.map(function(a){
+                      return '<option value="' + a.id + '"'
+                        + (a.e_lider ? ' selected' : '') + '>' + esc(a.nome)
+                        + '</option>'; }).join('') + '</select>'
+                : '<span class="nd">sozinho no grupo</span>')
+            + '</td>'
+          + '<td class="n" data-r="Respondeu sobre" data-v="' + pct.toFixed(2) + '">'
+            + (l.lider ? l.lider.enviadas + ' de ' + l.lider.colegas
+                + ' colega' + (+l.lider.colegas === 1 ? '' : 's')
+                + dbar(pct, est[0] === 'v' ? '' : (est[0] === 'a' ? 'am' : 'cz'))
+              : '<span class="nd">—</span>')
             + '</td>'
           + '<td data-r="Situação" data-v="' + pct.toFixed(2) + '">'
             + '<span class="tag ' + est[0] + '">' + est[1] + '</span>'
-            + (l.deve ? ' <button type="button" class="elo-g ver-aval" data-g="'
+            + (l.lider ? ' <button type="button" class="elo-g ver-aval" data-g="'
                 + esc(l.codigo) + '" aria-haspopup="dialog">ver respostas</button>' : '')
             + '</td></tr>';
       }).join('') + '</tbody>';
@@ -5661,6 +6211,22 @@ function pintarAvalPorGrupo(alunos) {
   el('tabAvalGrupo').querySelectorAll('.ver-aval').forEach(function(b){
     b.addEventListener('click', function(){ abrirFichaDoGrupo(b.dataset.g, b); });
   });
+  el('tabAvalGrupo').querySelectorAll('.sel-lider').forEach(function(s){
+    s.addEventListener('change', function(){ trocarLider(s.dataset.g, s.value, s); });
+  });
+}
+
+/* O professor nomeia quem responde a ficha de cada equipe. */
+async function trocarLider(grupo, id, sel) {
+  sel.disabled = true;
+  let r;
+  try {
+    r = await rpc('definir_lider', { p_token: EU.token, p_grupo: grupo,
+      p_aluno: id ? +id : null });
+  } catch (e) { r = { ok:false, erro:e.message }; }
+  sel.disabled = false;
+  if (!r.ok) { msg('avisoLider', r.erro, 'erro'); return; }
+  await carregarAvaliacao();
 }
 
 /* O que cada um respondeu sobre cada colega. Abre na mesma janela suspensa
@@ -5682,10 +6248,16 @@ async function abrirFichaDoGrupo(cod, bt) {
 
   const gente = r.gente || [], resp = r.respostas || [];
   el('janSub').textContent = r.resumo || '';
+  // só o líder preenche: o servidor zera "colegas" para os demais
   const deve = gente.filter(function(a){ return +a.colegas > 0; });
   const fez  = deve.filter(function(a){ return +a.enviadas >= +a.colegas; });
-  const chips = [fez.length + ' de ' + deve.length + ' responderam',
-                 resp.length + (resp.length === 1 ? ' resposta' : ' respostas')];
+  const lider = deve[0] || null;
+  const chips = lider
+    ? ['líder: ' + lider.nome,
+       lider.enviadas + ' de ' + lider.colegas + ' colega'
+         + (+lider.colegas === 1 ? '' : 's') + ' avaliados']
+    : ['sem líder nomeado'];
+  chips.push(resp.length + (resp.length === 1 ? ' resposta' : ' respostas'));
   el('janChips').innerHTML = chips.map(function(c){
     return '<span>' + esc(c) + '</span>'; }).join('');
 
@@ -5723,11 +6295,19 @@ async function abrirFichaDoGrupo(cod, bt) {
     '<div class="aviso info">Cada nota vai de 0 a 3 em cinco medidas, somando no '
     + 'máximo 15. Esta tela mostra quem deu qual nota a quem, então não abra com a '
     + 'projeção ligada.</div>'
-    + '<h5>O que cada um respondeu</h5>'
+    + (lider
+        ? '<div class="aviso ' + (resp.length ? 'erro' : 'info') + '">Nesta equipe a '
+          + 'ficha é respondida por uma pessoa só, <b>' + esc(lider.nome) + '</b>. '
+          + 'A nota de cada colega vem de um avaliador único, sem segunda opinião '
+          + 'para comparar, e é assim que ela deve ser lida.</div>'
+        : '')
+    + '<h5>O que o líder respondeu</h5>'
     + (autores.length ? autores.map(bloco).join('')
-        : '<p class="ajuda">Ninguém deste grupo respondeu a ficha ainda.</p>')
+        : '<p class="ajuda">' + (lider ? esc(lider.nome) + ' ainda não respondeu a ficha.'
+            : 'Esta equipe ainda não tem líder nomeado, então ninguém pode responder. '
+              + 'Nomeie na coluna Líder da tabela.') + '</p>')
     + (faltam.length
-        ? '<h5>Ainda não responderam</h5><div class="gente-g">'
+        ? '<h5>Ainda não respondeu</h5><div class="gente-g">'
           + faltam.map(function(a){
               return '<div class="pes' + (String(a.turma||'').toUpperCase() === '1B'
                   ? ' b' : '') + '">'
@@ -5759,18 +6339,19 @@ async function carregarAvaliacao() {
     : (+r.total === 0
         ? 'Nenhuma avaliação respondida até agora. Os alunos respondem pelo botão "Avaliar a equipe", na própria tela deles.'
         : r.total + ' avaliação(ões) respondida(s). '
-          + (semEnviar ? semEnviar + ' aluno(s) ainda não avaliaram todos os colegas.'
-                       : 'Todos já avaliaram os colegas.'));
+          + (semEnviar
+              ? semEnviar + ' líder(es) ainda não respondeu a ficha inteira da equipe.'
+              : 'Todos os líderes já responderam a ficha da equipe.'));
   if (!al.length) {
     el('tabAval').innerHTML = '<tbody><tr><td class="nd">Sem alunos em grupo.</td></tr></tbody>';
     el('tabAvalGrupo').innerHTML = '<tbody><tr><td class="nd">Sem alunos em grupo.</td></tr></tbody>';
     return;
   }
-  pintarAvalPorGrupo(al);
+  pintarAvalPorGrupo(al, r.lideres || []);
   const n1 = v => (v === null || v === undefined) ? '-' : String(v).replace('.', ',');
   el('tabAval').innerHTML =
-    '<thead><tr><th class="cresce">Aluno</th><th>Grupo</th><th>Recebidas</th>'
-    + '<th>Enviadas</th><th>Média</th>'
+    '<thead><tr><th class="cresce">Aluno</th><th>Grupo</th><th>Recebeu</th>'
+    + '<th>Respondeu sobre</th><th>Média</th>'
     + MEDIDAS.map(d => '<th>' + d[0] + '</th>').join('') + '</tr></thead><tbody>'
     + al.map(a => {
         const devendo = +a.colegas > 0 && +a.enviadas < +a.colegas;
@@ -5779,10 +6360,12 @@ async function carregarAvaliacao() {
         return '<tr' + (devendo ? ' class="alerta"' : '') + '>'
           + '<td class="cresce">' + esc(a.nome) + '</td>'
           + '<td data-r="Grupo"><b>' + esc(a.grupo) + '</b></td>'
-          + '<td class="n" data-r="Recebidas" data-v="' + a.recebidas + '">' + a.recebidas + '</td>'
-          + '<td class="n" data-r="Enviadas" data-v="'
-            + (+a.colegas ? +a.enviadas / +a.colegas : 0) + '">' + a.enviadas + ' de '
-            + a.colegas + '</td>'
+          + '<td class="n" data-r="Recebeu" data-v="' + a.recebidas + '">' + a.recebidas + '</td>'
+          // quem não é líder não tem ficha a preencher: "0 de 0" confundiria
+          + '<td class="n" data-r="Respondeu sobre" data-v="'
+            + (+a.colegas ? +a.enviadas / +a.colegas : -1) + '">'
+            + (+a.colegas ? a.enviadas + ' de ' + a.colegas
+                          : '<span class="nd">não avalia</span>') + '</td>'
           + '<td class="n" data-r="Média" data-v="' + (m === null ? -1 : m) + '"><b>'
             + vrg(n1(a.media)) + '</b>' + (m === null ? '' : dbar(m / 15 * 100,
               m >= 11 ? '' : (m >= 7 ? 'am' : 'cz'))) + '</td>'
