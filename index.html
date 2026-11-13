@@ -2813,8 +2813,9 @@ async function carregarFichasProf() {
   } catch (e) {}
   pintarFormFichaProf();
   const fechadas = fs.filter(f => f.resolvida).length;
-  const travadas = fs.filter(f => !f.resolvida && +f.enviados >= +f.previstos
-                                  && +f.previstos > 0).length;
+  const travadas = fs.filter(f => !f.resolvida
+                                  && (+f.enviados || 0) >= (+f.previstos || 0)
+                                  && (+f.previstos || 0) > 0).length;
   el('ajudaFichasProf').textContent = !fs.length
     ? 'Nenhuma ficha de cálculo aberta ainda. A equipe CÁLCULO abre as fichas na tela dela.'
     : fs.length + ' de ' + campo.length + ' grupo(s) com ficha. '
@@ -2855,11 +2856,16 @@ async function carregarFichasProf() {
                  + '<td class="n" data-r="Ano">' + v('ano') + ' ' + marca(e.ok_ano) + '</td>'
                  + '<td class="n" data-r="Desde a troca">' + v('total') + ' ' + marca(e.ok_total) + '</td>'
                  : '<td colspan="4" class="nd">ainda não enviou</td>')
+            /* enviados e previstos podem não vir na resposta; sem o ||0 a conta
+               virava "falta NaN" na tela do professor */
             + '<td data-r="Situação">' + (i === 0
                 ? (f.resolvida ? '<span class="pill c">fechada</span>'
-                   : +f.enviados >= +f.previstos
+                   : (+f.enviados || 0) >= (+f.previstos || 0)
+                       && (+f.previstos || 0) > 0
                      ? '<span class="pill erro">ninguém acertou</span>'
-                     : '<span class="pill am">falta ' + (+f.previstos - +f.enviados) + '</span>')
+                     : '<span class="pill am">falta '
+                       + Math.max((+f.previstos || 0) - (+f.enviados || 0), 0)
+                       + '</span>')
                 : '') + '</td></tr>';
         }).join('');
       }).join('') + '</tbody>';
