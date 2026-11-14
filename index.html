@@ -141,6 +141,14 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .btn.ok{background:var(--verde);border-color:var(--verde)}
 .btn.ok:hover{filter:brightness(1.1)}
 .btn.peq{width:auto;min-height:44px;padding:10px 17px;font-size:.88rem}
+/* a dica de onde achar a potência na etiqueta, embaixo do campo */
+.dica-pot{display:block;margin:7px 0 0;line-height:1.4}
+/* o telefone de quem responde pela equipe, no card do grupo */
+.zap-lider{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--linha)}
+.zap-lider label{display:block;font-size:.78rem;color:var(--tinta2);
+  margin-bottom:6px;font-family:var(--c)}
+.zap-lider label small{font-weight:400}
+.zap-lider .zapin{flex:1 1 9rem;min-width:0}
 /* dois botões lado a lado; no celular podem cair um embaixo do outro */
 .bt-par{display:flex;gap:7px;flex-wrap:wrap}
 .bt-par .btn{flex:0 0 auto}
@@ -1609,6 +1617,9 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
           <input type="text" id="pot" inputmode="decimal" autocomplete="off"
                  placeholder="o que está escrito no aparelho">
           <div class="chips" id="chipsPot"></div>
+          <!-- a etiqueta de ar-condicionado traz três números parecidos e as
+               equipes estavam lançando o errado -->
+          <small class="ajuda dica-pot" id="dicaPot" hidden></small>
         </div>
       </div>
       <label class="marca" id="marcaSemPot" for="semPot">
@@ -2727,9 +2738,26 @@ function montarTipos() {
   const mais = el('btMaisTipos');
   if (mais) mais.addEventListener('click', () => { TIPOS_ABERTO = true; montarTipos(); });
 }
+/* A etiqueta de ar-condicionado traz três números em watts, e dois estão
+   errados para o nosso fim: a capacidade de refrigeração (8,79 kW, que é o
+   calor tirado da sala, o mesmo que os 30.000 BTU) e a potência nominal
+   (o máximo que o aparelho pode puxar, usada para dimensionar o disjuntor).
+   O que vale é a potência elétrica em refrigeração. */
+const DICA_POT = {
+  'Ar-condicionado': 'Na etiqueta procure <b>Pot. Elétrica Refrigeração</b>, em W. '
+    + 'Não use a <b>Capac. Refrigeração</b> (aquela em kW ou BTU, que é o calor '
+    + 'retirado da sala) nem a <b>Pot. Nominal</b> (o máximo do aparelho). Se só '
+    + 'houver corrente e tensão, multiplique: A × V.',
+  'Lâmpada': 'O número vem seguido de W. Se aparecer 127 ou 220, isso é a tensão '
+    + 'da tomada, não a potência.' };
 function chipsPot() {
   /* saiu o atalho "não achei": agora quem não acha a potência marca a caixa
      logo abaixo, que é uma afirmação registrada, não um campo em branco */
+  const dica = el('dicaPot');
+  if (dica) {
+    dica.innerHTML = DICA_POT[TIPO] || '';
+    dica.hidden = !DICA_POT[TIPO];
+  }
   const l = POTS[TIPO] || [];
   el('chipsPot').innerHTML = l.map(p =>
     '<button type="button" data-p="' + p + '">' + p + ' W</button>').join('');
@@ -3936,8 +3964,33 @@ const VOLTAGENS = [110, 115, 120, 127, 220, 240, 380];
    professor, na tela do próprio WhatsApp: o sistema não guarda telefone de
    aluno nenhum, de propósito. wa.me serve no celular e no WhatsApp Web. */
 function ondeEstamos() { return location.href.split('#')[0]; }
-function mandarNoZap(texto) {
-  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener');
+/* Com número, o WhatsApp abre já na conversa daquela pessoa. Sem número, abre
+   para o professor escolher o contato. O número é só dígitos, com DDI e DDD. */
+let ZAPS = {};
+function mandarNoZap(texto, numero) {
+  const n = String(numero || '').replace(/\D/g, '');
+  window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(texto),
+    '_blank', 'noopener');
+}
+function zapDoGrupo(cod) { return (ZAPS[cod] && ZAPS[cod].zap) || ''; }
+// guardado como 5571999999999; na tela fica (71) 99999-9999, que é como se lê
+function zapBonito(n) {
+  const s = String(n || '').replace(/\D/g, '').replace(/^55/, '');
+  if (s.length === 11) return '(' + s.slice(0,2) + ') ' + s.slice(2,7) + '-' + s.slice(7);
+  if (s.length === 10) return '(' + s.slice(0,2) + ') ' + s.slice(2,6) + '-' + s.slice(6);
+  return s;
+}
+// equipe de campo é a que sai pela escola contando: só ela tem líder e telefone
+function ehCampo(g) {
+  return g && g.papel === 'grupo' && (g.tipo || 'inventario') === 'inventario';
+}
+async function carregarZaps() {
+  if (!EU || EU.papel !== 'professor') return;
+  try {
+    const r = await rpc('zaps_dos_lideres', { p_token: EU.token });
+    if (r && r.ok) { ZAPS = {}; (r.grupos || []).forEach(function(g){
+      ZAPS[g.grupo] = { zap: g.zap || '', lider: g.lider || '' }; }); }
+  } catch (e) {}
 }
 /* A lista de senhas mostra uma linha por PORTA de entrada, não por grupo no
    banco: as duas conferências entram pelo ambiente do cálculo, mas o aluno
@@ -4054,6 +4107,42 @@ function recadoDoPosto(grupo, nome, posto, senha) {
     + 'de observação, que você preenche só se quiser.'
     + entrar;
 }
+/* Os quatro motivos que o professor pode devolver para a equipe. Quem julga
+   "a foto é de outra etiqueta" é o professor: o aluno conferente só diz se o
+   que foi lançado bate com a foto que está lá. */
+const MOTIVO_PEND = {
+  sem_foto: 'o lançamento está sem foto da etiqueta',
+  ilegivel: 'a foto não dá para ler',
+  outra_etiqueta: 'a foto é de outra etiqueta, não a do aparelho',
+  outro_aparelho: 'a foto é de outro aparelho, não do que foi lançado',
+  numero_errado: 'o número lançado não bate com a etiqueta' };
+const NOME_PEND = {
+  sem_foto: 'Sem foto da etiqueta',
+  ilegivel: 'Foto ilegível',
+  outra_etiqueta: 'Foto de outra etiqueta',
+  outro_aparelho: 'Foto de outro aparelho',
+  numero_errado: 'Número lançado não bate com a etiqueta' };
+const TEXTO_PEND = {
+  sem_foto: 'Sem a foto da etiqueta ninguém consegue conferir o número.',
+  ilegivel: 'A foto está lá, mas não dá para ler o número na etiqueta.',
+  outra_etiqueta: 'A foto que veio é de outra etiqueta, como o selo de energia. '
+    + 'A que vale é a plaqueta do próprio aparelho, onde está o número seguido de W.',
+  outro_aparelho: 'O lançamento diz um aparelho e a foto mostra outro. Ou a foto '
+    + 'está no lançamento errado, ou o aparelho lançado não é esse.',
+  numero_errado: 'A etiqueta mostra um número e foi lançado outro.' };
+const FAZER_PEND = {
+  sem_foto: 'voltem no ambiente, fotografem a plaqueta do aparelho e anexem a '
+    + 'foto no lançamento.',
+  ilegivel: 'voltem no ambiente e tirem outra foto, de perto e com luz, de modo '
+    + 'que o número apareça legível.',
+  outra_etiqueta: 'voltem no ambiente e fotografem a plaqueta do aparelho, aquela '
+    + 'que traz o número seguido de W. Depois anexem no lançamento.',
+  outro_aparelho: 'confiram qual aparelho é esse de verdade. Se a foto está no '
+    + 'lançamento errado, troquem a foto. Se o aparelho lançado está errado, '
+    + 'corrijam o lançamento e fotografem a plaqueta do aparelho certo.',
+  numero_errado: 'abram o lançamento e corrijam a potência para o número que está '
+    + 'na etiqueta da foto.' };
+
 function recadoDoAlerta(a) {
   if (!a) return '';
   if (!a.amb) {
@@ -4072,9 +4161,11 @@ function recadoDoAlerta(a) {
     + ', lançado com ' + (i.potencia_w != null ? mil(+i.potencia_w, 2) + ' W'
                                                : 'potência em branco') + '.'
     + (i.lancado_nome ? '\nQuem lançou foi ' + i.lancado_nome + '.' : '')
-    + '\n\nO que está errado: ' + a.titulo + '.'
-    + '\n' + a.texto
-    + '\n\nO que fazer: ' + (temFoto
+    + '\n\nO que está errado: ' + (MOTIVO_PEND[a.motivo] || a.titulo) + '.'
+    + '\n' + (a.motivo ? TEXTO_PEND[a.motivo] : a.texto)
+    + '\n\nO que fazer: ' + (a.motivo
+        ? FAZER_PEND[a.motivo]
+        : temFoto
         ? 'confiram a foto da etiqueta no sistema. Se o número for outro, '
           + 'corrijam o lançamento no próprio ambiente. Se a foto não der para '
           + 'ler, voltem no ambiente e tirem outra.'
@@ -4215,16 +4306,55 @@ async function abrirAlerta(k, bt) {
           + 'Daqui nada é alterado: quem lançou é quem corrige.</p>'
         : '<h5>O que fazer</h5><p class="ajuda">Abra a aba <b>Lançamentos</b> para ver '
           + 'ambiente por ambiente quais lâmpadas têm essa potência, com as fotos.</p>')
+    + (a.item ? '<h5>Devolver para a equipe refazer</h5>'
+      + '<p class="ajuda">Marque o que está errado. A equipe recebe o aviso na tela '
+      + 'dela, com o ambiente e o aparelho, e o recado do WhatsApp muda junto.</p>'
+      + '<div class="bt-par" id="motivosPend">'
+      + Object.keys(NOME_PEND).map(function(m){
+          return '<button type="button" class="btn peq sec mot" data-m="' + m + '">'
+               + esc(NOME_PEND[m]) + '</button>'; }).join('')
+      + '<button type="button" class="btn peq sec mot" data-m="">Tirar a marcação</button>'
+      + '</div><div id="avisoPend"></div>' : '')
     + '<div class="bt-par" style="margin-top:14px;align-items:center">'
       + '<button type="button" class="btn peq zap" id="btZapAlerta">'
       + 'Mandar no WhatsApp</button>'
-      + '<span class="ajuda" style="margin:0;flex:1 1 11rem">Abre o WhatsApp com o '
-      + 'recado já escrito. Você escolhe para quem mandar.</span></div>'
+      + '<span class="ajuda" style="margin:0;flex:1 1 11rem">' + (zapDoGrupo(a.amb
+          && a.amb.grupo)
+        ? 'Abre direto a conversa de ' + esc((ZAPS[a.amb.grupo] || {}).lider
+            || 'quem responde pela equipe') + ', com o recado escrito.'
+        : 'Abre o WhatsApp com o recado já escrito. Você escolhe para quem mandar. '
+          + 'Para mandar direto, guarde o WhatsApp do líder na aba Grupos.')
+      + '</span></div>'
     + '<div style="height:12px"></div>';
   abrirJanela(bt);
   el('btZapAlerta').addEventListener('click', function(){
-    mandarNoZap(recadoDoAlerta(a));
+    mandarNoZap(recadoDoAlerta(a), zapDoGrupo(a.amb && a.amb.grupo));
   });
+  if (el('motivosPend')) {
+    const pintaMot = function(){
+      el('motivosPend').querySelectorAll('.mot').forEach(function(b){
+        b.classList.toggle('sec', b.dataset.m !== (a.motivo || '')); });
+    };
+    pintaMot();
+    el('motivosPend').querySelectorAll('.mot').forEach(function(b){
+      b.addEventListener('click', async function(){
+        const m = b.dataset.m;
+        msg('avisoPend', 'Guardando...');
+        let r;
+        try { r = await rpc('marcar_pendencia', { p_token: EU.token,
+                p_item: a.item.id, p_motivo: m || null,
+                p_pot_na_foto: null }); }
+        catch (e) { return msg('avisoPend', e.message, 'erro'); }
+        if (!r || !r.ok) return msg('avisoPend', (r && r.erro) || 'Não deu.', 'erro');
+        a.motivo = m || null;
+        pintaMot();
+        msg('avisoPend', m
+          ? 'Marcado. A equipe ' + a.amb.grupo + ' já vê esse aviso na tela dela. '
+            + 'O recado do WhatsApp abaixo mudou junto.'
+          : 'Marcação tirada.', 'bom');
+      });
+    });
+  }
   el('janCorpo').querySelectorAll('.vistas img').forEach(function(im){
     im.addEventListener('click', async function(){
       im.style.opacity = '.5';
@@ -5249,8 +5379,44 @@ async function carregarMontar() {
             + (semFicha ? ' Faltam ' + semFicha + ' grupo(s) sem ficha.' : '')
             + '</p>'
           : rodapeCalc)
+      /* O WhatsApp de quem responde pela equipe. Fica só na tela do professor e
+         serve para o recado de correção abrir já na conversa certa, em vez de
+         o professor procurar o contato na mão. */
+      + (ehCampo(g) && EU.papel === 'professor'
+          ? '<div class="zap-lider"><label for="zap-' + g.codigo + '">'
+            + 'WhatsApp de quem responde pela equipe'
+            + (ZAPS[g.codigo] && ZAPS[g.codigo].lider
+                ? ' <small>(' + esc(ZAPS[g.codigo].lider) + ')</small>' : '')
+            + '</label><div class="bt-par"><input id="zap-' + g.codigo
+            + '" class="zapin" data-g="' + g.codigo + '" type="tel" '
+            + 'inputmode="tel" placeholder="71 99999-9999" value="'
+            + esc(zapBonito(zapDoGrupo(g.codigo))) + '">'
+            + '<button type="button" class="btn peq zapsave" data-g="' + g.codigo
+            + '">guardar</button></div>'
+            + '<small class="ajuda" id="zapmsg-' + g.codigo + '"></small></div>'
+          : '')
       + '<div class="pe">' + pe + '</div></div>';
   }).join('') + '</div>';
+  // guardar o telefone de quem responde pela equipe
+  el('cards').querySelectorAll('.zapsave').forEach(function(b){
+    b.addEventListener('click', async function(){
+      const cod = b.dataset.g;
+      const campo = el('zap-' + cod);
+      const onde = 'zapmsg-' + cod;
+      msg(onde, 'Guardando...');
+      let r;
+      try { r = await rpc('definir_zap', { p_token: EU.token, p_grupo: cod,
+              p_zap: campo.value }); }
+      catch (e) { return msg(onde, e.message, 'erro'); }
+      if (!r || !r.ok) return msg(onde, (r && r.erro) || 'Não deu.', 'erro');
+      ZAPS[cod] = ZAPS[cod] || {};
+      ZAPS[cod].zap = r.zap || '';
+      campo.value = zapBonito(r.zap || '');
+      msg(onde, r.zap ? 'Guardado. O botão de WhatsApp dos avisos desta equipe '
+                        + 'passa a abrir direto nessa conversa.'
+                      : 'Telefone apagado.', 'bom');
+    });
+  });
 
   // quem ainda não foi alocado
   const daqui = todos.filter(a => a.desta_turma !== false);
@@ -5344,6 +5510,7 @@ el('btRecarregar').addEventListener('click', carregarProf);
 
 async function carregarProf() {
   let r;
+  carregarZaps();
   try { r = await rpc('resumo', { p_token: EU.token }); }
   catch (e) { el('avisoProf').innerHTML =
     '<div class="aviso erro">Não consegui falar com o servidor. Tente "Atualizar agora".</div>'; return; }
