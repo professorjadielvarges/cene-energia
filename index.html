@@ -180,13 +180,16 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
   .corr-bt{width:100%}
   .corr-bt .btn{width:100%}
 }
-/* onde estão as lâmpadas de uma potência fora do padrão: ambiente, equipe e
-   quem lançou, porque o aviso sozinho não dizia de quem cobrar */
+/* onde estão as lâmpadas de uma potência fora do padrão: cada lançamento com a
+   foto e os mesmos botões do aviso de um item só, para o professor agir ali */
 .onde-lista{margin:10px 0 0;border:1px solid var(--linha);border-radius:var(--r2);
   overflow:hidden;background:var(--sup)}
-.onde-l{display:flex;gap:11px;align-items:center;padding:10px 13px;
-  border-bottom:1px solid var(--linha)}
+.onde-l{padding:12px 13px;border-bottom:1px solid var(--linha)}
 .onde-l:last-child{border-bottom:none}
+.onde-topo{display:flex;gap:11px;align-items:center}
+.onde-l .inv-it{margin-top:8px}
+.onde-l .mot-grade{margin-top:9px}
+.onde-aviso:empty{display:none}
 .onde-q{flex:none;min-width:2.4rem;text-align:center;font-family:var(--c);
   font-weight:700;font-size:1.05rem;color:var(--tinta)}
 .onde-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -4258,7 +4261,8 @@ function varrerLancamentos(ambs) {
            lâmpadas de 20 W" e o professor não tinha como saber de quem cobrar */
         (ondePotencia[p] = ondePotencia[p] || []).push({
           grupo: a.grupo, ambiente: a.nome, quantidade: q,
-          lancou: i.lancado_nome || '', item: i.id });
+          lancou: i.lancado_nome || '', item: i.id, it: i, amb: a,
+          alterado_em: i.alterado_em, foto_em: i.foto_em });
       }
       if (p != null && VOLTAGENS.indexOf(p) >= 0 && i.tipo !== 'Lâmpada') {
         achados.push(Object.assign({ nivel:'erro',
@@ -4277,9 +4281,21 @@ function varrerLancamentos(ambs) {
         return;
       }
       if (lim && p != null && p > 0 && p < lim.min) {
-        achados.push(Object.assign({ nivel:'conferir',
-          titulo: p + ' W é baixo demais para ' + i.tipo.toLowerCase(),
-          texto: 'O normal é ' + lim.tipico + '. Vale olhar a foto da etiqueta.' }, base));
+        /* dois enganos que já aconteceram de verdade na etiqueta de
+           ar-condicionado: anotar o valor em kW (2,68 em vez de 2.680) e anotar
+           o nível de ruído em dB, que fica perto de 47 */
+        const emKw = p * 1000 >= lim.min && p * 1000 <= lim.max;
+        const pareceRuido = i.tipo === 'Ar-condicionado' && p >= 30 && p <= 70;
+        achados.push(Object.assign({ nivel: emKw || pareceRuido ? 'erro' : 'conferir',
+          titulo: mil(p, 2) + ' W é baixo demais para ' + i.tipo.toLowerCase(),
+          texto: 'O normal é ' + lim.tipico + '. '
+            + (emKw ? 'Esse número parece estar em kW: ' + vrg(p) + ' kW são '
+                      + mil(p * 1000, 2) + ' W. Na etiqueta, o que vale é o valor '
+                      + 'em W, não em kW.'
+               : pareceRuido ? 'Número nessa faixa costuma ser o nível de ruído, '
+                      + 'que a etiqueta mostra em dB, não a potência. A potência '
+                      + 'vem seguida de W.'
+               : 'Vale olhar a foto da etiqueta.') }, base));
         return;
       }
       if (i.tipo === 'Lâmpada' && q > 80) {
@@ -4319,26 +4335,95 @@ function varrerLancamentos(ambs) {
    a enviar (achou e ninguém avisou), corrigido (a equipe mexeu, falta conferir
    de novo) e enviado (já mandou, esperando). O botão do WhatsApp marca como
    enviado sozinho, que era o que faltava para ele não se perder. */
-let CORRECOES = [];
+let CORRECOES = [], AVISOS = {};
 const ESTADO_COR = { achado:'erro', corrigido:'bom', avisado:'am' };
 const ESTADO_NOME = { achado:'a enviar', corrigido:'corrigido', avisado:'enviado' };
 
 async function carregarCorrecoes() {
   if (!el('correcoes') || !EU || EU.papel !== 'professor') return;
-  let r;
-  try { r = await rpc('correcoes', { p_token: EU.token }); }
-  catch (e) { return; }
-  if (!r || !r.ok) return;
-  CORRECOES = r.lista || [];
+  try {
+    const r = await rpc('correcoes', { p_token: EU.token });
+    if (r && r.ok) CORRECOES = r.lista || [];
+  } catch (e) {}
+  try {
+    const v = await rpc('avisos_enviados', { p_token: EU.token });
+    /* junta, não substitui: um aviso marcado aqui agora não pode sumir porque a
+       resposta do servidor ainda não trouxe ele */
+    if (v && v.ok) (v.avisos || []).forEach(function(x){ AVISOS[x.item] = x.em; });
+  } catch (e) {}
   pintarCorrecoes();
+}
+
+/* A lista do professor junta duas origens que antes viviam separadas, e era
+   essa separação que fazia ele mandar o recado por uma tela e a outra continuar
+   dizendo que faltava mandar:
+   1) o que alguém marcou, dele ou do primeiro conferente (vem do banco);
+   2) o que o próprio sistema desconfiou nos números (os alertas da tela).
+   Tudo vira linha com o mesmo estado: a enviar, enviado, corrigido. */
+function depois(a, b) {
+  if (!a) return false;
+  if (!b) return true;
+  return new Date(a).getTime() > new Date(b).getTime();
+}
+function linhasCorrecao() {
+  const linhas = [], vistos = {};
+  (CORRECOES || []).forEach(function(c){
+    vistos[c.item] = true;
+    const aviso = AVISOS[c.item] || c.avisado_em || null;
+    const mexido = depois(c.mexido_em, c.achado_em) ? c.mexido_em : null;
+    linhas.push({ itens:[c.item], grupo:c.grupo, ambiente:c.ambiente,
+      tipo:c.tipo, quantidade:c.quantidade, potencia_w:c.potencia_w,
+      lancou:c.lancou, achou:c.achou, motivo:c.motivo, obs:c.obs,
+      foto_motivo:c.foto_motivo, aviso_em:aviso, mexido_em:mexido,
+      estado: mexido ? 'corrigido' : (aviso ? 'avisado' : 'achado') });
+  });
+  (ALERTAS || []).forEach(function(a, k){
+    const onde = a.amb && a.item
+      ? [{ grupo:a.amb.grupo, ambiente:a.amb.nome, quantidade:a.item.quantidade,
+           lancou:a.item.lancado_nome, item:a.item.id,
+           mexido: maisNovo(a.item.alterado_em, a.item.foto_em) }]
+      : (a.onde || []);
+    const ids = onde.map(function(o){ return o.item; })
+                    .filter(function(id){ return id && !vistos[id]; });
+    if (!ids.length) return;
+    let aviso = null, mexido = null;
+    ids.forEach(function(id){
+      const av = AVISOS[id] || null;
+      if (av && (!aviso || depois(av, aviso))) aviso = av;
+    });
+    onde.forEach(function(o){
+      if (!o.item || vistos[o.item]) return;
+      const mx = o.mexido || maisNovo(o.alterado_em, o.foto_em);
+      if (mx && depois(mx, AVISOS[o.item] || null) && AVISOS[o.item]
+          && (!mexido || depois(mx, mexido))) mexido = mx;
+    });
+    const um = onde.length === 1;
+    linhas.push({ itens:ids, alerta:k,
+      grupo: um ? onde[0].grupo : (a.equipes || []).join(', '),
+      ambiente: um ? onde[0].ambiente : onde.length + ' ambientes',
+      tipo: um && a.item ? a.item.tipo : 'Lâmpada',
+      quantidade: um ? onde[0].quantidade : onde.reduce(function(s, o){
+        return s + (+o.quantidade || 0); }, 0),
+      potencia_w: a.item ? a.item.potencia_w : (a.potencia != null ? a.potencia : null),
+      lancou: um ? onde[0].lancou : '', achou:'sistema', motivo:a.titulo,
+      obs:null, foto_motivo:null, aviso_em:aviso, mexido_em:mexido,
+      estado: mexido ? 'corrigido' : (aviso ? 'avisado' : 'achado') });
+  });
+  return linhas;
+}
+function maisNovo(a, b) {
+  if (!a) return b || null;
+  if (!b) return a;
+  return depois(a, b) ? a : b;
 }
 
 function pintarCorrecoes() {
   const n = el('correcoes');
   if (!n) return;
-  if (!CORRECOES.length) { n.innerHTML = ''; return; }
+  const LINHAS = linhasCorrecao();
+  if (!LINHAS.length) { n.innerHTML = ''; return; }
   const conta = { achado:0, corrigido:0, avisado:0 };
-  CORRECOES.forEach(function(c){ conta[c.estado] = (conta[c.estado] || 0) + 1; });
+  LINHAS.forEach(function(c){ conta[c.estado] = (conta[c.estado] || 0) + 1; });
   const partes = [];
   if (conta.achado) partes.push('<b>' + conta.achado + ' para enviar</b>');
   if (conta.corrigido) partes.push(conta.corrigido + ' corrigid'
@@ -4353,7 +4438,7 @@ function pintarCorrecoes() {
     /* a ordem é a do que ele tem de fazer, e é refeita aqui: ao marcar um aviso
        como enviado, a linha desce na hora para o fim, em vez de ficar no alto
        dando a impressão de que ainda falta mandar */
-    + CORRECOES.map(function(c, k){ return { c:c, k:k }; })
+    + LINHAS.map(function(c, k){ return { c:c, k:k }; })
         .sort(function(x, y){
           const peso = { achado:0, corrigido:1, avisado:2 };
           return (peso[x.c.estado] - peso[y.c.estado])
@@ -4370,8 +4455,8 @@ function pintarCorrecoes() {
           + '</small>'
           + '<small class="corr-mot">' + esc(c.motivo)
           + ' · achou: ' + esc(c.achou) + '</small>'
-          + (c.estado === 'avisado' && c.avisado_em
-              ? '<small>avisado em ' + dataHora(c.avisado_em) + '</small>' : '')
+          + (c.estado === 'avisado' && c.aviso_em
+              ? '<small>avisado em ' + dataHora(c.aviso_em) + '</small>' : '')
           + (c.estado === 'corrigido'
               ? '<small class="corr-ok">a equipe mexeu em ' + dataHora(c.mexido_em)
                 + '. Peça ao primeiro conferente que confira de novo.</small>' : '')
@@ -4379,23 +4464,59 @@ function pintarCorrecoes() {
           + '<span class="corr-bt">'
           + (c.estado === 'corrigido' ? ''
               : '<button type="button" class="btn peq corr-zap" data-k="' + k
-                + '">WhatsApp</button>')
+                + '">' + (c.estado === 'avisado' ? 'mandar de novo' : 'WhatsApp')
+                + '</button>')
           + '</span></div>';
       }).join('') + '</div></div>';
 
   n.querySelectorAll('.corr-zap').forEach(function(b){
     b.addEventListener('click', async function(){
-      const c = CORRECOES[+b.dataset.k];
-      mandarNoZap(recadoDaCorrecao(c), zapDoGrupo(c.grupo));
+      const c = LINHAS[+b.dataset.k];
+      mandarNoZap(c.alerta != null ? recadoDoAlerta(ALERTAS[c.alerta])
+                                   : recadoDaCorrecao(c),
+                  zapDoGrupo(c.grupo));
       b.disabled = true;
-      try {
-        const r = await rpc('marcar_avisado', { p_token: EU.token, p_item: c.item,
-          p_motivo: c.motivo });
-        if (r && r.ok) { c.avisado_em = r.em; c.estado = 'avisado'; pintarCorrecoes(); }
-        else b.disabled = false;
-      } catch (e) { b.disabled = false; }
+      /* marca na hora, para a linha descer para "enviado" no mesmo gesto, e só
+         depois confirma com o servidor */
+      const agora = new Date().toISOString();
+      (c.itens || []).forEach(function(id){ AVISOS[id] = agora; });
+      pintarCorrecoes();
+      await marcarAvisados(c.itens, c.motivo);
+      carregarCorrecoes();
     });
   });
+}
+
+/* Um aviso pode cobrir vários lançamentos de uma vez, como as 72 lâmpadas de
+   20 W espalhadas por cinco ambientes: marcar só um deixaria os outros quatro
+   parecendo que nunca foram avisados. */
+async function marcarAvisados(itens, motivo) {
+  for (let i = 0; i < (itens || []).length; i++) {
+    try { await rpc('marcar_avisado', { p_token: EU.token, p_item: itens[i],
+            p_motivo: motivo || null }); } catch (e) {}
+  }
+}
+
+/* O recado de um lançamento dentro do aviso de potência. É o mesmo texto do
+   aviso de um item só, mas falando daquele ambiente, e não do conjunto. */
+function recadoDeUmLancamento(o, a, motivo) {
+  const i = o.it || {};
+  return 'CENE · Feira de Ciências 2026'
+    + '\nEquipe ' + o.grupo + ' · ' + o.ambiente
+    + '\n\nLançamento para corrigir: ' + o.quantidade + '× ' + (i.tipo || 'Lâmpada')
+    + (i.potencia_w != null ? ', lançado com ' + mil(+i.potencia_w, 2) + ' W' : '')
+    + '.'
+    + (o.lancou ? '\nQuem lançou foi ' + o.lancou + '.' : '')
+    + '\n\nO que está errado: '
+    + (motivo ? MOTIVO_PEND[motivo] : a.titulo) + '.'
+    + '\n' + (motivo ? TEXTO_PEND[motivo] : a.texto)
+    + '\n\nO que fazer: ' + (motivo ? FAZER_PEND[motivo]
+        : 'confiram a foto da etiqueta no sistema. Se o número for outro, '
+          + 'corrijam o lançamento no próprio ambiente.')
+    + '\n\nNão apaguem o lançamento para fazer outro: abram o que já existe e '
+    + 'corrijam. Apagando, some o registro de quem lançou e de quem conferiu.'
+    + '\n\n' + ondeEstamos()
+    + '\n\nCorrigir não tira ponto de ninguém. Deixar errado, sim.';
 }
 
 function recadoDaCorrecao(c) {
@@ -4445,6 +4566,49 @@ function pintarAlertas() {
   });
 }
 
+/* Um lançamento dentro do aviso de potência: a foto para comparar, o que foi
+   lançado, e os mesmos motivos de devolver que existem no aviso de um item só.
+   Sem isso a janela era um resumo e não dava para agir em nada. */
+function blocoOnde(o, j) {
+  const i = o.it || {};
+  const marcado = (MARCAS_ALERTA[o.item] || null);
+  const avisado = AVISOS[o.item] || null;
+  return '<div class="onde-l" data-j="' + j + '">'
+    + '<div class="onde-topo"><span class="onde-q">' + o.quantidade + '</span>'
+    + '<span class="onde-tx"><b>' + esc(o.ambiente) + '</b>'
+    + '<small>equipe ' + esc(o.grupo)
+    + (o.lancou ? ' · lançou: ' + esc(o.lancou) : '') + '</small>'
+    + '<small>lançado com <b>' + (i.potencia_w != null
+        ? mil(+i.potencia_w, 2) + ' W' : 'potência em branco') + '</b></small>'
+    + (marcado ? '<small class="corr-mot">devolvido: ' + esc(NOME_PEND[marcado])
+                 + '</small>' : '')
+    + (avisado ? '<small>avisado em ' + dataHora(avisado) + '</small>' : '')
+    + '</span></div>'
+    + ((i.fotos || []).length
+        ? '<div class="inv-it"><span class="inv-tx"><b>Foto da etiqueta</b>'
+          + '<small>toque para ver grande e ler o número</small></span>'
+          + '<span class="vistas">' + i.fotos.map(function(f){
+              return '<img src="data:image/jpeg;base64,' + f.mini
+                + '" alt="Foto da etiqueta" data-f="' + f.id + '">'; }).join('')
+          + '</span></div>'
+        : '<div class="inv-it"><span class="inv-tx"><b>Sem foto</b>'
+          + '<small>não dá para conferir a etiqueta daqui; só indo ao ambiente</small>'
+          + '</span></div>')
+    + '<div class="mot-grade onde-mot" data-item="' + o.item + '">'
+    + Object.keys(NOME_PEND).map(function(m){
+        return '<button type="button" class="btn peq mot'
+             + (marcado === m ? '' : ' sec')
+             + (NOME_PEND[m].length > 22 ? ' largo' : '') + '" data-m="' + m
+             + '">' + esc(NOME_PEND[m]) + '</button>'; }).join('')
+    + '<button type="button" class="btn peq sec mot largo tirar" data-m="">'
+    + 'Tirar a marcação</button>'
+    + '<button type="button" class="btn peq largo onde-zap" data-item="' + o.item
+    + '" data-j="' + j + '">' + (avisado ? 'Mandar de novo' : 'Mandar no WhatsApp')
+    + '</button></div>'
+    + '<div class="onde-aviso" id="onde-aviso-' + j + '"></div></div>';
+}
+let MARCAS_ALERTA = {};
+
 async function abrirAlerta(k, bt) {
   const a = ALERTAS[k];
   if (!a) return;
@@ -4487,14 +4651,13 @@ async function abrirAlerta(k, bt) {
           + 'Daqui nada é alterado: quem lançou é quem corrige.</p>'
         : /* aviso de potência fora do padrão: não é um lançamento só, são vários.
              Então a janela lista cada ambiente, a equipe e quem lançou. */
-          '<h5>Onde estão essas lâmpadas</h5>'
+          '<p class="ajuda">Este aviso não é de um lançamento só: é a soma dos '
+          + 'lançamentos com essa potência. Abaixo vem cada um, com a foto da '
+          + 'etiqueta, para você comparar com o número lançado. Se algum estiver '
+          + 'errado, marque ali mesmo o motivo e mande o recado.</p>'
+          + '<h5>Onde estão essas lâmpadas</h5>'
           + '<div class="onde-lista">'
-          + (a.onde || []).map(function(o){
-              return '<div class="onde-l"><span class="onde-q">' + o.quantidade
-                + '</span><span class="onde-tx"><b>' + esc(o.ambiente) + '</b>'
-                + '<small>equipe ' + esc(o.grupo)
-                + (o.lancou ? ' · lançou: ' + esc(o.lancou) : '') + '</small>'
-                + '</span></div>'; }).join('')
+          + (a.onde || []).map(function(o, j){ return blocoOnde(o, j); }).join('')
           + '</div>'
           + '<h5>O que fazer</h5><p class="ajuda">'
           + ((a.equipes || []).length === 1
@@ -4535,6 +4698,42 @@ async function abrirAlerta(k, bt) {
        da mesma equipe, manda direto para o líder dela */
     mandarNoZap(recadoDoAlerta(a), zapDoGrupo(a.amb ? a.amb.grupo
       : ((a.equipes || []).length === 1 ? a.equipes[0] : '')));
+  });
+  /* cada lançamento dentro do aviso de potência tem os mesmos botões do aviso
+     de um item só, e o recado sai daquele lançamento, não do conjunto */
+  el('janCorpo').querySelectorAll('.onde-mot').forEach(function(g){
+    const item = +g.dataset.item;
+    const caixa = g.parentElement;
+    const ondeAviso = 'onde-aviso-' + caixa.dataset.j;
+    g.querySelectorAll('.mot').forEach(function(b){
+      b.addEventListener('click', async function(){
+        const m = b.dataset.m;
+        msg(ondeAviso, 'Guardando...');
+        let r;
+        try { r = await rpc('marcar_pendencia', { p_token: EU.token, p_item: item,
+                p_motivo: m || null }); }
+        catch (e) { return msg(ondeAviso, e.message, 'erro'); }
+        if (!r || !r.ok) return msg(ondeAviso, (r && r.erro) || 'Não deu.', 'erro');
+        if (m) MARCAS_ALERTA[item] = m; else delete MARCAS_ALERTA[item];
+        g.querySelectorAll('.mot').forEach(function(x){
+          x.classList.toggle('sec', !(x.dataset.m && x.dataset.m === m)); });
+        msg(ondeAviso, m ? 'Marcado. A equipe já vê esse aviso na tela dela.'
+                         : 'Marcação tirada.', 'bom');
+        carregarCorrecoes();
+      });
+    });
+    const zap = g.querySelector('.onde-zap');
+    if (zap) zap.addEventListener('click', async function(){
+      const o = (a.onde || [])[+zap.dataset.j];
+      if (!o) return;
+      mandarNoZap(recadoDeUmLancamento(o, a, MARCAS_ALERTA[item]), zapDoGrupo(o.grupo));
+      zap.textContent = 'Mandar de novo';
+      await marcarAvisados([item], MARCAS_ALERTA[item]
+        ? MOTIVO_PEND[MARCAS_ALERTA[item]] : a.titulo);
+      AVISOS[item] = new Date().toISOString();
+      msg(ondeAviso, 'Marcado como enviado.', 'bom');
+      carregarCorrecoes();
+    });
   });
   if (el('motivosPend')) {
     const pintaMot = function(){
