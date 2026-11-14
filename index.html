@@ -150,6 +150,10 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
   line-height:1.25;padding:11px 10px}
 .mot-grade .largo{grid-column:1 / -1}
 .mot-grade .tirar{margin-top:4px;border-style:dashed}
+/* "está correto" é o oposto dos motivos: verde, e separado deles */
+.mot-grade .certo{margin-bottom:4px;border-color:var(--verde);color:var(--verde)}
+.mot-grade .certo:not(.sec){background:var(--verde);border-color:var(--verde);
+  color:#fff}
 @media(max-width:359px){ .mot-grade{grid-template-columns:1fr} }
 /* o botão de mandar e a explicação: lado a lado na tela larga, um embaixo do
    outro no celular, onde lado a lado espreme os dois */
@@ -4255,6 +4259,10 @@ function varrerLancamentos(ambs) {
       const q = +i.quantidade || 0;
       const lim = LIMITES_W[i.tipo];
 
+      /* lançamento que o professor já olhou e marcou como correto sai dos
+         avisos: ele conferiu a foto e disse que está certo */
+      if (i.minha && i.minha.foto_ok === true && i.minha.pot_informada === true
+          && i.minha.pot_correta === true) return;
       if (i.tipo === 'Lâmpada' && p != null) {
         porPotencia[p] = (porPotencia[p] || 0) + q;
         /* guarda onde cada potência apareceu: sem isso o aviso dizia "72
@@ -4595,6 +4603,10 @@ function blocoOnde(o, j) {
           + '<small>não dá para conferir a etiqueta daqui; só indo ao ambiente</small>'
           + '</span></div>')
     + '<div class="mot-grade onde-mot" data-item="' + o.item + '">'
+    /* o oposto da devolução: olhei a foto e está certo. Sem isso o aviso ficava
+       na tela para sempre, mesmo depois de conferido */
+    + '<button type="button" class="btn peq largo certo mot'
+    + (marcado === 'ok' ? '' : ' sec') + '" data-m="ok">Está correto</button>'
     + Object.keys(NOME_PEND).map(function(m){
         return '<button type="button" class="btn peq mot'
              + (marcado === m ? '' : ' sec')
@@ -4673,6 +4685,8 @@ async function abrirAlerta(k, bt) {
       /* dois por linha, e o rótulo comprido ocupa a linha inteira: botão de
          larguras diferentes embaralhado fica feio no celular */
       + '<div class="mot-grade" id="motivosPend">'
+      + '<button type="button" class="btn peq largo certo mot sec" data-m="ok">'
+      + 'Está correto</button>'
       + Object.keys(NOME_PEND).map(function(m){
           return '<button type="button" class="btn peq sec mot'
                + (NOME_PEND[m].length > 22 ? ' largo' : '') + '" data-m="' + m + '">'
@@ -4717,8 +4731,17 @@ async function abrirAlerta(k, bt) {
         if (m) MARCAS_ALERTA[item] = m; else delete MARCAS_ALERTA[item];
         g.querySelectorAll('.mot').forEach(function(x){
           x.classList.toggle('sec', !(x.dataset.m && x.dataset.m === m)); });
-        msg(ondeAviso, m ? 'Marcado. A equipe já vê esse aviso na tela dela.'
-                         : 'Marcação tirada.', 'bom');
+        msg(ondeAviso, m === 'ok'
+          ? 'Marcado como correto. Este lançamento sai dos avisos.'
+          : m ? 'Marcado. A equipe já vê esse aviso na tela dela.'
+              : 'Marcação tirada.', 'bom');
+        if (m === 'ok') {
+          const o = (a.onde || []).filter(function(x){ return x.item === item; })[0];
+          if (o && o.it) o.it.minha = { foto_ok:true, pot_informada:true,
+                                        pot_correta:true };
+          ALERTAS = varrerLancamentos(INVENTARIO);
+          pintarAlertas();
+        }
         carregarCorrecoes();
       });
     });
@@ -4756,10 +4779,18 @@ async function abrirAlerta(k, bt) {
         if (!r || !r.ok) return msg('avisoPend', (r && r.erro) || 'Não deu.', 'erro');
         a.motivo = m || null;
         pintaMot();
-        msg('avisoPend', m
+        msg('avisoPend', m === 'ok'
+          ? 'Marcado como correto. Este lançamento sai dos avisos e da lista de '
+            + 'correções.'
+          : m
           ? 'Marcado. A equipe ' + a.amb.grupo + ' já vê esse aviso na tela dela. '
             + 'O recado do WhatsApp abaixo mudou junto.'
           : 'Marcação tirada.', 'bom');
+        if (m === 'ok') {
+          a.item.minha = { foto_ok:true, pot_informada:true, pot_correta:true };
+          ALERTAS = varrerLancamentos(INVENTARIO);
+          pintarAlertas();
+        }
       });
     });
   }
