@@ -829,6 +829,9 @@ tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--azul)}
   padding:8px 0;border-top:1px solid var(--linha2);flex-wrap:wrap}
 .cobrar li:first-child{border-top:0}
 .cobrar li span{flex:1 1 12rem}
+.tab-led{margin:0 0 22px}
+.tab-led h4{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin:6px 0 4px;font-size:1.02rem}
 .espera-conta{border:1px solid var(--ambar);background:var(--ambar-sup);
   border-radius:14px;padding:14px 16px;margin:0 0 16px}
 .espera-conta .tit{color:var(--ambar);display:block;margin-bottom:4px;font-weight:700}
@@ -1654,8 +1657,9 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
     <div class="etapa" id="etapa1">
       <span class="n">Passo 1</span>
       <div><b>Treino: a conta de uma lâmpada</b>
-      <small id="subTreino">Oito linhas de horas por dia. A de 4 horas já vem
-      resolvida, como exemplo. Faça as outras sete.</small></div>
+      <small id="subTreino">Duas tabelas: uma com a LED de 18 W e outra com a de
+      20 W, as duas que estão nas etiquetas da escola. Em cada uma, a linha de 4 horas
+      já vem resolvida. Faça as outras sete.</small></div>
     </div>
     <p class="ajuda" id="fontePreco" style="margin:-6px 0 14px"></p>
     <div id="avisoFolha"></div>
@@ -3259,7 +3263,9 @@ async function carregarConta() {
   pintarCapaSub();
   el('numerosConta').innerHTML = [
     [vrg(r.pot_antes) + ' W', 'lâmpada de antes'],
-    [vrg(r.pot_led) + ' W', 'LED que entrou'],
+    [(r.linhas || []).some(x => x.led_b_w != null && +x.led_b_w !== +r.pot_led)
+       ? vrg(r.pot_led) + ' e ' + vrg((r.linhas.find(x => x.led_b_w != null) || {}).led_b_w) + ' W'
+       : vrg(r.pot_led) + ' W', 'LEDs que entraram'],
     ['R$ ' + vrg(r.tarifa), 'o quilowatt-hora'],
     [vrg(r.meses) + ' meses', 'desde a troca']
   ].map(x => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
@@ -3293,17 +3299,25 @@ async function carregarTreino() {
   TREINO = r;
   pintarFontePreco();
   const ls = r.linhas || [];
-  const feitas = ls.filter(l => !l.exemplo && l.em).length;
-  const certas = ls.filter(l => !l.exemplo && l.tudo_certo).length;
-  const pend = ls.filter(l => !l.exemplo && l.em && l.ok_kwh == null).length;
-  el('etapa1').classList.toggle('feito', certas === 7);
-  el('linhasFolha').innerHTML = ls.map(l => {
+  const leds = (r.leds && r.leds.length ? r.leds : [r.pot_led]).map(Number);
+  const pa = +r.pot_antes || 40;
+  const reais = ls.filter(l => !l.exemplo);
+  const total = reais.length;
+  const feitas = reais.filter(l => l.em).length;
+  const certas = reais.filter(l => l.tudo_certo).length;
+  const pend = reais.filter(l => l.em && l.ok_kwh == null).length;
+  el('etapa1').classList.toggle('feito', total > 0 && certas === total);
+  const linhaDe = l => {
+    const led = +l.led || leds[0], id = led + '_' + l.horas;
     if (l.exemplo) {
       return '<div class="lf exemplo"><div class="cab"><span class="hh">4 horas por dia'
         + '<i>exemplo resolvido</i></span></div><div class="tres">'
         + [[mil(l.certo_kwh, 3) + ' kWh', 'kWh evitados no mês'],
            [brl(+l.certo_economia), 'economia por lâmpada'],
-           [mil(l.certo_retorno, 1) + ' meses', 'tempo para se pagar']]
+           /* o retorno do exemplo sai da economia já arredondada em centavos,
+              que é o que o aluno faz no papel: 22 ÷ 1,54 = 14,3 */
+           [mil((+r.preco_led || 22) / (Math.round(+l.certo_economia * 100) / 100), 1)
+              + ' meses', 'tempo para se pagar']]
             .map(x => '<div><span class="vr">' + x[0] + '</span>'
               + '<small style="display:block;color:var(--tinta2);font-size:.78rem">'
               + x[1] + '</small></div>').join('')
@@ -3321,53 +3335,61 @@ async function carregarTreino() {
       + 'autocomplete="off" value="' + (val != null ? vrg(val) : '') + '">'
       + (certo != null ? '<span class="certo">o certo é ' + mostra(certo)
           + '</span>' : '') + '</div>';
-    const faltam = pendente
-      ? Math.max(1, (+l.previstos || 1) - (+l.enviaram || 0)) : 0;
-    return '<div class="lf' + cls + '" data-h="' + l.horas + '">'
+    return '<div class="lf' + cls + '" data-h="' + l.horas + '" data-led="' + led + '">'
       + '<div class="cab"><span class="hh">' + vrg(l.horas) + ' horas por dia</span>'
-      + (pendente ? '<span class="marca e">esperando a conferência</span>'
+      + (pendente ? '<span class="marca e">esperando</span>'
          : enviada && l.tudo_certo ? '<span class="marca c">linha fechada</span>' : '')
       + '</div>'
-      + (pendente ? '<p class="ajuda" style="margin:-2px 0 10px">Enviada. O resultado '
-          + 'fica guardado até ' + (faltam === 1 ? 'o conferente que falta'
-              : 'os ' + faltam + ' conferentes que faltam')
-          + ' enviar esta mesma linha.</p>' : '')
       + '<div class="tres">'
-      + campo('fk' + l.horas, 'kWh evitados no mês', l.kwh, l.ok_kwh, l.certo_kwh,
-              v => mil(v, 3))
-      + campo('fe' + l.horas, 'Economia por lâmpada', l.economia, l.ok_economia,
+      + campo('fk' + id, 'kWh evitados no mês', l.kwh, l.ok_kwh, l.certo_kwh, v => mil(v, 3))
+      + campo('fe' + id, 'Economia por lâmpada', l.economia, l.ok_economia,
               l.certo_economia, v => brl(+v))
-      + campo('fr' + l.horas, 'Tempo para se pagar, em meses', l.retorno,
+      + campo('fr' + id, 'Tempo para se pagar, em meses', l.retorno,
               l.ok_retorno, l.certo_retorno, v => mil(v, 1) + ' meses')
       + '</div>'
       + '<div style="margin-top:11px"><button class="btn peq sec envt" data-h="'
-      + l.horas + '">' + (enviada ? 'Enviar de novo' : 'Enviar esta linha')
+      + l.horas + '" data-led="' + led + '">' + (enviada ? 'Enviar de novo' : 'Enviar esta linha')
       + '</button></div></div>';
+  };
+  el('linhasFolha').innerHTML = leds.map((led, k) => {
+    const daqui = ls.filter(l => +(l.led || leds[0]) === led);
+    const nr = daqui.filter(l => !l.exemplo);
+    const ok = nr.filter(l => l.tudo_certo).length;
+    return '<div class="tab-led" data-led="' + led + '">'
+      + '<h4>Tabela ' + (k + 1) + ' · LED de ' + vrg(led) + ' W'
+      + '<span class="tag ' + (nr.length && ok === nr.length ? 'v' : 'c') + '">'
+      + ok + ' de ' + nr.length + '</span></h4>'
+      + '<p class="ajuda">Cada lâmpada deixa de gastar <b>' + vrg(pa) + ' − ' + vrg(led)
+      + ' = ' + vrg(pa - led) + ' W</b>. É este número que entra no passo 1 da conta.</p>'
+      + daqui.map(linhaDe).join('') + '</div>';
   }).join('');
   document.querySelectorAll('#linhasFolha .envt').forEach(b =>
-    b.addEventListener('click', () => enviarLinhaTreino(+b.dataset.h, b)));
-  msg('avisoFolha', feitas < 7
-    ? feitas + ' de 7 linhas enviadas'
-      + (pend ? ', ' + pend + ' esperando a conferência' : '')
-      + '. Faltam ' + (7 - feitas) + '.'
+    b.addEventListener('click', () => enviarLinhaTreino(+b.dataset.h, b, +b.dataset.led)));
+  const n = total || 0;
+  msg('avisoFolha', feitas < n
+    ? feitas + ' de ' + n + ' linhas enviadas, contando as duas tabelas'
+      + (pend ? ', ' + pend + ' esperando' : '')
+      + '. Faltam ' + (n - feitas) + '.'
     : pend
-      ? 'As sete foram enviadas. ' + pend + ' esperando a conferência: volte depois.'
-      : certas === 7
-        ? 'As sete linhas bateram. Agora vá para o passo 2, com os números da escola.'
-        : certas + ' de 7 bateram. Reveja as marcadas e envie de novo.',
-    certas === 7 ? 'bom' : 'info');
+      ? 'Todas foram enviadas. ' + pend + ' esperando: volte depois.'
+      : certas === n
+        ? 'As ' + n + ' linhas das duas tabelas bateram. Agora vá para o passo 2, com os números da escola.'
+        : certas + ' de ' + n + ' bateram. Reveja as marcadas e envie de novo.',
+    certas === n && n > 0 ? 'bom' : 'info');
 }
-async function enviarLinhaTreino(h, b) {
+async function enviarLinhaTreino(h, b, led) {
   const v = id => num(el(id).value);
-  const kwh = v('fk' + h), ec = v('fe' + h), ret = v('fr' + h);
+  const id = led + '_' + h;
+  const kwh = v('fk' + id), ec = v('fe' + id), ret = v('fr' + id);
   if (kwh == null || ec == null || ret == null)
     return msg('avisoFolha', 'Preencha as três colunas da linha de ' + vrg(h)
-      + ' horas antes de enviar.', 'erro'), aoAlcance('avisoFolha');
+      + ' horas da tabela da LED de ' + vrg(led) + ' W antes de enviar.', 'erro'),
+      aoAlcance('avisoFolha');
   b.disabled = true;
   let r;
   try {
     r = await rpc('enviar_folha_linha', { p_token: EU.token, p_aluno: SOU.id,
-      p_horas: h, p_kwh: kwh, p_economia: ec, p_retorno: ret });
+      p_horas: h, p_kwh: kwh, p_economia: ec, p_retorno: ret, p_led: led });
   } catch (e) { r = { ok:false, erro:e.message }; }
   b.disabled = false;
   if (!r.ok) { msg('avisoFolha', r.erro, 'erro'); return aoAlcance('avisoFolha'); }
@@ -3380,8 +3402,13 @@ function pintarExemploFaixa() {
     '<li>Assim que a contagem começar, o exemplo aparece aqui.</li>'; return; }
   const kwh = l.watts / 1000 * l.horas * l.dias, ec = kwh * CONTA.tarifa;
   el('exemploFaixa').innerHTML = [
-    'A linha diz quantos watts aquele horário deixou de gastar: <code>'
-      + mil(l.watts, 0) + ' W</code>',
+    (l.led_a_w != null
+      ? 'Cada LED de ' + vrg(l.led_a_w) + ' W deixa de gastar ' + vrg(CONTA.pot_antes - l.led_a_w)
+        + ' W, e cada uma de ' + vrg(l.led_b_w) + ' W deixa de gastar '
+        + vrg(CONTA.pot_antes - l.led_b_w) + ' W. Somando as da linha: <code>'
+        + somaLeds(l, CONTA.pot_antes) + '</code>'
+      : 'A linha diz quantos watts aquele horário deixou de gastar: <code>'
+        + mil(l.watts, 0) + ' W</code>'),
     'Passar para quilowatts: <code>' + mil(l.watts, 0) + ' ÷ 1000 = '
       + vrg(arred(l.watts/1000, 3)) + ' kW</code>',
     'Vezes as horas e os dias daquele horário: <code>' + vrg(arred(l.watts/1000,3))
@@ -3390,6 +3417,15 @@ function pintarExemploFaixa() {
     'Vezes o preço do quilowatt-hora: <code>' + mil(arred(kwh,3), 3) + ' × '
       + vrg(CONTA.tarifa) + ' = ' + brl(arred(ec,2)) + ' no mês</code>'
   ].map(t => '<li>' + t + '</li>').join('');
+}
+/* "131 × 22 + 43 × 20 = 3.742 W": de onde vêm os watts da faixa, com as duas
+   LEDs separadas. Só entra o tipo que tem lâmpada na faixa. */
+function somaLeds(l, pa) {
+  pa = +pa || 40;
+  const partes = [];
+  if (+l.led_a) partes.push(mil(+l.led_a, 0) + ' × ' + vrg(pa - l.led_a_w));
+  if (+l.led_b) partes.push(mil(+l.led_b, 0) + ' × ' + vrg(pa - l.led_b_w));
+  return partes.join(' + ') + ' = ' + mil(l.watts, 0) + ' W que deixaram de gastar';
 }
 function pintarLinhasConta() {
   const r = CONTA, n = (r.linhas || []).length;
@@ -3442,7 +3478,10 @@ function pintarLinhasConta() {
       + '<span class="ond">' + esc(l.blocos) + '</span>'
       + '<div class="dado">'
       +   '<span>ambientes<i>' + vrg(l.ambientes) + '</i></span>'
-      +   '<span>lâmpadas trocadas<i>' + mil(l.lampadas, 0) + '</i></span>'
+      +   (l.led_a_w != null
+            ? '<span>LED de ' + vrg(l.led_a_w) + ' W<i>' + mil(+l.led_a || 0, 0) + '</i></span>'
+              + '<span>LED de ' + vrg(l.led_b_w) + ' W<i>' + mil(+l.led_b || 0, 0) + '</i></span>'
+            : '<span>lâmpadas trocadas<i>' + mil(l.lampadas, 0) + '</i></span>')
       +   '<span>deixou de gastar<i>' + mil(l.watts, 0) + ' W</i></span>'
       +   '<span>' + (l.eventual ? 'horas por vez' : 'horas por dia')
       +     '<i>' + vrg(l.horas) + '</i></span>'
@@ -3450,6 +3489,7 @@ function pintarLinhasConta() {
       +     '<i>' + vrg(l.dias) + '</i></span>'
       + '</div></div>'
       + '<div class="conta">'
+      + (l.led_a_w != null ? '<p class="formula">' + somaLeds(l, r.pot_antes) + '</p>' : '')
       + '<p class="formula">' + mil(l.watts, 0) + ' ÷ 1000 × ' + vrg(l.horas) + ' × '
       +   vrg(l.dias) + ' = kWh do mês &nbsp;·&nbsp; kWh × ' + vrg(r.tarifa)
       +   ' = reais do mês</p>'
