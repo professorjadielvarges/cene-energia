@@ -159,6 +159,38 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
   .zap-cx{display:block}
   .zap-cx .btn{width:100%;margin:0 0 7px}
 }
+/* a lista de correções: estado, o que é, e o botão de mandar */
+.corr-cx h3{margin:0 0 4px}
+.corr-lista{margin-top:12px;border:1px solid var(--linha);border-radius:var(--r2);
+  overflow:hidden}
+.corr-l{display:flex;gap:11px;align-items:flex-start;padding:12px 13px;
+  border-bottom:1px solid var(--linha);background:var(--sup)}
+.corr-l:last-child{border-bottom:none}
+.corr-l.achado{border-left:4px solid var(--verm)}
+.corr-l.corrigido{border-left:4px solid var(--verde)}
+.corr-l.avisado{border-left:4px solid var(--ambar)}
+.corr-tag{flex:none;align-self:flex-start}
+.corr-tx{display:flex;flex-direction:column;gap:2px;flex:1 1 auto;min-width:0}
+.corr-tx small{color:var(--tinta2);font-family:var(--c);font-size:.78rem}
+.corr-mot{color:var(--verm) !important}
+.corr-ok{color:var(--verde) !important}
+.corr-bt{flex:none}
+@media(max-width:560px){
+  .corr-l{flex-wrap:wrap}
+  .corr-bt{width:100%}
+  .corr-bt .btn{width:100%}
+}
+/* onde estão as lâmpadas de uma potência fora do padrão: ambiente, equipe e
+   quem lançou, porque o aviso sozinho não dizia de quem cobrar */
+.onde-lista{margin:10px 0 0;border:1px solid var(--linha);border-radius:var(--r2);
+  overflow:hidden;background:var(--sup)}
+.onde-l{display:flex;gap:11px;align-items:center;padding:10px 13px;
+  border-bottom:1px solid var(--linha)}
+.onde-l:last-child{border-bottom:none}
+.onde-q{flex:none;min-width:2.4rem;text-align:center;font-family:var(--c);
+  font-weight:700;font-size:1.05rem;color:var(--tinta)}
+.onde-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.onde-tx small{color:var(--tinta2);font-family:var(--c);font-size:.78rem}
 /* a dica de onde achar a potência na etiqueta, embaixo do campo */
 .dica-pot{display:block;margin:7px 0 0;line-height:1.4}
 /* o telefone de quem responde pela equipe, no card do grupo */
@@ -1928,6 +1960,10 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <!-- O que parece errado nos lançamentos, logo no alto, com link para
            abrir e ver a foto sem sair daqui. -->
       <div id="alertas"></div>
+      <!-- O caminho de cada correção: o que foi achado, o que já foi avisado e
+           o que a equipe já corrigiu. Sem isso o professor não sabia o que já
+           tinha mandado no WhatsApp. -->
+      <div id="correcoes"></div>
       <div id="heroi"></div>
       <div class="minis" id="minis"></div>
       <div class="graf" id="grafGrupos"></div>
@@ -4164,12 +4200,23 @@ const FAZER_PEND = {
 function recadoDoAlerta(a) {
   if (!a) return '';
   if (!a.amb) {
+    const onde = a.onde || [];
+    const equipes = a.equipes || [];
     return 'CENE · Feira de Ciências 2026'
+      + (equipes.length === 1 ? '\nEquipe ' + equipes[0] : '')
       + '\nConferir as potências das lâmpadas'
       + '\n\n' + a.titulo + '.'
       + '\n' + a.texto
-      + '\n\nEntrem no sistema e confiram a etiqueta pela foto: '
-      + ondeEstamos();
+      + (onde.length ? '\n\nOnde estão:\n'
+          + onde.map(function(o){
+              return '· ' + o.ambiente + ' (' + o.quantidade + '), equipe '
+                   + o.grupo + (o.lancou ? ', lançou ' + o.lancou : ''); }).join('\n')
+        : '')
+      + '\n\nO que fazer: abram cada um desses lançamentos no sistema, confiram a '
+      + 'etiqueta pela foto e corrijam o que estiver diferente. Se a foto não der '
+      + 'para ler, voltem no ambiente e tirem outra.'
+      + '\n\n' + ondeEstamos()
+      + '\n\nCorrigir não tira ponto de ninguém. Deixar errado, sim.';
   }
   const i = a.item || {};
   const temFoto = (i.fotos || []).length > 0;
@@ -4197,7 +4244,7 @@ let ALERTAS = [];
 
 function varrerLancamentos(ambs) {
   const achados = [];
-  const porPotencia = {};
+  const porPotencia = {}, ondePotencia = {};
   (ambs || []).forEach(function(a){
     (a.itens || []).forEach(function(i){
       const base = { amb: a, item: i };
@@ -4207,6 +4254,11 @@ function varrerLancamentos(ambs) {
 
       if (i.tipo === 'Lâmpada' && p != null) {
         porPotencia[p] = (porPotencia[p] || 0) + q;
+        /* guarda onde cada potência apareceu: sem isso o aviso dizia "72
+           lâmpadas de 20 W" e o professor não tinha como saber de quem cobrar */
+        (ondePotencia[p] = ondePotencia[p] || []).push({
+          grupo: a.grupo, ambiente: a.nome, quantidade: q,
+          lancou: i.lancado_nome || '', item: i.id });
       }
       if (p != null && VOLTAGENS.indexOf(p) >= 0 && i.tipo !== 'Lâmpada') {
         achados.push(Object.assign({ nivel:'erro',
@@ -4246,7 +4298,11 @@ function varrerLancamentos(ambs) {
     const maior = porPotencia[chaves[0]];
     chaves.slice(1).forEach(function(p){
       if (porPotencia[p] >= maior) return;
-      achados.push({ nivel:'conferir', potencia: p,
+      const onde = (ondePotencia[p] || []).slice()
+        .sort(function(x, y){ return (y.quantidade || 0) - (x.quantidade || 0); });
+      const equipes = [];
+      onde.forEach(function(o){ if (equipes.indexOf(o.grupo) < 0) equipes.push(o.grupo); });
+      achados.push({ nivel:'conferir', potencia: p, onde: onde, equipes: equipes,
         titulo: porPotencia[p] + ' lâmpadas de ' + mil(p, 2) + ' W, contra '
           + maior + ' de ' + mil(chaves[0], 2) + ' W',
         texto: 'Potência diferente da maioria. Pode ser real, pode ser leitura '
@@ -4256,6 +4312,109 @@ function varrerLancamentos(ambs) {
   }
   const ordem = { erro: 0, conferir: 1 };
   return achados.sort(function(x, y){ return ordem[x.nivel] - ordem[y.nivel]; });
+}
+
+/* ------------- o caminho de cada correção, na tela do professor -------------
+   Três estados, nesta ordem, porque é a ordem do que ele tem de fazer:
+   a enviar (achou e ninguém avisou), corrigido (a equipe mexeu, falta conferir
+   de novo) e enviado (já mandou, esperando). O botão do WhatsApp marca como
+   enviado sozinho, que era o que faltava para ele não se perder. */
+let CORRECOES = [];
+const ESTADO_COR = { achado:'erro', corrigido:'bom', avisado:'am' };
+const ESTADO_NOME = { achado:'a enviar', corrigido:'corrigido', avisado:'enviado' };
+
+async function carregarCorrecoes() {
+  if (!el('correcoes') || !EU || EU.papel !== 'professor') return;
+  let r;
+  try { r = await rpc('correcoes', { p_token: EU.token }); }
+  catch (e) { return; }
+  if (!r || !r.ok) return;
+  CORRECOES = r.lista || [];
+  pintarCorrecoes();
+}
+
+function pintarCorrecoes() {
+  const n = el('correcoes');
+  if (!n) return;
+  if (!CORRECOES.length) { n.innerHTML = ''; return; }
+  const conta = { achado:0, corrigido:0, avisado:0 };
+  CORRECOES.forEach(function(c){ conta[c.estado] = (conta[c.estado] || 0) + 1; });
+  const partes = [];
+  if (conta.achado) partes.push('<b>' + conta.achado + ' para enviar</b>');
+  if (conta.corrigido) partes.push(conta.corrigido + ' corrigid'
+    + (conta.corrigido === 1 ? 'o, esperando conferência' : 'os, esperando conferência'));
+  if (conta.avisado) partes.push(conta.avisado + ' enviad'
+    + (conta.avisado === 1 ? 'o, sem resposta ainda' : 'os, sem resposta ainda'));
+
+  n.innerHTML = '<div class="cx corr-cx"><h3>Correções</h3>'
+    + '<p class="ajuda">' + partes.join(' · ') + '. O botão do WhatsApp já marca '
+    + 'como enviado, então o que estiver em <b>a enviar</b> é o que falta mandar.</p>'
+    + '<div class="corr-lista">'
+    /* a ordem é a do que ele tem de fazer, e é refeita aqui: ao marcar um aviso
+       como enviado, a linha desce na hora para o fim, em vez de ficar no alto
+       dando a impressão de que ainda falta mandar */
+    + CORRECOES.map(function(c, k){ return { c:c, k:k }; })
+        .sort(function(x, y){
+          const peso = { achado:0, corrigido:1, avisado:2 };
+          return (peso[x.c.estado] - peso[y.c.estado])
+              || String(x.c.grupo).localeCompare(String(y.c.grupo), 'pt-BR')
+              || String(x.c.ambiente).localeCompare(String(y.c.ambiente), 'pt-BR'); })
+        .map(function(par){
+        const c = par.c, k = par.k;
+        return '<div class="corr-l ' + c.estado + '">'
+          + '<span class="pill ' + ESTADO_COR[c.estado] + ' corr-tag">'
+          + ESTADO_NOME[c.estado] + '</span>'
+          + '<span class="corr-tx"><b>' + esc(c.ambiente) + '</b>'
+          + '<small>equipe ' + esc(c.grupo) + ' · ' + c.quantidade + '× '
+          + esc(c.tipo) + (c.potencia_w != null ? ' de ' + mil(+c.potencia_w, 2) + ' W' : '')
+          + '</small>'
+          + '<small class="corr-mot">' + esc(c.motivo)
+          + ' · achou: ' + esc(c.achou) + '</small>'
+          + (c.estado === 'avisado' && c.avisado_em
+              ? '<small>avisado em ' + dataHora(c.avisado_em) + '</small>' : '')
+          + (c.estado === 'corrigido'
+              ? '<small class="corr-ok">a equipe mexeu em ' + dataHora(c.mexido_em)
+                + '. Peça ao primeiro conferente que confira de novo.</small>' : '')
+          + '</span>'
+          + '<span class="corr-bt">'
+          + (c.estado === 'corrigido' ? ''
+              : '<button type="button" class="btn peq corr-zap" data-k="' + k
+                + '">WhatsApp</button>')
+          + '</span></div>';
+      }).join('') + '</div></div>';
+
+  n.querySelectorAll('.corr-zap').forEach(function(b){
+    b.addEventListener('click', async function(){
+      const c = CORRECOES[+b.dataset.k];
+      mandarNoZap(recadoDaCorrecao(c), zapDoGrupo(c.grupo));
+      b.disabled = true;
+      try {
+        const r = await rpc('marcar_avisado', { p_token: EU.token, p_item: c.item,
+          p_motivo: c.motivo });
+        if (r && r.ok) { c.avisado_em = r.em; c.estado = 'avisado'; pintarCorrecoes(); }
+        else b.disabled = false;
+      } catch (e) { b.disabled = false; }
+    });
+  });
+}
+
+function recadoDaCorrecao(c) {
+  const m = c.foto_motivo;
+  return 'CENE · Feira de Ciências 2026'
+    + '\nEquipe ' + c.grupo + ' · ' + c.ambiente
+    + '\n\nLançamento para corrigir: ' + c.quantidade + '× ' + c.tipo
+    + (c.potencia_w != null ? ', lançado com ' + mil(+c.potencia_w, 2) + ' W' : '')
+    + '.'
+    + (c.lancou ? '\nQuem lançou foi ' + c.lancou + '.' : '')
+    + '\n\nO que está errado: ' + c.motivo + '.'
+    + (m && TEXTO_PEND[m] ? '\n' + TEXTO_PEND[m] : '')
+    + (c.obs ? '\nObservação de quem conferiu: ' + c.obs : '')
+    + '\n\nO que fazer: ' + (m && FAZER_PEND[m] ? FAZER_PEND[m]
+        : 'abram o lançamento no sistema, confiram a etiqueta pela foto e '
+          + 'corrijam o que estiver diferente. Se a foto não der para ler, '
+          + 'voltem no ambiente e tirem outra.')
+    + '\n\nQuem corrige é quem lançou, no sistema: ' + ondeEstamos()
+    + '\n\nCorrigir não tira ponto de ninguém. Deixar errado, sim.';
 }
 
 function pintarAlertas() {
@@ -4273,7 +4432,11 @@ function pintarAlertas() {
         return '<div class="alerta-l ' + a.nivel + '">'
           + '<span class="tx"><b>' + esc(a.titulo) + '</b>'
           + '<small>' + (a.amb ? esc(a.amb.nome) + ' · equipe ' + esc(a.amb.grupo)
-                               : 'em vários ambientes') + '</small></span>'
+              : ((a.equipes || []).length
+                  ? 'equipe' + (a.equipes.length > 1 ? 's ' : ' ')
+                    + a.equipes.map(esc).join(', ') + ' · '
+                    + (a.onde || []).length + ' ambientes'
+                  : 'em vários ambientes')) + '</small></span>'
           + '<button type="button" class="elo-g ver-alerta" data-k="' + k + '"'
           + (a.amb ? ' aria-haspopup="dialog"' : '') + '>ver</button></div>';
       }).join('') + '</div>';
@@ -4322,8 +4485,25 @@ async function abrirAlerta(k, bt) {
           + esc(a.amb.grupo) + '</b> que corrija o lançamento no próprio ambiente. '
           + 'Se a foto estiver ilegível ou não houver foto, peça que voltem lá. '
           + 'Daqui nada é alterado: quem lançou é quem corrige.</p>'
-        : '<h5>O que fazer</h5><p class="ajuda">Abra a aba <b>Lançamentos</b> para ver '
-          + 'ambiente por ambiente quais lâmpadas têm essa potência, com as fotos.</p>')
+        : /* aviso de potência fora do padrão: não é um lançamento só, são vários.
+             Então a janela lista cada ambiente, a equipe e quem lançou. */
+          '<h5>Onde estão essas lâmpadas</h5>'
+          + '<div class="onde-lista">'
+          + (a.onde || []).map(function(o){
+              return '<div class="onde-l"><span class="onde-q">' + o.quantidade
+                + '</span><span class="onde-tx"><b>' + esc(o.ambiente) + '</b>'
+                + '<small>equipe ' + esc(o.grupo)
+                + (o.lancou ? ' · lançou: ' + esc(o.lancou) : '') + '</small>'
+                + '</span></div>'; }).join('')
+          + '</div>'
+          + '<h5>O que fazer</h5><p class="ajuda">'
+          + ((a.equipes || []).length === 1
+              ? 'Todas são da equipe <b>' + esc(a.equipes[0]) + '</b>. Peça que '
+                + 'confiram a etiqueta pela foto e corrijam o que estiver errado.'
+              : 'São de ' + (a.equipes || []).length + ' equipes: <b>'
+                + (a.equipes || []).map(esc).join('</b>, <b>') + '</b>. Peça a cada '
+                + 'uma que confira a etiqueta pela foto.')
+          + ' A aba <b>Lançamentos</b> mostra as fotos ambiente por ambiente.</p>')
     + (a.item ? '<h5>Devolver para a equipe refazer</h5>'
       + '<p class="ajuda">Marque o que está errado. A equipe recebe o aviso na tela '
       + 'dela, com o ambiente e o aparelho, e o recado do WhatsApp muda junto.</p>'
@@ -4340,8 +4520,10 @@ async function abrirAlerta(k, bt) {
     + '<div class="zap-cx">'
       + '<button type="button" class="btn peq zap" id="btZapAlerta">'
       + 'Mandar no WhatsApp</button>'
-      + '<span class="ajuda">' + (zapDoGrupo(a.amb && a.amb.grupo)
-        ? 'Abre direto a conversa de ' + esc((ZAPS[a.amb.grupo] || {}).lider
+      + '<span class="ajuda">' + (zapDoGrupo(a.amb ? a.amb.grupo
+          : ((a.equipes || []).length === 1 ? a.equipes[0] : ''))
+        ? 'Abre direto a conversa de ' + esc((ZAPS[a.amb ? a.amb.grupo
+              : (a.equipes || [])[0]] || {}).lider
             || 'quem responde pela equipe') + ', com o recado escrito.'
         : 'Abre o WhatsApp com o recado já escrito. Você escolhe para quem mandar. '
           + 'Para mandar direto, guarde o WhatsApp do líder na aba Grupos.')
@@ -4349,7 +4531,10 @@ async function abrirAlerta(k, bt) {
     + '<div style="height:12px"></div>';
   abrirJanela(bt);
   el('btZapAlerta').addEventListener('click', function(){
-    mandarNoZap(recadoDoAlerta(a), zapDoGrupo(a.amb && a.amb.grupo));
+    /* no aviso de potência não existe um ambiente só: se todas as lâmpadas são
+       da mesma equipe, manda direto para o líder dela */
+    mandarNoZap(recadoDoAlerta(a), zapDoGrupo(a.amb ? a.amb.grupo
+      : ((a.equipes || []).length === 1 ? a.equipes[0] : '')));
   });
   if (el('motivosPend')) {
     const pintaMot = function(){
@@ -5535,6 +5720,7 @@ el('btRecarregar').addEventListener('click', carregarProf);
 async function carregarProf() {
   let r;
   carregarZaps();
+  carregarCorrecoes();
   try { r = await rpc('resumo', { p_token: EU.token }); }
   catch (e) { el('avisoProf').innerHTML =
     '<div class="aviso erro">Não consegui falar com o servidor. Tente "Atualizar agora".</div>'; return; }
@@ -5983,6 +6169,9 @@ function pintarMinis(r, P, C, lamp, precoMed, qtdPrecos) {
     ['econ', C.econMes, 'economia por mês', '', brl],
     ['prec', qtdPrecos ? precoMed : 0, 'preço do LED', 'referência', brl]
   ];
+  /* número que não veio vira zero: sem isso a tela do professor mostrava
+     "R$ NaN" enquanto o servidor não respondia, e NaN não diz nada a ninguém */
+  itens.forEach(function (x) { if (!isFinite(+x[1])) x[1] = 0; });
   el('minis').innerHTML = itens.map(function (x) {
     return '<div class="mini"><b id="mn-' + x[0] + '">' + x[4](0) +
       (x[3] ? '<i>' + esc(x[3]) + '</i>' : '') + '</b><span>' + x[2] + '</span></div>';
