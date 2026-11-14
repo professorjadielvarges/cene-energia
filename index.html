@@ -740,6 +740,30 @@ tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--azul)}
   letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
   background:var(--sup2);color:var(--tinta2)}
 .tag.v{background:var(--verde-sup);color:var(--verde)}
+.tag.r{background:var(--verm-sup);color:var(--verm)}
+.est-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:12px}
+.est-card{background:var(--sup);border:1px solid var(--linha);border-radius:14px;padding:4px 0 2px}
+.est-card>h4{margin:0;padding:10px 16px 8px;font-size:1.05rem;display:flex;
+  justify-content:space-between;align-items:baseline;gap:10px}
+.est-card>h4 small{font-weight:400;color:var(--tinta2);font-size:.8rem}
+.est-et{padding:10px 16px 11px;border-top:1px solid var(--linha)}
+.est-et.parado{background:var(--verm-sup);box-shadow:inset 3px 0 0 var(--verm)}
+.est-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.est-nome{font-family:var(--d);font-size:.7rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--tinta2)}
+.est-quem{margin:3px 0 0;font-weight:600}
+.est-num{margin:2px 0 0;color:var(--tinta2);font-size:.9rem}
+.est-et .btn{margin-top:8px}
+.cobrar{background:var(--verm-sup);border:1px solid var(--verm);border-radius:14px;
+  padding:12px 16px;margin:0 0 14px}
+.cobrar h4{margin:0 0 4px;color:var(--verm)}
+.cobrar ul{list-style:none;margin:6px 0 0;padding:0}
+.cobrar li{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 0;border-top:1px solid var(--linha2);flex-wrap:wrap}
+.cobrar li:first-child{border-top:0}
+.cobrar li span{flex:1 1 12rem}
+.tudo-certo{background:var(--verde-sup);color:var(--verde);border-radius:14px;
+  padding:12px 16px;margin:0 0 14px;font-weight:600}
 .tag.a{background:var(--ambar-sup);color:var(--ambar)}
 .tag.c{background:var(--linha);color:var(--tinta2)}
 .tag.az{background:var(--azul-sup);color:var(--azul)}
@@ -1976,9 +2000,17 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
       <div class="graf" id="grafGrupos"></div>
       <div class="graf" id="grafSaldo"></div>
       <div id="semAcessoProf"></div>
-      <h3 class="sec">Etapa de cada grupo</h3>
-      <p class="ajuda">Atualiza sozinho a cada 30 segundos.</p>
-      <div class="rol"><table id="tabGrupos"></table></div>
+      <!-- Acompanhamento das etapas que vêm depois do campo: quem já começou,
+           quem está parado e quem ainda espera a etapa anterior. -->
+      <h3 class="sec" id="tituloEsteira">Conferências e cálculo</h3>
+      <p class="ajuda">Cada grupo passa por quatro etapas, nesta ordem. Uma etapa só
+      libera quando a anterior fecha. Em vermelho está quem já pode trabalhar e não
+      começou: é quem cobrar primeiro.</p>
+      <div id="cobrarAgora"></div>
+      <div id="esteira"></div>
+      <!-- A tabela "Etapa de cada grupo" saiu a pedido do professor: repetia a
+           barra de cima e contava só as salas contadas, esquecendo as trancadas,
+           então dizia "em andamento" para grupo que já tinha terminado. -->
     </div>
 
     <div class="pag" id="ab-grupos" hidden>
@@ -4909,6 +4941,157 @@ async function assumirConf2(grupo) {
   aoAlcance('caixaConf2Prof');
 }
 
+/* ====== ACOMPANHAMENTO: 1ª CONFERÊNCIA, CÁLCULO E 2ª CONFERÊNCIA ======
+   Uma linha por etapa, na ordem em que o trabalho anda. O estado de cada uma:
+   trava (a anterior não fechou), parado (liberada e ninguém mexeu),
+   andando (começou e não terminou), feito. "Parado" é o que o professor cobra. */
+const NOME_ETAPA = { campo:'Trabalho de campo', c1:'1ª conferência',
+  ca:'Cálculo', c2:'2ª conferência' };
+function haQuanto(iso) {
+  if (!iso) return '';
+  const d = new Date(iso); if (isNaN(d)) return '';
+  const min = Math.max(0, Math.round((Date.now() - d.getTime()) / 60000));
+  if (min < 60) return 'mexeu há ' + Math.max(min, 1) + ' min';
+  const h = Math.round(min / 60);
+  if (h < 24) return 'mexeu há ' + h + ' h';
+  const dias = Math.round(h / 24);
+  return 'mexeu há ' + dias + (dias === 1 ? ' dia' : ' dias');
+}
+function plural(n, um, varios) { return n + ' ' + (n === 1 ? um : varios); }
+function etapasDoGrupo(g) {
+  const amb = +g.amb || 0, faltaAmb = +g.amb_falta || 0;
+  const itens = +g.itens || 0, c1f = +g.c1_feitos || 0, c1p = +g.c1_prof || 0,
+        c1a = +g.c1_aluno || 0;
+  const nf = +g.faixas || 0, cae = +g.ca_enviadas || 0, cac = +g.ca_certas || 0;
+  const c2f = +g.c2_feitas || 0, c2r = +g.c2_recusadas || 0;
+  const campoOk = faltaAmb === 0;
+  const c1Ok = campoOk && c1f >= itens;
+  const caOk = c1Ok && nf > 0 && cae >= nf;
+  const c2Ok = caOk && c2f >= nf;
+  const E = [];
+  E.push({ k:'campo', quem: 'Equipe ' + g.grupo, num: (amb - faltaAmb) + ' de ' + amb + ' salas resolvidas',
+    est: campoOk ? 'feito' : 'andando',
+    rot: campoOk ? 'concluído' : 'falta ' + plural(faltaAmb, 'sala', 'salas'),
+    quando: campoOk ? '' : haQuanto(g.campo_ultimo), falta: faltaAmb });
+  const c1 = { k:'c1', quem: g.c1_nome || '', num: c1f + ' de ' + plural(itens, 'lançamento', 'lançamentos')
+      + (c1p ? ' (' + c1p + ' por você)' : ''), quando: haQuanto(g.c1_ultimo), falta: itens - c1f };
+  if (!g.c1_nome) { c1.est = 'sem'; c1.rot = 'sem conferente'; }
+  else if (!campoOk) { c1.est = 'trava'; c1.rot = 'espera o campo'; }
+  else if (c1Ok) { c1.est = 'feito'; c1.rot = 'concluída'; }
+  else if (c1a === 0) { c1.est = 'parado'; c1.rot = 'não começou'; }
+  else { c1.est = 'andando'; c1.rot = 'em andamento'; }
+  E.push(c1);
+  const ca = { k:'ca', quem: g.ca_nome || '', num: cae + ' de ' + plural(nf, 'faixa', 'faixas') + ' lançadas'
+      + (cae ? ', ' + cac + ' certa' + (cac === 1 ? '' : 's') : ''),
+      quando: haQuanto(g.ca_ultimo), falta: nf - cae };
+  if (!g.ca_nome) { ca.est = 'sem'; ca.rot = 'sem calculista'; }
+  else if (caOk) { ca.est = 'feito'; ca.rot = 'concluído'; }
+  else if (!c1Ok) { ca.est = 'trava'; ca.rot = 'espera a 1ª conferência'; }
+  else if (cae === 0) { ca.est = 'parado'; ca.rot = 'não começou'; }
+  else { ca.est = 'andando'; ca.rot = 'em andamento'; }
+  E.push(ca);
+  const c2 = { k:'c2', quem: g.c2_nome || '', num: c2f + ' de ' + plural(nf, 'faixa', 'faixas') + ' conferidas'
+      + (c2r ? ', ' + c2r + ' não conferiu' : ''), quando: haQuanto(g.c2_ultimo), falta: nf - c2f };
+  if (!g.c2_nome) { c2.est = 'sem'; c2.rot = 'sem conferente'; }
+  else if (c2Ok) { c2.est = 'feito'; c2.rot = 'concluída'; }
+  else if (cae === 0) { c2.est = 'trava'; c2.rot = 'espera o cálculo'; }
+  else if (c2f === 0) { c2.est = 'parado'; c2.rot = 'não começou'; }
+  else { c2.est = 'andando'; c2.rot = 'em andamento'; }
+  E.push(c2);
+  return E;
+}
+const TAG_EST = { feito:'v', andando:'a', parado:'r', trava:'c', sem:'r' };
+const POSTO_ETAPA = { c1:'conf1', ca:'calculista', c2:'conf2' };
+function recadoDeCobranca(grupo, e) {
+  const nome = (e.quem || '').split(' ')[0];
+  const topo = 'CENE · Feira de Ciências 2026\n';
+  if (e.k === 'campo') {
+    return topo + 'Equipe ' + grupo + ', falta ' + plural(e.falta, 'sala', 'salas')
+      + ' para fechar o trabalho de campo.'
+      + '\n\nEnquanto o campo não fecha, a 1ª conferência de vocês não pode começar, e '
+      + 'o grupo inteiro fica parado. A feira é dia 24/11.'
+      + '\n\nSe a sala estiver trancada, registrem no sistema como sem acesso, com o motivo.';
+  }
+  const parte = e.k === 'c1' ? 'a 1ª conferência da equipe ' + grupo
+              : e.k === 'ca' ? 'o cálculo da equipe ' + grupo
+              : 'a 2ª conferência da equipe ' + grupo;
+  const falta = e.k === 'c1' ? plural(e.falta, 'lançamento', 'lançamentos') + ' para conferir'
+              : plural(e.falta, 'faixa', 'faixas') + (e.k === 'ca' ? ' para lançar' : ' para conferir');
+  return topo + (nome ? nome + ', ' : '') + parte + ' já está liberado para você'
+    + (e.est === 'parado' ? ' e ainda não começou.' : ' e ainda não terminou.')
+    + '\nFaltam ' + falta + '.'
+    + '\n\nA feira é dia 24/11, e a etapa seguinte só abre quando a sua fechar.'
+    + '\n\nEndereço: ' + ondeEstamos() + '\nCódigo: CALCULO'
+    + (SENHA_CALC ? '\nSenha: ' + SENHA_CALC : '')
+    + '\n\nAo entrar, diga quem é você na lista. O sistema abre só a sua parte.';
+}
+let ESTEIRA = [];
+async function carregarEsteira() {
+  const n = el('esteira');
+  if (!n || !EU || (EU.papel !== 'professor' && EU.papel !== 'gestao')) return;
+  let r;
+  try { r = await rpc('esteira', { p_token: EU.token }); } catch (e) { return; }
+  if (!r || !r.ok) {
+    n.innerHTML = '<div class="aviso">' + esc((r && r.erro) || 'Não deu para carregar o acompanhamento.') + '</div>';
+    return;
+  }
+  ESTEIRA = (r.grupos || []).slice().sort(function (x, y) {
+    return String(x.grupo).localeCompare(String(y.grupo), 'pt-BR'); });
+  if (EU.papel === 'professor') { await senhaDoCalculo(); await carregarZaps(); }
+  pintarEsteira();
+}
+function botaoCobrar(g, e) {
+  if (EU.papel !== 'professor') return '';
+  return '<button type="button" class="btn peq sec cobra" data-g="' + esc(g)
+    + '" data-k="' + e.k + '">Cobrar no WhatsApp</button>';
+}
+function pintarEsteira() {
+  const n = el('esteira'), cx = el('cobrarAgora');
+  if (!n) return;
+  if (!ESTEIRA.length) {
+    n.innerHTML = '<p class="ajuda">Nenhum grupo de campo com sala cadastrada.</p>';
+    if (cx) cx.innerHTML = ''; return;
+  }
+  const cobrar = [];
+  n.innerHTML = '<div class="est-cards">' + ESTEIRA.map(function (g) {
+    const E = etapasDoGrupo(g);
+    E.forEach(function (e) { if (e.k !== 'campo' && e.est === 'parado') cobrar.push([g.grupo, e]); });
+    return '<div class="est-card" data-g="' + esc(g.grupo) + '"><h4>' + esc(g.grupo)
+      + '<small>' + esc(g.turma || '') + '</small></h4>'
+      + E.map(function (e) {
+          const pode = (e.est === 'parado' || e.est === 'andando') && (e.k !== 'campo' || e.falta > 0);
+          return '<div class="est-et ' + e.est + '" data-k="' + e.k + '">'
+            + '<div class="est-top"><span class="est-nome">' + NOME_ETAPA[e.k] + '</span>'
+            + '<span class="tag ' + TAG_EST[e.est] + '">' + esc(e.rot) + '</span></div>'
+            + (e.quem ? '<p class="est-quem">' + esc(e.quem) + '</p>' : '')
+            + '<p class="est-num">' + esc(e.num)
+            + (e.quando && e.est !== 'feito' && e.est !== 'trava' ? ' · ' + esc(e.quando) : '') + '</p>'
+            + (pode ? botaoCobrar(g.grupo, e) : '') + '</div>';
+        }).join('') + '</div>';
+  }).join('') + '</div>';
+  if (cx) {
+    cx.innerHTML = cobrar.length
+      ? '<div class="cobrar"><h4>Para cobrar agora</h4><p class="ajuda" style="margin:0">'
+        + (cobrar.length === 1 ? '1 pessoa já pode trabalhar e ainda não começou.'
+           : cobrar.length + ' pessoas já podem trabalhar e ainda não começaram.') + '</p><ul>'
+        + cobrar.map(function (x) {
+            return '<li><span><b>' + esc(x[1].quem) + '</b><br><small>' + NOME_ETAPA[x[1].k]
+              + ' da equipe ' + esc(x[0]) + ' · ' + esc(x[1].num) + '</small></span>'
+              + botaoCobrar(x[0], x[1]) + '</li>';
+          }).join('') + '</ul></div>'
+      : '<div class="tudo-certo">Ninguém parado: quem já pode trabalhar já começou.</div>';
+  }
+  document.querySelectorAll('#esteira .cobra, #cobrarAgora .cobra').forEach(function (b) {
+    b.addEventListener('click', function () {
+      const g = ESTEIRA.filter(function (x) { return x.grupo === b.dataset.g; })[0];
+      if (!g) return;
+      const e = etapasDoGrupo(g).filter(function (x) { return x.k === b.dataset.k; })[0];
+      if (!e) return;
+      mandarNoZap(recadoDeCobranca(g.grupo, e), e.k === 'campo' ? zapDoGrupo(g.grupo) : '');
+    });
+  });
+}
+
 /* ====== SEGUNDA CONFERÊNCIA: A CONTA DO CALCULISTA ======
    O conferente vê o que o calculista lançou em cada faixa e responde se
    confere. Ele não vê se o sistema considerou certo: o juízo tem de ser dele,
@@ -5988,7 +6171,8 @@ async function carregarProf() {
   pintarGrafGrupos(GRUPOS_ORD);
   pintarGrafSaldo(C, P, lamp);
 
-  if (!(r.grupos || []).length) {
+  if (!el('tabGrupos')) { /* tabela retirada da Visão geral */ }
+  else if (!(r.grupos || []).length) {
     el('tabGrupos').innerHTML = '<tbody><tr><td class="nd">Nenhum grupo cadastrado no sistema.</td></tr></tbody>';
   } else {
     const maiorL = Math.max.apply(null, (r.grupos||[]).map(g => +g.lampadas).concat([1]));
@@ -6057,6 +6241,7 @@ async function carregarProf() {
   encherBarras();
   if (EU.papel === 'professor') { carregarParticipacao(); carregarAvaliacao(); carregarNotas(); carregarConferencia(); }
   carregarFichasProf();
+  carregarEsteira();
   carregarEspacoFotos();
   // a varredura dos lançamentos sai do mesmo inventário das fotos. Vem depois
   // do painel pintado, para não atrasar o que o professor vê primeiro.
