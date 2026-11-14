@@ -141,6 +141,24 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .btn.ok{background:var(--verde);border-color:var(--verde)}
 .btn.ok:hover{filter:brightness(1.1)}
 .btn.peq{width:auto;min-height:44px;padding:10px 17px;font-size:.88rem}
+/* Os motivos de devolver o lançamento: dois por linha, todos da mesma largura.
+   O rótulo comprido e o "tirar a marcação" ocupam a linha inteira. Em tela bem
+   estreita vira um por linha, senão o texto quebra em três linhas dentro do
+   botão. */
+.mot-grade{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 0}
+.mot-grade .btn{width:100%;margin:0;text-align:center;white-space:normal;
+  line-height:1.25;padding:11px 10px}
+.mot-grade .largo{grid-column:1 / -1}
+.mot-grade .tirar{margin-top:4px;border-style:dashed}
+@media(max-width:359px){ .mot-grade{grid-template-columns:1fr} }
+/* o botão de mandar e a explicação: lado a lado na tela larga, um embaixo do
+   outro no celular, onde lado a lado espreme os dois */
+.zap-cx{margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.zap-cx .ajuda{margin:0;flex:1 1 11rem}
+@media(max-width:560px){
+  .zap-cx{display:block}
+  .zap-cx .btn{width:100%;margin:0 0 7px}
+}
 /* a dica de onde achar a potência na etiqueta, embaixo do campo */
 .dica-pot{display:block;margin:7px 0 0;line-height:1.4}
 /* o telefone de quem responde pela equipe, no card do grupo */
@@ -4115,13 +4133,13 @@ const MOTIVO_PEND = {
   ilegivel: 'a foto não dá para ler',
   outra_etiqueta: 'a foto é de outra etiqueta, não a do aparelho',
   outro_aparelho: 'a foto é de outro aparelho, não do que foi lançado',
-  numero_errado: 'o número lançado não bate com a etiqueta' };
+  numero_errado: 'o valor lançado não bate com a etiqueta' };
 const NOME_PEND = {
   sem_foto: 'Sem foto da etiqueta',
   ilegivel: 'Foto ilegível',
   outra_etiqueta: 'Foto de outra etiqueta',
   outro_aparelho: 'Foto de outro aparelho',
-  numero_errado: 'Número lançado não bate com a etiqueta' };
+  numero_errado: 'Valor lançado não bate com a etiqueta' };
 const TEXTO_PEND = {
   sem_foto: 'Sem a foto da etiqueta ninguém consegue conferir o número.',
   ilegivel: 'A foto está lá, mas não dá para ler o número na etiqueta.',
@@ -4309,17 +4327,20 @@ async function abrirAlerta(k, bt) {
     + (a.item ? '<h5>Devolver para a equipe refazer</h5>'
       + '<p class="ajuda">Marque o que está errado. A equipe recebe o aviso na tela '
       + 'dela, com o ambiente e o aparelho, e o recado do WhatsApp muda junto.</p>'
-      + '<div class="bt-par" id="motivosPend">'
+      /* dois por linha, e o rótulo comprido ocupa a linha inteira: botão de
+         larguras diferentes embaralhado fica feio no celular */
+      + '<div class="mot-grade" id="motivosPend">'
       + Object.keys(NOME_PEND).map(function(m){
-          return '<button type="button" class="btn peq sec mot" data-m="' + m + '">'
+          return '<button type="button" class="btn peq sec mot'
+               + (NOME_PEND[m].length > 22 ? ' largo' : '') + '" data-m="' + m + '">'
                + esc(NOME_PEND[m]) + '</button>'; }).join('')
-      + '<button type="button" class="btn peq sec mot" data-m="">Tirar a marcação</button>'
+      + '<button type="button" class="btn peq sec mot largo tirar" data-m="">'
+      + 'Tirar a marcação</button>'
       + '</div><div id="avisoPend"></div>' : '')
-    + '<div class="bt-par" style="margin-top:14px;align-items:center">'
+    + '<div class="zap-cx">'
       + '<button type="button" class="btn peq zap" id="btZapAlerta">'
       + 'Mandar no WhatsApp</button>'
-      + '<span class="ajuda" style="margin:0;flex:1 1 11rem">' + (zapDoGrupo(a.amb
-          && a.amb.grupo)
+      + '<span class="ajuda">' + (zapDoGrupo(a.amb && a.amb.grupo)
         ? 'Abre direto a conversa de ' + esc((ZAPS[a.amb.grupo] || {}).lider
             || 'quem responde pela equipe') + ', com o recado escrito.'
         : 'Abre o WhatsApp com o recado já escrito. Você escolhe para quem mandar. '
@@ -4332,8 +4353,11 @@ async function abrirAlerta(k, bt) {
   });
   if (el('motivosPend')) {
     const pintaMot = function(){
+      /* só um motivo de verdade fica aceso. O "tirar a marcação" tem data-m
+         vazio, e sem este cuidado ele aparecia aceso quando não havia marcação
+         nenhuma, parecendo que o lançamento tinha sido devolvido. */
       el('motivosPend').querySelectorAll('.mot').forEach(function(b){
-        b.classList.toggle('sec', b.dataset.m !== (a.motivo || '')); });
+        b.classList.toggle('sec', !(b.dataset.m && b.dataset.m === a.motivo)); });
     };
     pintaMot();
     el('motivosPend').querySelectorAll('.mot').forEach(function(b){
