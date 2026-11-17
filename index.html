@@ -343,7 +343,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--azul);
 .lupa-topo i{font-style:normal;font-family:var(--m);font-size:.78rem;
   color:rgba(255,255,255,.78);min-width:50px;text-align:center}
 .lupa-rol{flex:1;overflow:auto;background:#fff;-webkit-overflow-scrolling:touch}
-.lupa-rol img{display:block;max-width:none;height:auto}
+.lupa-rol img{display:block;max-width:none;height:auto;margin:0 auto}
 @media(max-width:520px){
   .lupa-topo strong{width:100%;margin:0 0 2px}
   .lupa-topo button{padding:9px 13px;font-size:.86rem}
@@ -741,6 +741,16 @@ tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--azul)}
   background:var(--sup2);color:var(--tinta2)}
 .tag.v{background:var(--verde-sup);color:var(--verde)}
 .tag.r{background:var(--verm-sup);color:var(--verm)}
+/* olhinho do campo de senha: toca para ver o que digitou, toca de novo para esconder */
+.campo-senha{position:relative}
+.campo-senha input{padding-right:56px;width:100%}
+.olho{position:absolute;top:50%;right:4px;transform:translateY(-50%);width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;background:transparent;border:0;
+  border-radius:10px;color:var(--tinta2);cursor:pointer}
+.olho:hover{color:var(--tinta)}
+.olho:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+.olho .risco{display:none}
+.olho[aria-pressed="true"] .risco{display:inline}
 
 /* A porta escolhida na lista decide o que aparece na tela do cálculo:
    quem entra pelo CÁLCULO vê só a conta; pela 1ª conferência, só o campo;
@@ -1455,7 +1465,18 @@ svg.cart .marco{stroke:var(--sup);stroke-width:2.5}
         </div>
         <div class="campo">
           <label for="senha">Senha</label>
-          <input type="password" id="senha" autocomplete="off" required>
+          <div class="campo-senha">
+            <input type="password" id="senha" autocomplete="off" required>
+            <button type="button" id="btOlho" class="olho" aria-label="Mostrar a senha"
+              aria-pressed="false" title="Mostrar a senha">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>
+                <circle cx="12" cy="12" r="3"/>
+                <line class="risco" x1="3" y1="3" x2="21" y2="21"/>
+              </svg>
+            </button>
+          </div>
         </div>
         <button class="btn" id="btEntrar" type="submit">Entrar</button>
       </form>
@@ -2607,6 +2628,19 @@ function msg(onde, texto, tipo) {
   el(onde).innerHTML = texto ? '<div class="aviso ' + tipo + '">' + texto + '</div>' : '';
 }
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? null : n; }
+/* o olhinho da senha */
+(function () {
+  const b = document.getElementById('btOlho'), c = document.getElementById('senha');
+  if (!b || !c) return;
+  b.addEventListener('click', function () {
+    const ver = c.type === 'password';
+    c.type = ver ? 'text' : 'password';
+    b.setAttribute('aria-pressed', ver ? 'true' : 'false');
+    b.setAttribute('aria-label', ver ? 'Esconder a senha' : 'Mostrar a senha');
+    b.title = ver ? 'Esconder a senha' : 'Mostrar a senha';
+    c.focus();
+  });
+})();
 /* Número para o olho brasileiro: 2.5 vira 2,5. O inverso é o num() acima. */
 function vrg(v){
   if (v === null || v === undefined || v === '') return '';
@@ -2689,6 +2723,10 @@ function entrou() {
   el('eu').hidden = false; el('btSair').hidden = false;
   el('eu').textContent = rotuloEu();
   el('senha').value = '';
+  /* ao sair, a senha volta a ficar escondida para o próximo que usar o celular */
+  el('senha').type = 'password';
+  if (el('btOlho')) { el('btOlho').setAttribute('aria-pressed', 'false');
+    el('btOlho').setAttribute('aria-label', 'Mostrar a senha'); el('btOlho').title = 'Mostrar a senha'; }
   if (EU.papel === 'professor' || EU.papel === 'gestao') {
     const soLeitura = EU.papel === 'gestao';
     document.querySelectorAll('#abas button[data-so="prof"]')
@@ -9626,7 +9664,7 @@ el('btCopiar').addEventListener('click', async () => {
    A planta vai embutida no proprio index.html, entao nao da para abrir em
    outra aba: o navegador bloqueia data: em aba nova. A lupa resolve isso
    dentro da pagina, com + e - e rolagem nos dois sentidos. */
-const LUPA_NIVEIS = [1, 1.6, 2.4, 3.6, 5.2];
+const LUPA_NIVEIS = [1, 1.6, 2.4, 3.6, 5.2, 7.5];
 let LUPA_I = 0;
 
 function lupaAplicar(manterCentro) {
@@ -9635,7 +9673,13 @@ function lupaAplicar(manterCentro) {
   const antes = rol.clientWidth ? (rol.scrollLeft + rol.clientWidth / 2) : 0;
   const antesY = rol.clientHeight ? (rol.scrollTop + rol.clientHeight / 2) : 0;
   const larguraAntes = img.offsetWidth || rol.clientWidth;
-  img.style.width = (rol.clientWidth * LUPA_NIVEIS[LUPA_I]) + 'px';
+  /* 100% é a imagem INTEIRA na tela: cabe na largura e na altura. Antes era só
+     a largura, e no computador uma foto em pé ficava enorme, mostrando só a
+     parede de cima, com a etiqueta fora da tela. */
+  const prop = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0;
+  const base = prop && rol.clientHeight
+    ? Math.min(rol.clientWidth, rol.clientHeight * prop) : rol.clientWidth;
+  img.style.width = Math.round(base * LUPA_NIVEIS[LUPA_I]) + 'px';
   const larguraDepois = img.offsetWidth || rol.clientWidth;
   const fator = larguraAntes ? larguraDepois / larguraAntes : 1;
   if (manterCentro) {
