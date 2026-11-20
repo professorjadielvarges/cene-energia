@@ -4515,6 +4515,11 @@ function recadoDoAlerta(a) {
 
 let ALERTAS = [];
 
+/* as LEDs confirmadas por etiqueta na escola (parametros.pot_led e
+   pot_led_max): a de 18 W e a G-light de 20 W. Só elas deixam de gerar aviso;
+   qualquer outra potência, mesmo baixa como 15 W, continua sendo conferida.
+   LED_MAX é até quantos watts a conta trata como LED. */
+let LED_MAX = 20, LEDS_OK = [18, 20];
 function varrerLancamentos(ambs) {
   const achados = [];
   const porPotencia = {}, ondePotencia = {};
@@ -4588,6 +4593,9 @@ function varrerLancamentos(ambs) {
     const maior = porPotencia[chaves[0]];
     chaves.slice(1).forEach(function(p){
       if (porPotencia[p] >= maior) return;
+      /* duas LEDs reconhecidas (18 e 20 W) convivendo é o normal da escola,
+         não erro: o professor confirmou a de 20 W na etiqueta e no auditório */
+      if (LEDS_OK.indexOf(p) >= 0 && LEDS_OK.indexOf(chaves[0]) >= 0) return;
       const onde = (ondePotencia[p] || []).slice()
         .sort(function(x, y){ return (y.quantidade || 0) - (x.quantidade || 0); });
       const equipes = [];
@@ -4596,8 +4604,8 @@ function varrerLancamentos(ambs) {
         titulo: porPotencia[p] + ' lâmpadas de ' + mil(p, 2) + ' W, contra '
           + maior + ' de ' + mil(chaves[0], 2) + ' W',
         texto: 'Potência diferente da maioria. Pode ser real, pode ser leitura '
-          + 'errada. Como o sistema trata ' + mil(chaves[0], 2) + ' W como a '
-          + 'medida do LED, estas estão entrando na conta como se fossem antigas.' });
+          + 'errada.' + (p > LED_MAX ? ' Como o sistema trata como LED só até '
+          + mil(LED_MAX, 2) + ' W, estas estão entrando na conta como lâmpadas antigas.' : '') });
     });
   }
   const ordem = { erro: 0, conferir: 1 };
@@ -6387,6 +6395,8 @@ async function carregarProf() {
     if (e && e.ok && e.por_ano && e.desde && e.total != null) ECO = e;
   } catch (err) { /* o painel ainda funciona sem, mostrando o que dá */ }
   const P = {}; (r.parametros || []).forEach(p => P[p.chave] = +p.valor);
+  if (P.pot_led_max > 0) LED_MAX = P.pot_led_max;
+  if (P.pot_led > 0) LEDS_OK = [P.pot_led, LED_MAX];
   const feitos = +r.total_concluidos, tot = +r.total_ambientes;
   const lamp = (r.grupos || []).reduce((s,g) => s + (+g.lampadas), 0);
   const precos = (r.precos || []).map(p => +p.preco);
